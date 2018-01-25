@@ -1,0 +1,29 @@
+insert into goods.GOODS (PRECISION, NAME, ARTICUL, BARCODE, GOODS_TYPE, PRICE, NDS, ATTRIBUTES) values (1, 'TOVAR, article, whithout barcode, count, fix price, whithout nds', '1', '', 1, 111, 6, 0);
+insert into goods.GOODS (PRECISION, NAME, ARTICUL, BARCODE, GOODS_TYPE, PRICE, NDS, ATTRIBUTES) values (1, 'PODAKCIZN, TOVAR article, whithout barcode, count, fix price, nds 0%', '2', '', 2, 222, 5, 0);
+insert into goods.GOODS (PRECISION, NAME, ARTICUL, BARCODE, GOODS_TYPE, PRICE, NDS, ATTRIBUTES) values (1, 'RABOTA, article, whithout barcode, count, fix price, nds 10%', '3', '', 3, 333, 2, 0);
+insert into goods.GOODS (PRECISION, NAME, ARTICUL, BARCODE, GOODS_TYPE, PRICE, NDS, ATTRIBUTES) values (1, 'YSLUGA, article, whithout barcode, count, fix price, nds 18%', '4', '', 4, 444, 1, 0);
+insert into goods.GOODS (PRECISION, NAME, ARTICUL, BARCODE, GOODS_TYPE, PRICE, NDS, ATTRIBUTES) values (1, 'STAVKA AZRTNOI IGRI, article, whithout barcode, count, fix price, nds 18/118', '5', '', 5, 555, 3, 0);
+insert into goods.GOODS (PRECISION, NAME, ARTICUL, BARCODE, GOODS_TYPE, PRICE, NDS, ATTRIBUTES) values (1, 'VIGRISH AZRTNOI IGRI, article, whithout barcode, count, fix price, nds 10/110', '6', '', 6, 666, 4, 0);
+insert into goods.GOODS (PRECISION, NAME, ARTICUL, BARCODE, GOODS_TYPE, PRICE, NDS, ATTRIBUTES) values (1, 'LOTEREINY BILET, article, whithout barcode, count, fix price, whithout nds', '7', '', 7, 777, 6, 0);
+insert into goods.GOODS (PRECISION, NAME, ARTICUL, BARCODE, GOODS_TYPE, PRICE, NDS, ATTRIBUTES) values (1, 'VIGRISH LOTEREI, article, whithout barcode, count, fix price, nds? 0%', '8', '', 8, 888, 5, 0);
+insert into goods.GOODS (PRECISION, NAME, ARTICUL, BARCODE, GOODS_TYPE, PRICE, NDS, ATTRIBUTES) values (1, 'PREDOSTAVLENUE RID, article, whithout barcode, count, fix price, nds 10%', '9', '', 9, 999, 1, 0);
+insert into goods.GOODS (PRECISION, NAME, ARTICUL, BARCODE, GOODS_TYPE, PRICE, NDS, ATTRIBUTES) values (1, 'PLATEZ, article, whithout barcode, count, fix price, nds 18%', '10', '', 10, 1010, 1, 0);
+insert into goods.GOODS (PRECISION, NAME, ARTICUL, BARCODE, GOODS_TYPE, PRICE, NDS, ATTRIBUTES) values (1, 'AGENTSKOE VOZNAGRAZDENIE, article, whithout barcode, count, fix price, nds 18/118', '11', '', 11, 1111, 3, 0);
+insert into goods.GOODS (PRECISION, NAME, ARTICUL, BARCODE, GOODS_TYPE, PRICE, NDS, ATTRIBUTES) values (1, 'SOSTAVNOI PREDMET RASCHETA, article, whithout barcode, count, fix price, nds 10/110', '12', '', 12, 1212, 4, 0);
+insert into goods.GOODS (PRECISION, NAME, ARTICUL, BARCODE, GOODS_TYPE, PRICE, NDS, ATTRIBUTES) values (1, 'INOI PREDMET RASCHETA, article, whithout barcode, count, fix price, whithout nds', '13', '', 13, 1313, 6, 0);
+insert into goods.GOODS (PRECISION, NAME, ARTICUL, BARCODE, GOODS_TYPE, PRICE, NDS, ATTRIBUTES) values (1, 'TOVAR, article, whithout barcode, weight, type 16 fix price, whithout nds', '16', '', 16, 1616, 6, 0);
+insert into goods.GOODS (PRECISION, NAME, ARTICUL, BARCODE, GOODS_TYPE, PRICE, NDS, ATTRIBUTES) values (1, 'TOVAR, article, whithout barcode, weight, fix price, whithout nds', '17', '', 17, 1717, 6, 0);
+insert into goods.GOODS (PRECISION, NAME, ARTICUL, BARCODE, GOODS_TYPE, PRICE, NDS, ATTRIBUTES) values (1, 'PODAKCIZN, TOVAR, article, whithout barcode, weight, fix price, nds 0%', '18', '', 18, 1818, 5, 0);
+insert into goods.GOODS (PRECISION, NAME, ARTICUL, BARCODE, GOODS_TYPE, PRICE, NDS, ATTRIBUTES) values (1, 'RABOTA, article, whithout barcode, weight, fix price, nds 10%', '19', '', 19, 1919, 2, 0);
+insert into goods.GOODS (PRECISION, NAME, ARTICUL, BARCODE, GOODS_TYPE, PRICE, NDS, ATTRIBUTES) values (1, 'YSLUGA, article, whithout barcode, weight, fix price, nds 18%', '20', '', 20, 2020, 1, 0);
+insert into goods.GOODS (PRECISION, NAME, ARTICUL, BARCODE, GOODS_TYPE, PRICE, NDS, ATTRIBUTES) values (1, 'STAVKA AZRTNOI IGRI, article, whithout barcode, weight, fix price, nds 18/118', '21', '', 21, 2121, 3, 0);
+insert into goods.GOODS (PRECISION, NAME, ARTICUL, BARCODE, GOODS_TYPE, PRICE, NDS, ATTRIBUTES) values (1, 'VIGRISH AZRTNOI IGRI, article, whithout barcode, weight, fix price, nds 10/110', '22', '', 22, 2222, 4, 0);
+insert into goods.GOODS (PRECISION, NAME, ARTICUL, BARCODE, GOODS_TYPE, PRICE, NDS, ATTRIBUTES) values (1, 'LOTEREINY BILET, article, whithout barcode, weight, fix price, whithout nds', '23', '', 23, 2323, 6, 0);
+insert into goods.GOODS (PRECISION, NAME, ARTICUL, BARCODE, GOODS_TYPE, PRICE, NDS, ATTRIBUTES) values (1, 'VIGRISH LOTEREI, article, whithout barcode, weight, fix price, nds 0%', '24', '', 24, 2424, 5, 0);
+insert into goods.GOODS (PRECISION, NAME, ARTICUL, BARCODE, GOODS_TYPE, PRICE, NDS, ATTRIBUTES) values (1, 'PREDOSTAVLENUE RID, article, whithout barcode, weight, fix price, nds 10%', '25', '', 25, 2525, 1, 0);
+insert into goods.GOODS (PRECISION, NAME, ARTICUL, BARCODE, GOODS_TYPE, PRICE, NDS, ATTRIBUTES) values (1, 'PLATEZ, article, whithout barcode, weight, fix price, nds 18%', '26', '', 26, 2626, 1, 0);
+insert into goods.GOODS (PRECISION, NAME, ARTICUL, BARCODE, GOODS_TYPE, PRICE, NDS, ATTRIBUTES) values (1, 'AGENTSKOE VOZNAGRAZDENIE, article, whithout barcode, weight, fix price, nds 18/118', '27', '', 27, 2727, 3, 0);
+insert into goods.GOODS (PRECISION, NAME, ARTICUL, BARCODE, GOODS_TYPE, PRICE, NDS, ATTRIBUTES) values (1, 'SOSTAVNOI PREDMET RASCHETA, article, whithout barcode, weight, fix price, nds 10/110', '28', '', 28, 2828, 4, 0);
+insert into goods.GOODS (PRECISION, NAME, ARTICUL, BARCODE, GOODS_TYPE, PRICE, NDS, ATTRIBUTES) values (1, 'INOI PREDMET RASCHETA, article, whithout barcode, weight, fix price, whithout nds', '29', '', 29, 2929, 6, 0);
+
+

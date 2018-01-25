@@ -1,0 +1,1 @@
+insert into goods.GOODS (PRECISION, MEASURE, NAME, ARTICUL, BARCODE, GOODS_TYPE, PRICE, NDS, ATTRIBUTES) values (1, ' ', '¯', '1', '', 1, 111, 6, 0);
