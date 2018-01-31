@@ -9,8 +9,6 @@ import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-import static junit.framework.TestCase.assertFalse;
-import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -21,7 +19,7 @@ public class CashTest {
     Calendar curdate = Calendar.getInstance();
 
     private static final String CashBoxType = "DreamkasF"; //DreamkasRF
-    private static final String CashboxIP = "192.168.243.6";//15";
+    private static final String CashboxIP = "192.168.243.6";
     private static final String CashboxPort = "3425";
 
     private static final String USERNAME = "root";
@@ -39,22 +37,18 @@ public class CashTest {
     private static int keypad_mode = 0; //= keypadMode.FREE_MODE;//SPEC_SYMBOLS;//ENGLISH;//CYRILLIC;
     private KeyEnum keyEnum = new KeyEnum();
 
-   // private Sale sale = new Sale();
     private TCPSocket tcpSocket = new TCPSocket();
 
-    private int countGoods = 0;
-
     public CashTest() throws FileNotFoundException {
-    }
-
-    public void setCountGoods(int countGoodsTmp) {
-        countGoods = countGoodsTmp;
     }
 
     DateFromCashbox manager = new DateFromCashbox();
 
     FileInputStream fstream = new FileInputStream("./reciveData/tmpScreen.bmp");
     BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
+
+    List<String> dateStr = new ArrayList<>();
+    private SQLCommands sqlCommands = new SQLCommands();
 
     @Before
     public void before_test_clear_cashbox() {
@@ -65,13 +59,13 @@ public class CashTest {
         tcpSocket.setFlagGetScreen(true);
         tcpSocket.createSocket(CashboxIP, Integer.parseInt(CashboxPort));
         manager.initSession(CashboxIP, USERNAME, PORT, PASSWORD);
+
         /*****************************************************************
          ****************************Предусловия**************************
          *************Сброс кассы (выполнение тех. обнуления)*************
          ****************************************************************/
         //проверяем, что открыт экран ввода пароля
-        /*
-        boolean compare = compareScreen(screenPicture.PASSWORD);
+      /*  boolean compare = compareScreen(screenPicture.PASSWORD);
         //если полученный экран с кассы совпадает с экраном ввода пароля, то выполняем if
         if (compare) {
             //делаем выборку их БД users на кассе, получаем пароль одного из них
@@ -83,7 +77,7 @@ public class CashTest {
         }
         //делаем тех. обнуление на кассе
         techNull();
-        sleepMiliSecond(20000);
+
         tcpSocket.socketClose();
 
         //перезапускаем фискат
@@ -94,6 +88,8 @@ public class CashTest {
         tcpSocket.setReadAllInstruction(false);
         tcpSocket.setFlagGetScreen(true);
         tcpSocket.createSocket(CashboxIP, Integer.parseInt(CashboxPort));
+        //добавляем в БД товаров все виды товаров
+        addGoodsOnCash();
         /*****************************************************************/
     }
 
@@ -157,19 +153,19 @@ public class CashTest {
             int testResul = registration(listScript);
             System.out.println("testResul = " + testResul);
             if (testResul == -1)
-                fail("Пункт регистрации недоступен в меню");
+                fail("Пункт регистрации недоступен в меню.");
             if (testResul == -2)
-                fail("Пустой ИНН в пункте регистрации.\nЗавершить регистрацию невнозможно.");
+                fail("Пустой ИНН в пункте регистрации. Завершить регистрацию невнозможно.");
             if (testResul == -3)
-                fail("Пустое наименование организации в пункте регистрации.\nЗавершить регистрацию невнозможно.");
+                fail("Пустое наименование организации в пункте регистрации. Завершить регистрацию невнозможно.");
             if (testResul == -4)
-                fail("Пустой адрес рассчетов в пункте регистрации.\nЗавершить регистрацию невнозможно.");
+                fail("Пустой адрес рассчетов в пункте регистрации. Завершить регистрацию невнозможно.");
             if (testResul == -5)
-                fail("Пустое место рассчетов в пункте регистрации.\nЗавершить регистрацию невнозможно.");
+                fail("Пустое место рассчетов в пункте регистрации. Завершить регистрацию невнозможно.");
             if (testResul == -6)
-                fail("Пустой РН ККТ в пункте регистрации.\nЗавершить регистрацию невнозможно.");
+                fail("Пустой РН ККТ в пункте регистрации. Завершить регистрацию невнозможно.");
             if (testResul == -7)
-                fail("Неверный РН ККТ в пункте регистрации.\nЗавершить регистрацию невнозможно.");
+                fail("Неверный РН ККТ в пункте регистрации. Завершить регистрацию невнозможно.");
 
             getPassCommand = "echo \"attach '/FisGo/configDb.db' as config; " +
                     "select STAGE from config.CONFIG;\"" +
@@ -340,12 +336,11 @@ public class CashTest {
                 "select STAGE from config.CONFIG;\"" +
                 " | sqlite3 /FisGo/configDb.db\n";
         List<String> line = CashBoxConnect(getStageCommand);
-  //      if (line.get(0).equals("0")) {
+        if (line.get(0).equals("0")) {
             //проверяем, что открыт экран ввода пароля
             boolean compare = compareScreen(screenPicture.PASSWORD);
             //если полученный экран с кассы совпадает с экраном ввода пароля, то выполняем if
             if (compare) {
-                //    System.out.println("in compare");
                 //делаем выборку их БД users на кассе, получаем пароль одного из них
                 String getPassCommand = "echo \"attach '/FisGo/usersDb.db' as users; " +
                         "select PASS from users.USERS limit 1;\" | sqlite3 /FisGo/usersDb.db\n";
@@ -356,26 +351,226 @@ public class CashTest {
 
             line.clear();
             //делаем выборку их конфига на кассе, проверем, открыта смена или нет
-            String getOpenShiftCommand = "echo \"attach '/FisGo/configDb.db' as users; " +
+            String getOpenShiftCommand = "echo \"attach '/FisGo/configDb.db' as config; " +
                     "select OPEN_SHIFT_DATE from config.CONFIG;\" | sqlite3 /FisGo/configDb.db\n";
             line = CashBoxConnect(getOpenShiftCommand);
-            if (line.isEmpty())
+            if (line.isEmpty()) {
                 openShift();
-
-            //добавляем в БД товаров все виды товаров
-            addGoodsOnCash();
+            }
 
             line.clear();
+            //делаем выборку из базы чеков
+            String getCheckCountCommand = "echo \"attach '/FisGo/receiptsDb.db' as receipts; " +
+                    "select count (*) from receipts.RECEIPTS;\" | sqlite3 /FisGo/receiptsDb.db\n";
+            line = CashBoxConnect(getCheckCountCommand);
+            int countCheck = Integer.parseInt(line.get(0));
 
             //читаем из файла сценарий пробития чека
             List<String> listScript = readDataScript("src\\test\\resourses\\sale_advent_learning_mode.txt");
+            int checkResult = checkPrintSaleComming(listScript);
+            if (checkResult == -1)
+                fail("Не открыт экран продажи (режим свободной цены)");
+            if (checkResult == -2)
+                fail("Не найдены товары, которые необходимо добавить в чек");
+            if (checkResult == -3)
+                fail("Не найдены товары, которые необходимо добавить в чек в методе печати чека");
+            if (checkResult == -4)
+                fail("Не указан способ добавления товара в чек");
+            if (checkResult == -5)
+                fail("Не указано количество товара во входном файле сценария");
+            if (checkResult == -6)
+                fail("Не указан способ оплаты во входном файле сценария");
+            if (checkResult == -7)
+                fail("Не указан тип товара во входном файле сценария");
+            if (checkResult == 0) {
+                line = CashBoxConnect(getCheckCountCommand);
+                int countCheckTest = Integer.parseInt(line.get(0));
+                if ((countCheckTest - countCheck) == 1) {
+                    System.out.println("date = " + dateStr.get(0));
 
-    /*    }
+                    //сделать выборку из базы чеков, по дате
+                    String getCheckDateCommand = "echo \"attach '/FisGo/receiptsDb.db' as receipts; " +
+                            "select RECEIPT_CREATE_DATE from receipts.RECEIPTS ORDER BY ID DESC limit 1;\" | sqlite3 /FisGo/receiptsDb.db\n";
+                    line = CashBoxConnect(getCheckDateCommand);
+                    String receiptDate = line.get(0);
+                    System.out.println("RECEIPT_CREATE_DATE = " + receiptDate);
+                    System.out.println("receiptDate.length() = " + receiptDate.length() );
+                    if (receiptDate.length() == 12) {
+                        StringBuilder dateStrBuild = new StringBuilder();
+                        dateStrBuild.append(receiptDate.substring(0, 4));
+                        dateStrBuild.append(receiptDate.substring(6));
+                        receiptDate = dateStrBuild.toString();
+
+                    }
+                    writeLogFile("Тест печати чека в учебном режиме. Дата на кассе: " + dateStr.get(0) + "Дата чека: " + receiptDate);
+                    assertEquals(dateStr.get(0), receiptDate);
+
+                    //select * from RECEIPTS ORDER BY ID DESC limit 1;
+                  //POS_COUNT|RECEIVED|DELIVERY|SHIFT_NUM|IS_PAID_CARD|IS_PAID_CASH|ORGANIZATION_NAME|CALCULATION_ADDR|CALCULATION_PLACE|ORGANIZATION_INN|KKT_EMAIL|KKT_PLANT_NUM|CUR_TAX_SYSTEM|CUR_AGENT|OFFLINE_MODE|OFD_NAME|OFD_INN|OFD_SERVER_ADDR|OFD_SERVER_IP|OFD_CHECK_RECEIPT_ADDR|OFD_SERVER_PORT|FD_NUMBER|FPD_NUMBER|RECEIPT_NUM|TYPE|TEL_NUMBER|BYER_EMAIL|DAY|MONTH|YEAR|HOURS|MINUTES|SECONDS|QR_CODE|IS_CABINET_SEND|TOTAL_SUM_RECEIPT|TIMEZONE|EXCESS|TOTAL_SUM_DISPLAY|NDS_NO|NDS_0|NDS_10|NDS_18|NDS_10_110|NDS_18_118|
+                  //    7|    1000000|  975039|    1         0|              1|      ООО "Образец"|  Санкт-Петербург, ул. Мира 1||       012345678910|   kassa@dreamkas.ru|0496000001|1|0|0||||||0|0|0|6|1|||26|1|2018|13|53|4||1|27097|3|0|24961|23545|444|61|0|121|169|
+
+                } else
+                    fail("Чек не добавлен в базу receiptsDb.db");
+            }
+        }
         else {
             fail("Касса не в учебном режиме");
-        }*/
+        }
     }
+    /***************************************Тесты на открытие смены*************************************/
+    /***************************************ККТ в учебном режиме****************************************/
+    @Test
+    public void open_shift_training_mode() {
+        List<String> line = CashBoxConnect(sqlCommands.getStageCommand());
+        if (line.get(0).equals("0")) {
+            //проверяем, что открыт экран ввода пароля
+            boolean compare = compareScreen(screenPicture.PASSWORD);
+            //если полученный экран с кассы совпадает с экраном ввода пароля, то выполняем if
+            if (compare) {
+                //делаем выборку их БД users на кассе, получаем пароль одного из них
+                String getPassCommand = "echo \"attach '/FisGo/usersDb.db' as users; " +
+                        "select PASS from users.USERS limit 1;\" | sqlite3 /FisGo/usersDb.db\n";
+                line = CashBoxConnect(getPassCommand);
+                //вводим пароль на кассе
+                strToKeypadConvert(line.get(0));
+            }
 
+            line.clear();
+            //делаем выборку их конфига на кассе, проверем, открыта смена или нет
+            line = CashBoxConnect(sqlCommands.getOpenShiftCommand());
+            if (line.get(0).isEmpty() && (Integer.parseInt(line.get(1)) == 0)) {
+                int testResult = openShift();
+                switch (testResult) {
+                    case -1:
+                        fail("Смена уже открыта");
+                        break;
+                    case -2:
+                        fail("Пункт открытия смены не доступен");
+                        break;
+                    case -3:
+                        fail("После открытия смены не открыт экран продажи по свободной цене");
+                        break;
+                    case 0:
+                        line.clear();
+                        line = CashBoxConnect(sqlCommands.getOpenShiftCommand());
+                        if (Integer.parseInt(line.get(1)) == 1) {
+                            //делаем выборку даты с кассы
+                            assertEquals(dateStr.get(0), line.get(0));
+                        } else {
+                            fail("Поле SHIFT_TIMER в конфиге OFF");
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+            else {
+                fail("Смена уже открыта");
+            }
+
+        } else {
+            fail("Касса не в учебном режиме");
+        }
+    }
+    /***************************************************************************************************/
+    /***************************************Печать Х-отчета*********************************************/
+    /*FIXME условия прохождения теста - ??? */
+    @Test
+    public void print_x_count() {
+        //проверяем, что stage кассы = 0
+        String getStageCommand = "echo \"attach '/FisGo/configDb.db' as config; " +
+                "select STAGE from config.CONFIG;\"" +
+                " | sqlite3 /FisGo/configDb.db\n";
+        List<String> line = CashBoxConnect(getStageCommand);
+        if (line.get(0).equals("0")) {
+            //проверяем, что открыт экран ввода пароля
+            boolean compare = compareScreen(screenPicture.PASSWORD);
+            //если полученный экран с кассы совпадает с экраном ввода пароля, то выполняем if
+            if (compare) {
+                //делаем выборку их БД users на кассе, получаем пароль одного из них
+                String getPassCommand = "echo \"attach '/FisGo/usersDb.db' as users; " +
+                        "select PASS from users.USERS limit 1;\" | sqlite3 /FisGo/usersDb.db\n";
+                line = CashBoxConnect(getPassCommand);
+                //вводим пароль на кассе
+                strToKeypadConvert(line.get(0));
+            }
+
+            line.clear();
+            //делаем выборку их конфига на кассе, проверем, открыта смена или нет
+            String getOpenShiftCommand = "echo \"attach '/FisGo/configDb.db' as config; " +
+                    "select OPEN_SHIFT_DATE from config.CONFIG;\" | sqlite3 /FisGo/configDb.db\n";
+            line = CashBoxConnect(getOpenShiftCommand);
+            if (line.isEmpty()) {
+                openShift();
+            }
+
+            line.clear();
+
+            String insertCounts = "echo \"attach '/FisGo/countersDb.db' as counters;\n" +
+                    "update counters.COUNTERS set CASH_ON_TOP = 1, ADVENT = 2, ADVENT_CNT = 3, CONSUMPTION = 4,\n" +
+                    "CONSUMPTION_CNT = 5, ADVENT_RETURN = 6, ADVENT_RETURN_CNT = 7, CONSUMPTION_RETURN = 8, CONSUMPTION_RETURN_CNT = 9,\n" +
+                    "INSERTION = 10, INSERTION_CNT = 11, RESERVE = 12, RESERVE_CNT = 13, CASH_IN_FINAL = 14, ADVENT_CARD = 15,\n" +
+                    "ADVENT_CARD_CNT = 16, ADVENT_RETURN_CARD = 17, ADVENT_RETURN_CARD_CNT = 18, ADVENT_TOTAL = 19, CONSUMPTION_TOTAL = 20,\n" +
+                    "ADVENT_RETURN_TOTAL = 21, CONSUMPTION_RETURN_TOTAL = 22, REALIZATION_TOTAL = 23, REPORT_CNT = 24, CASH = 25,\n" +
+                    "CARD = 26, CASH_CNT = 27, CARD_CNT = 28, CONSUMPTION_CARD = 29, CONSUMPTION_CARD_CNT = 30, RET_CONSUMPTION_CARD = 31,\n" +
+                    "RET_CONSUMPTION_CARD_CNT = 32, ADVENT_TOTAL_ABS = 33, CONSUMPTION_TOTAL_ABS = 34, ADVENT_RETURN_TOTAL_ABS = 35,\n" +
+                    "CONSUMPTION_RETURN_TOTAL_ABS = 36, REALIZATION_TOTAL_ABS = 37, CURR_RECEIPT_NUM = 38, CURR_SHIFT_NUM = 39 WHERE ID = 1;\n" +
+                    "\" | sqlite3 /FisGo/configDb.db";
+            CashBoxConnect(insertCounts);
+            //перезапускаем фискат
+            tcpSocket.socketClose();
+
+            //перезапускаем фискат
+            CashBoxConnect("/sbin/reboot");
+            sleepMiliSecond(25000);
+
+            manager.initSession(CashboxIP, USERNAME, PORT, PASSWORD);
+            tcpSocket.setReadAllInstruction(false);
+            tcpSocket.setFlagGetScreen(true);
+            tcpSocket.createSocket(CashboxIP, Integer.parseInt(CashboxPort));
+
+            //проверяем, что открыт экран ввода пароля
+            compare = compareScreen(screenPicture.PASSWORD);
+            //если полученный экран с кассы совпадает с экраном ввода пароля, то выполняем if
+            if (compare) {
+                //делаем выборку их БД users на кассе, получаем пароль одного из них
+                String getPassCommand = "echo \"attach '/FisGo/usersDb.db' as users; " +
+                        "select PASS from users.USERS limit 1;\" | sqlite3 /FisGo/usersDb.db\n";
+                line = CashBoxConnect(getPassCommand);
+                //вводим пароль на кассе
+                strToKeypadConvert(line.get(0));
+            }
+            //setLogLevel(readDataScript("src\\test\\resourses\\set_log_level_debug.txt"));
+            xCount();
+            sleepMiliSecond(6000);
+            //setLogLevel(readDataScript("src\\test\\resourses\\set_log_level_error.txt"));
+
+
+
+/*
+X-отчет в логе:
+Приход          *  0 =     0.00
+ Возврат прихода *  0 =     0.00
+ Расход          *  0 =     0.00
+ Возврат расхода *  0 =     0.00
+ ИТОГО ПРИХОДА        =     0.00
+ ИТОГО РАСХОДА        =     0.00
+ ИТОГО ВОЗВРАТ ПРИХОДА
+                      =     0.00
+ ИТОГО ВОЗВРАТ РАСХОДА
+                      =     0.00
+ ИТОГО РЕАЛИЗАЦИЯ     =     0.00
+
+      06.01.2018  16:29
+
+
+*/
+
+
+        } else {
+            fail("Касса не в учебном режиме");
+        }
+    }
     /***************************************************************************************************/
 
     //Чтение параметров сценария из файла
@@ -1093,6 +1288,7 @@ public class CashTest {
         pressKeyBot(keyEnum.key7, 0, 1);
         pressKeyBot(keyEnum.keyEnter, 0, 2);
         tcpSocket.setFlagPause(true, 17);
+        sleepMiliSecond(20000);
     }
     //Смена данных юрлица
     private int re_registrationLegalEntity(List <String> keyWordArray) {
@@ -1163,37 +1359,44 @@ public class CashTest {
     }
     //Открытие смены
     private int openShift() {
-        System.out.println("open shift");
         //делаем выборку их конфига на кассе, проверем, открыта смена или нет
-        String getOpenShiftCommand = "echo \"attach '/FisGo/configDb.db' as users; " +
+        String getOpenShiftCommand = "echo \"attach '/FisGo/configDb.db' as config; " +
                 "select OPEN_SHIFT_DATE from config.CONFIG;\" | sqlite3 /FisGo/configDb.db\n";
-        List <String> line = CashBoxConnect(getOpenShiftCommand);
+        List <String> line = new ArrayList<>();
+        line.clear();
+        line = CashBoxConnect(getOpenShiftCommand);
         if (line.isEmpty()) {
             pressKeyBot(keyEnum.keyMenu, 0, 1);
             pressKeyBot(keyEnum.key1, 0, 1);
             boolean compare = compareScreen(screenPicture.OPEN_SHIFT_MENU);
             if (compare) {
+                dateStr.clear();
+                dateStr = CashBoxConnect(sqlCommands.getDateCommand());
                 pressKeyBot(keyEnum.keyEnter, 0, 2);
-                tcpSocket.setFlagPause(true, 10);
+                sleepMiliSecond(8000);
+                tcpSocket.setFlagPause(true, 8);
             } else {
                 writeLogFile("Пункт открытия смены не доступен");
                 return -2;
             }
-            return 0;
+
+            compare = compareScreen(screenPicture.FREE_SALE_MODE);
+            if (compare) {
+                return 0;
+            } else {
+                return -3;
+            }
         }
         else
             return -1;
     }
     //Продажа, приход
     private int checkPrintSaleComming(List <String> keyWordArray) {
-        System.out.println("in checkPrintSaleComming");
         sleepMiliSecond(1000);
-
         pressKeyBot(keyEnum.keyMenu, 0, 1);
         pressKeyBot(keyEnum.keyCancel, 0, 1);
         sleepMiliSecond(1000);
         boolean compare = compareScreen(screenPicture.FREE_SALE_MODE);
-        System.out.println("compare = " + compare);
         if (compare) {
             String countCheckStr = searchForKeyword("check_count: ", keyWordArray);
             if (countCheckStr.equals("CANNOT FIND KEYWORD")) {
@@ -1203,118 +1406,139 @@ public class CashTest {
             String tmpGoodsStr = searchForKeyword("Good ", keyWordArray);
             if (tmpGoodsStr.equals("CANNOT FIND KEYWORD")) {
                 writeLogFile("Не найдены товары, которые необходимо добавить в чек");
-                return -1;
-            } else {
+                return -2;
+            }
+            else {
                 int countChecks = Integer.parseInt(countCheckStr);
                 for (int i = 0; i < countChecks; i++) {
-                    checkPrint(keyWordArray);
+                    int resPrintCheck = checkPrint(keyWordArray);
+                    switch (resPrintCheck) {
+                        case -1:
+                            return -3;
+                        case -2:
+                            return -4;
+                        case -3:
+                            return -5;
+                        case -5:
+                            return -6;
+                        case -4:
+                            return -7;
+
+                        default:
+                            break;
+                    }
                 }
             }
         } else {
             writeLogFile("Не открыт экран продажи (режим свободной цены)");
+            return -1;
         }
         return 0;
     }
-    private void checkPrint(List <String> keyWordArray) {
-        System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!in checkPrint");
-        String tmpGoodsStr;
-       // System.out.println("countGoods = " + sale.getCountGoods());
-        for (int j = 0; j < 3 /*sale.getCountGoods()*/; j++) {
-            //bool compare = compareScreen(SCREEN);
-            //if (compare)
-            //{
-            tmpGoodsStr = searchForKeyword("good_from_" + (j + 1) + ": ", keyWordArray);
-            System.out.println("good_from_ = " + tmpGoodsStr);
-            if (tmpGoodsStr.equals("CANNOT FIND KEYWORD")) {
-                writeLogFile("Goods not found in input file");
-                return;
-            }
-            if (tmpGoodsStr.equals("good_from_base")) {
-                pressKeyBot(keyEnum.keyGoods, 0, 1);
-                tmpGoodsStr = searchForKeyword("good_code_" + (j + 1) + ": ", keyWordArray);
-                System.out.println();
-                strToKeypadConvert(tmpGoodsStr);
-                pressKeyBot(keyEnum.keyEnter, 0, 1);
-                tmpGoodsStr = searchForKeyword("good_base_free_price_" + (j + 1) + ": ", keyWordArray);
-                //       System.out.println("(free price base) tmpGoodsStr = " + tmpGoodsStr);
-                if (!tmpGoodsStr.equals("CANNOT FIND KEYWORD")) {
-                    System.out.println("tmpGoodsStr = " + tmpGoodsStr);
-                    strToKeypadConvert(tmpGoodsStr);
-                    pressKeyBot(keyEnum.keyEnter, 0, 1);
-                }
-                tmpGoodsStr = searchForKeyword("good_type_" + (j + 1) + ": ", keyWordArray);
-                if (tmpGoodsStr.equals("weighted")) {
-                    tmpGoodsStr = searchForKeyword("good_weight_" + (j + 1) + ": ", keyWordArray);
-                    if (tmpGoodsStr.equals("CANNOT FIND KEYWORD")) {
-                        writeLogFile("Goods type not found in input file");
-                        return;
-                    }
-                    strToKeypadConvert(tmpGoodsStr);
-                    pressKeyBot(keyEnum.keyEnter, 0, 1);
-                }
-            }
-            if (tmpGoodsStr.equals("good_free_price")) {
-                System.out.println("tmpGoodsStr.equals(\"good_free_price\")");
-                tmpGoodsStr = searchForKeyword("good_price_" + (j + 1) + ": ", keyWordArray);
-                System.out.println("tmpGoodsStr = " + tmpGoodsStr);
-                strToKeypadConvert(tmpGoodsStr);
-                pressKeyBot(keyEnum.keyEnter, 0, 1);
-            }
-            tmpGoodsStr = searchForKeyword("good_type_" + (j + 1) + ": ", keyWordArray);
-            if (tmpGoodsStr.equals("countable")) {
-                tmpGoodsStr = searchForKeyword("good_count_" + (j + 1) + ": ", keyWordArray);
-                if (tmpGoodsStr.equals("CANNOT FIND KEYWORD")) {
-                    writeLogFile("Goods count not found in input file");
-                    return;
-                }
-                if (Integer.parseInt(tmpGoodsStr) > 1) {
-                    pressKeyBot(keyEnum.keyQuantity, 0, 1);
-                    strToKeypadConvert(tmpGoodsStr);
-                    pressKeyBot(keyEnum.keyEnter, 0, 1);
-                }
-            }
+    //Формирование и печать чека
+    private int checkPrint(List <String> keyWordArray) {
+        dateStr.clear();
+        int countGoods = 0;
+        for (String tmpStr: keyWordArray) {
+            if (tmpStr.contains("Good "))
+                countGoods++;
+        }
+        if (countGoods == 0)
+            return -1;
 
-            tmpGoodsStr = searchForKeyword("spacial_form_" + (j + 1) + ": ", keyWordArray);
-            if (!tmpGoodsStr.equals("CANNOT FIND KEYWORD"))
-                holdKey(keyEnum.keyMenu, 0, 1);
-            if (tmpGoodsStr.equals("ПР"))
-                pressKeyBot(keyEnum.key1, 0, 1);
-            if (tmpGoodsStr.equals("ЧП")) {
-                pressKeyBot(keyEnum.key2, 0, 1);
-                tmpGoodsStr = searchForKeyword("special_form_prepayment_sum_" + (j + 1) + ": ", keyWordArray);
-                strToKeypadConvert(tmpGoodsStr);
-                pressKeyBot(keyEnum.keyEnter, 0, 1);
+        for (int j = 0; j < countGoods; j++) {
+            String tmpGoodsStr = searchForKeyword("good_from_" + (j + 1) + ": ", keyWordArray);
+            if (tmpGoodsStr.equals("CANNOT FIND KEYWORD")) {
+                writeLogFile("Не указан способ добавления товара " + (j + 1) + "в чек");
+                return -2;
             }
-            if (tmpGoodsStr.equals("А"))
-                pressKeyBot(keyEnum.key3, 0, 1);
-            if (tmpGoodsStr.equals("П")){
-                pressKeyBot(keyEnum.key4, 0, 1);
-                tmpGoodsStr = searchForKeyword("special_form_offset_of_prepayment_sum_" + (j + 1) + ": ", keyWordArray);
-                strToKeypadConvert(tmpGoodsStr);
-                pressKeyBot(keyEnum.keyEnter, 0, 1);
+            else {
+                if (tmpGoodsStr.equals("good_from_base")) {
+                    pressKeyBot(keyEnum.keyGoods, 0, 1);
+                    tmpGoodsStr = searchForKeyword("good_code_" + (j + 1) + ": ", keyWordArray);
+                    strToKeypadConvert(tmpGoodsStr);
+                    pressKeyBot(keyEnum.keyEnter, 0, 1);
+                    //товар из базы со свободной ценой
+                    tmpGoodsStr = searchForKeyword("good_base_free_price_" + (j + 1) + ": ", keyWordArray);
+                    if (!tmpGoodsStr.equals("CANNOT FIND KEYWORD")) {
+                        strToKeypadConvert(tmpGoodsStr);
+                        pressKeyBot(keyEnum.keyEnter, 0, 1);
+                    }
+                    //весовой товар из базы
+                    tmpGoodsStr = searchForKeyword("good_type_" + (j + 1) + ": ", keyWordArray);
+                    if (tmpGoodsStr.equals("weighted")) {
+                        tmpGoodsStr = searchForKeyword("good_weight_" + (j + 1) + ": ", keyWordArray);
+                        if (tmpGoodsStr.equals("CANNOT FIND KEYWORD")) {
+                            writeLogFile("Не указан тип товара во входном файле сценария");
+                            return -3;
+                        }
+                        strToKeypadConvert(tmpGoodsStr);
+                        pressKeyBot(keyEnum.keyEnter, 0, 1);
+                    }
+                }
+                if (tmpGoodsStr.equals("good_free_price")) {
+                    tmpGoodsStr = searchForKeyword("good_price_" + (j + 1) + ": ", keyWordArray);
+                    strToKeypadConvert(tmpGoodsStr);
+                    pressKeyBot(keyEnum.keyEnter, 0, 1);
+                }
+                //если штучный товар, то смотрим еолимчество
+                tmpGoodsStr = searchForKeyword("good_type_" + (j + 1) + ": ", keyWordArray);
+                if (tmpGoodsStr.equals("countable")) {
+                    tmpGoodsStr = searchForKeyword("good_count_" + (j + 1) + ": ", keyWordArray);
+                    if (tmpGoodsStr.equals("CANNOT FIND KEYWORD")) {
+                        writeLogFile("Не указано количество товара во входном файле сценария");
+                        return -4;
+                    }
+                    if (Integer.parseInt(tmpGoodsStr) > 1) {
+                        pressKeyBot(keyEnum.keyQuantity, 0, 1);
+                        strToKeypadConvert(tmpGoodsStr);
+                        pressKeyBot(keyEnum.keyEnter, 0, 1);
+                    }
+                }
+
+                tmpGoodsStr = searchForKeyword("spacial_form_" + (j + 1) + ": ", keyWordArray);
+                if (!tmpGoodsStr.equals("CANNOT FIND KEYWORD")) {
+                    holdKey(keyEnum.keyMenu, 0, 1);
+                    if (tmpGoodsStr.equals("ПР"))
+                        pressKeyBot(keyEnum.key1, 0, 1);
+                    if (tmpGoodsStr.equals("ЧП")) {
+                        pressKeyBot(keyEnum.key2, 0, 1);
+                        tmpGoodsStr = searchForKeyword("special_form_prepayment_sum_" + (j + 1) + ": ", keyWordArray);
+                        strToKeypadConvert(tmpGoodsStr);
+                        pressKeyBot(keyEnum.keyEnter, 0, 1);
+                    }
+                    if (tmpGoodsStr.equals("А"))
+                        pressKeyBot(keyEnum.key3, 0, 1);
+                    if (tmpGoodsStr.equals("П")){
+                        pressKeyBot(keyEnum.key4, 0, 1);
+                        tmpGoodsStr = searchForKeyword("special_form_offset_of_prepayment_sum_" + (j + 1) + ": ", keyWordArray);
+                        strToKeypadConvert(tmpGoodsStr);
+                        pressKeyBot(keyEnum.keyEnter, 0, 1);
+                    }
+                    if (tmpGoodsStr.equals("КР"))
+                        pressKeyBot(keyEnum.key5, 0, 1);
+                    if (tmpGoodsStr.equals("ЧК")) {
+                        pressKeyBot(keyEnum.key6, 0, 1);
+                        tmpGoodsStr = searchForKeyword("special_form_credit_sum_" + (j + 1) + ": ", keyWordArray);
+                        strToKeypadConvert(tmpGoodsStr);
+                        pressKeyBot(keyEnum.keyEnter, 0, 1);
+                    }
+                    if (tmpGoodsStr.equals("К")) {
+                        pressKeyBot(keyEnum.key7, 0, 1);
+                        tmpGoodsStr = searchForKeyword("special_form_credit_pay_sum_" + (j + 1) + ": ", keyWordArray);
+                        strToKeypadConvert(tmpGoodsStr);
+                        pressKeyBot(keyEnum.keyEnter, 0, 1);
+                    }
+                }
             }
-            if (tmpGoodsStr.equals("КР"))
-                pressKeyBot(keyEnum.key5, 0, 1);
-            if (tmpGoodsStr.equals("ЧК")) {
-                pressKeyBot(keyEnum.key6, 0, 1);
-                tmpGoodsStr = searchForKeyword("special_form_credit_sum_" + (j + 1) + ": ", keyWordArray);
-                strToKeypadConvert(tmpGoodsStr);
-                pressKeyBot(keyEnum.keyEnter, 0, 1);
-            }
-            if (tmpGoodsStr.equals("К")) {
-                pressKeyBot(keyEnum.key7, 0, 1);
-                tmpGoodsStr = searchForKeyword("special_form_credit_pay_sum_" + (j + 1) + ": ", keyWordArray);
-                strToKeypadConvert(tmpGoodsStr);
-                pressKeyBot(keyEnum.keyEnter, 0, 1);
-            }
-            pressKeyBot(keyEnum.keyEnter, 0, 1);
         }
 
         //Тип оплаты чека
-        tmpGoodsStr = searchForKeyword("type_pay: ", keyWordArray);
+        String tmpGoodsStr = searchForKeyword("type_pay: ", keyWordArray);
+        System.out.println("type_pay: " + tmpGoodsStr);
         if (tmpGoodsStr.equals("CANNOT FIND KEYWORD")) {
-            writeLogFile("Pay type not found in input file");
-            return;
+            writeLogFile("Не указан способ оплаты во входном файле сценария");
+            return -5;
         } else {
             if (tmpGoodsStr.equals("cash_pay")) {
                 pressKeyBot(keyEnum.keyPayByCash, 0, 1);
@@ -1327,13 +1551,18 @@ public class CashTest {
 
             pressKeyBot(keyEnum.keyEnter, 0, 1);
         }
-        tcpSocket.setFlagPause(true, 20);
-    }
+        //получить дату из кассы
+        String getDateCommand = " date '+%d%m%y%H%M'\n";
+        dateStr.add(CashBoxConnect(getDateCommand).get(0));
 
+        tcpSocket.setFlagPause(true, 20);
+        sleepMiliSecond(20000);
+        return 0;
+    }
 
     //Добавление товаров на кассу
     //FIXME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!разобраться с русскими символами!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    private void addGoodsOnCash() {
+    private void addGoodsOnCash(){
         //вставляем товары из файла
         StringBuilder addGoodCmd = new StringBuilder();
         addGoodCmd.append("echo \"attach '/FisGo/goodsDb.db' as goods; ");
@@ -1370,6 +1599,44 @@ public class CashTest {
             insertGoodCodeCmd.append("\" | sqlite3 /FisGo/goodsDb.db\n");
 
             CashBoxConnect(insertGoodCodeCmd.toString());
+        }
+    }
+    //Устанавливаем уровень лога
+    private void setLogLevel(List <String> dataList) {
+        pressKeyBot(keyEnum.keyMenu, 0, 1);
+        pressKeyBot(keyEnum.key4, 0, 2);
+        pressKeyBot(keyEnum.key1, 0, 1);
+        String logLevel = searchForKeyword("level_log: ", dataList);
+        System.out.println("logLevel = " + logLevel);
+
+        if (logLevel.equals("CANNOT FIND KEYWORD"))
+            writeLogFile("Не установлен уровень лога");
+        else {
+            if (logLevel.equals("Ошибки"))
+                pressKeyBot(keyEnum.key1, 0, 1);
+            if (logLevel.equals("Предупреждения"))
+                pressKeyBot(keyEnum.key2, 0, 1);
+            if (logLevel.equals("Информация"))
+                pressKeyBot(keyEnum.key3, 0, 1);
+            if (logLevel.equals("Отладка"))
+                pressKeyBot(keyEnum.key4, 0, 1);
+
+            pressKeyBot(keyEnum.keyEnter, 0, 1);
+        }
+        tcpSocket.setFlagPause(true, 2);
+    }
+    //Печать Х-отчета
+    private void xCount() {
+        pressKeyBot(keyEnum.keyMenu, 0, 1);
+        pressKeyBot(keyEnum.key1, 0, 1);
+        boolean compare = compareScreen(screenPicture.SHIFT_MENU_OPEN_SHIFT);
+        if (compare) {
+            pressKeyBot(keyEnum.key3, 0, 1);
+            tcpSocket.setFlagPause(true, 4);
+        }
+        else {
+            writeLogFile("X-отчет не доступен");
+            return;
         }
     }
 
@@ -1570,13 +1837,6 @@ public class CashTest {
             tcpSocket.setFlagPause(true, 10);
         }
     }
-
-
-
-
-
-
-
 
 
     private void printNumberRegistrationResult() throws IOException {
@@ -2523,24 +2783,7 @@ public class CashTest {
         }
     }
 
-  /*  private void enterPassBot() {
-        System.out.println("in enterPassBot");
-        boolean compare = compareScreen(screenPicture.PASSWORD);
-        //если полученный экран с кассы совпадает с экраном ввода пароля, то выполняем if
-        if (compare) {
-            System.out.println("in enterPassBot compare == true");
-            String pass = searchForKeyword("password: ");
-            if (pass == "CANNOT FIND KEYWORD")
-                writeLogFile("Пароль не найден в файле сценария.");
-            strToKeypadConvert(pass);
-            compare = compareScreen(screenPicture.INCORRECT_PASSWORD);
-            if (compare) writeLogFile("Введен неверный пароль");
-            else writeLogFile("Введен верный пароль");
-        } else {
-            writeLogFile("Экран ввода пароля не открыт.");
-            return;
-        }
-    }
+  /*
 
     private void checkPrintRefundConsumption() throws IOException {
         System.out.println("in checkPrintRefundConsuption");
@@ -2616,133 +2859,7 @@ public class CashTest {
         //     tcpSocket.setFlagTcpSocket(true);
         //   tcpSocket.createSocket(cashboxIP.getText(), Integer.parseInt(cashboxPort.getText()));
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-    private void checkPrint(List <String> keyWordArray) {
-        System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!in checkPrint");
-        String tmpGoodsStr;
-        //System.out.println("countGoods = " + sale.getCountGoods());
-        for (int j = 0; j < 1/*sale.getCountGoods()*/;/* j++) {
-            //bool compare = compareScreen(SCREEN);
-            //if (compare)
-            //{
-            tmpGoodsStr = searchForKeyword("good_from_" + (j + 1) + ": ", keyWordArray);
-            System.out.println("good_from_ = " + tmpGoodsStr);
-            if (tmpGoodsStr.equals("CANNOT FIND KEYWORD")) {
-                writeLogFile("Goods not found in input file");
-                return;
-            }
-            if (tmpGoodsStr.equals("good_from_base")) {
-                pressKeyBot(keyEnum.keyGoods, 0, 1);
-                tmpGoodsStr = searchForKeyword("good_code_" + (j + 1) + ": ", keyWordArray);
-                System.out.println();
-                strToKeypadConvert(tmpGoodsStr);
-                pressKeyBot(keyEnum.keyEnter, 0, 1);
-                tmpGoodsStr = searchForKeyword("good_base_free_price_" + (j + 1) + ": ", keyWordArray);
-                //       System.out.println("(free price base) tmpGoodsStr = " + tmpGoodsStr);
-                if (!tmpGoodsStr.equals("CANNOT FIND KEYWORD")) {
-                    System.out.println("tmpGoodsStr = " + tmpGoodsStr);
-                    strToKeypadConvert(tmpGoodsStr);
-                    pressKeyBot(keyEnum.keyEnter, 0, 1);
-                }
-                tmpGoodsStr = searchForKeyword("good_type_" + (j + 1) + ": ", keyWordArray);
-                if (tmpGoodsStr.equals("weighted")) {
-                    tmpGoodsStr = searchForKeyword("good_weight_" + (j + 1) + ": ", keyWordArray);
-                    if (tmpGoodsStr.equals("CANNOT FIND KEYWORD")) {
-                        writeLogFile("Goods type not found in input file");
-                        return;
-                    }
-                    strToKeypadConvert(tmpGoodsStr);
-                    pressKeyBot(keyEnum.keyEnter, 0, 1);
-                }
-            }
-            if (tmpGoodsStr.equals("good_free_price")) {
-                System.out.println("tmpGoodsStr.equals(\"good_free_price\")");
-                tmpGoodsStr = searchForKeyword("good_price_" + (j + 1) + ": ", keyWordArray);
-                System.out.println("tmpGoodsStr = " + tmpGoodsStr);
-                strToKeypadConvert(tmpGoodsStr);
-                pressKeyBot(keyEnum.keyEnter, 0, 1);
-            }
-            tmpGoodsStr = searchForKeyword("good_type_" + (j + 1) + ": ", keyWordArray);
-            if (tmpGoodsStr.equals("countable")) {
-                tmpGoodsStr = searchForKeyword("good_count_" + (j + 1) + ": ", keyWordArray);
-                if (tmpGoodsStr.equals("CANNOT FIND KEYWORD")) {
-                    writeLogFile("Goods count not found in input file");
-                    return;
-                }
-                if (Integer.parseInt(tmpGoodsStr) > 1) {
-                    pressKeyBot(keyEnum.keyQuantity, 0, 1);
-                    strToKeypadConvert(tmpGoodsStr);
-                    pressKeyBot(keyEnum.keyEnter, 0, 1);
-                }
-            }
-
-            tmpGoodsStr = searchForKeyword("spacial_form_" + (j + 1) + ": ", keyWordArray);
-            if (!tmpGoodsStr.equals("CANNOT FIND KEYWORD"))
-                holdKey(keyEnum.keyMenu, 0, 1);
-            if (tmpGoodsStr.equals("ПР"))
-                pressKeyBot(keyEnum.key1, 0, 1);
-            if (tmpGoodsStr.equals("ЧП")) {
-                pressKeyBot(keyEnum.key2, 0, 1);
-                tmpGoodsStr = searchForKeyword("special_form_prepayment_sum_" + (j + 1) + ": ", keyWordArray);
-                strToKeypadConvert(tmpGoodsStr);
-                pressKeyBot(keyEnum.keyEnter, 0, 1);
-            }
-            if (tmpGoodsStr.equals("А"))
-                pressKeyBot(keyEnum.key3, 0, 1);
-            if (tmpGoodsStr.equals("П")){
-                pressKeyBot(keyEnum.key4, 0, 1);
-                tmpGoodsStr = searchForKeyword("special_form_offset_of_prepayment_sum_" + (j + 1) + ": ", keyWordArray);
-                strToKeypadConvert(tmpGoodsStr);
-                pressKeyBot(keyEnum.keyEnter, 0, 1);
-            }
-            if (tmpGoodsStr.equals("КР"))
-                pressKeyBot(keyEnum.key5, 0, 1);
-            if (tmpGoodsStr.equals("ЧК")) {
-                pressKeyBot(keyEnum.key6, 0, 1);
-                tmpGoodsStr = searchForKeyword("special_form_credit_sum_" + (j + 1) + ": ", keyWordArray);
-                strToKeypadConvert(tmpGoodsStr);
-                pressKeyBot(keyEnum.keyEnter, 0, 1);
-            }
-            if (tmpGoodsStr.equals("К")) {
-                pressKeyBot(keyEnum.key7, 0, 1);
-                tmpGoodsStr = searchForKeyword("special_form_credit_pay_sum_" + (j + 1) + ": ", keyWordArray);
-                strToKeypadConvert(tmpGoodsStr);
-                pressKeyBot(keyEnum.keyEnter, 0, 1);
-            }
-            pressKeyBot(keyEnum.keyEnter, 0, 1);
-        }
-
-        //Тип оплаты чека
-        tmpGoodsStr = searchForKeyword("type_pay: ", keyWordArray);
-        if (tmpGoodsStr.equals("CANNOT FIND KEYWORD")) {
-            writeLogFile("Pay type not found in input file");
-            return;
-        } else {
-            if (tmpGoodsStr.equals("cash_pay")) {
-                pressKeyBot(keyEnum.keyPayByCash, 0, 1);
-                tmpGoodsStr = searchForKeyword("sum_pay: ", keyWordArray);
-                strToKeypadConvert(tmpGoodsStr);
-            }
-            if (tmpGoodsStr.equals("card_pay")) {
-                pressKeyBot(keyEnum.keyPayByCard, 0, 1);
-            }
-
-            pressKeyBot(keyEnum.keyEnter, 0, 1);
-        }
-        tcpSocket.setFlagPause(true, 20);
-    }*/
+*/
 
     private void pressKeyBot(int keyNum, int keyNum2,  int pressCount) {
         for (int i = 0; i < pressCount; i++)
@@ -2750,6 +2867,7 @@ public class CashTest {
     }
 
     private void holdKey(int keyNum, int keyNum2,  int pressCount) {
+        sleepMiliSecond(500);
         tcpSocket.setFlagPauseEnter(true);
         tcpSocket.sendPressKey(keyNum, keyNum2, 2);
     }
@@ -2809,6 +2927,9 @@ public class CashTest {
 
                 case FREE_SALE_MODE:
                     return strFromFile.equals(screens.freeSaleModeScreen);
+
+                case NOT_ENOUGH_MONEY:
+                    return strFromFile.equals(screens.notEnoughMoneyScreen);
 
                 default:
                     return false;

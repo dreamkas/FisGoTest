@@ -919,9 +919,10 @@ public class TCPSocket {
         try {
 
             setFlagKeypadMode(false);
+            setFlagGetScreen(false);
             createData(1);
             setFlagTcpSocket(false);
-            setFlagGetScreen(false);
+
         } catch (Exception e) {
             e.printStackTrace();
         }

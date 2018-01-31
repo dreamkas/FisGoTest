@@ -14,23 +14,24 @@ public class Screens {
         screensInit();
     }
 
-    public String passwodScreen;
-    public String registrationScreen;
-    public String registrationFiscalModeScreen;
-    public String getRegistrationDataFromCabinetScreen;
-    public String incorrectPasswodScreen;
-    public String menuRegistrationScreen;
-    public String wrongRegNumberScreen;
-    public String emptyScreen;
-    public String reRegistrationMenuScreen;
-    public String reRegistrationMenuNotAutonomicScreen;
-    public String documentNotSendedScreen;
-    public String turnOffScreen;
-    public String openShiftMenuScreen;
-    public String shiftMenuOpenShiftScreen;
-    public String lessMoneyInCashboxtScreen;
-    public String freeSaleModeScreen;
-    public String menuAfterPasswdScreen;
+    public String passwodScreen,
+            registrationScreen,
+            registrationFiscalModeScreen,
+            getRegistrationDataFromCabinetScreen,
+            incorrectPasswodScreen,
+            menuRegistrationScreen,
+            wrongRegNumberScreen,
+            emptyScreen,
+            reRegistrationMenuScreen,
+            reRegistrationMenuNotAutonomicScreen,
+            documentNotSendedScreen,
+            turnOffScreen,
+            openShiftMenuScreen,
+            shiftMenuOpenShiftScreen,
+            lessMoneyInCashboxtScreen,
+            freeSaleModeScreen,
+            menuAfterPasswdScreen,
+            notEnoughMoneyScreen;
 
     private String readScreenFile(String fileName) {
         try {
@@ -59,6 +60,7 @@ public class Screens {
         lessMoneyInCashboxtScreen = readScreenFile("./screens/lessMoneyInCashbox.bmp");
         freeSaleModeScreen = readScreenFile("./screens/freeSaleMode.bmp");
         menuAfterPasswdScreen = readScreenFile("./screens/menuAfterPasswd.bmp");
-        wrongRegNumberScreen = readScreenFile("./screens/wrongRegNumber.bmp");;
+        wrongRegNumberScreen = readScreenFile("./screens/wrongRegNumber.bmp");
+        notEnoughMoneyScreen = readScreenFile("./screens/notEnoughMoney.bmp");
     }
 }
