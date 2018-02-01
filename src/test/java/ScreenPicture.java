@@ -1,4 +1,4 @@
-/**
+/*
  * Created by v.bochechko on 04.12.2017.
  */
 enum ScreenPicture {
@@ -22,5 +22,6 @@ enum ScreenPicture {
     SHIFT_MENU_OPEN_SHIFT,
     LESS_MONEY_IN_CASHBOX,
     FREE_SALE_MODE,
-    NOT_ENOUGH_MONEY
+    NOT_ENOUGH_MONEY,
+    FREE_SALE_MODE_CHANGE_400
 }

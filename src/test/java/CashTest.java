@@ -31,7 +31,7 @@ public class CashTest {
     private Screens screens = new Screens();
     private ScreenPicture screenPicture;
 
-    private Vector<String> instruction_table = new Vector<String>();
+    private Vector<String> instruction_table = new Vector<>();
     private Keypad keypad = new Keypad();
     private KeypadMode keypadMode = new KeypadMode();
     private static int keypad_mode = 0; //= keypadMode.FREE_MODE;//SPEC_SYMBOLS;//ENGLISH;//CYRILLIC;
@@ -49,6 +49,7 @@ public class CashTest {
 
     List<String> dateStr = new ArrayList<>();
     private SQLCommands sqlCommands = new SQLCommands();
+    private ParseCount parseCount = new ParseCount();
 
     @Before
     public void before_test_clear_cashbox() {
@@ -65,7 +66,7 @@ public class CashTest {
          *************Сброс кассы (выполнение тех. обнуления)*************
          ****************************************************************/
         //проверяем, что открыт экран ввода пароля
-      /*  boolean compare = compareScreen(screenPicture.PASSWORD);
+    /*    boolean compare = compareScreen(screenPicture.PASSWORD);
         //если полученный экран с кассы совпадает с экраном ввода пароля, то выполняем if
         if (compare) {
             //делаем выборку их БД users на кассе, получаем пароль одного из них
@@ -328,14 +329,11 @@ public class CashTest {
             fail("Stage != 2, Касса незарегистрирована!");
     }
     /***************************************Тесты на продажу********************************************/
-    /****************ККТ в учебном режиме, продажа - приход, наличные, все виды товаров*****************/
+    /******ККТ в учебном режиме, продажа - приход, наличные, товар по свободной цене, итог 100 руб.*****/
     @Test
     public void sale_advent_learning_mode() {
         //проверяем, что stage кассы = 0
-        String getStageCommand = "echo \"attach '/FisGo/configDb.db' as config; " +
-                "select STAGE from config.CONFIG;\"" +
-                " | sqlite3 /FisGo/configDb.db\n";
-        List<String> line = CashBoxConnect(getStageCommand);
+        List<String> line = CashBoxConnect(sqlCommands.getStageCommand());
         if (line.get(0).equals("0")) {
             //проверяем, что открыт экран ввода пароля
             boolean compare = compareScreen(screenPicture.PASSWORD);
@@ -351,72 +349,242 @@ public class CashTest {
 
             line.clear();
             //делаем выборку их конфига на кассе, проверем, открыта смена или нет
-            String getOpenShiftCommand = "echo \"attach '/FisGo/configDb.db' as config; " +
-                    "select OPEN_SHIFT_DATE from config.CONFIG;\" | sqlite3 /FisGo/configDb.db\n";
-            line = CashBoxConnect(getOpenShiftCommand);
-            if (line.isEmpty()) {
+            line = CashBoxConnect(sqlCommands.getOpenShiftCommand());
+            if (line.get(0).isEmpty() && (Integer.parseInt(line.get(1)) == 0)) {
                 openShift();
             }
 
-            line.clear();
             //делаем выборку из базы чеков
-            String getCheckCountCommand = "echo \"attach '/FisGo/receiptsDb.db' as receipts; " +
-                    "select count (*) from receipts.RECEIPTS;\" | sqlite3 /FisGo/receiptsDb.db\n";
-            line = CashBoxConnect(getCheckCountCommand);
+            line.clear();
+            line = CashBoxConnect(sqlCommands.getRecieptCountCommand());
             int countCheck = Integer.parseInt(line.get(0));
+            line.clear();
+
+            //делаем выборку из базы счетчиков
+            int [] countBegin = parseCount.parseCountValueFromStr(CashBoxConnect(sqlCommands.getCountersAdventValueCommand()).get(0));
 
             //читаем из файла сценарий пробития чека
-            List<String> listScript = readDataScript("src\\test\\resourses\\sale_advent_learning_mode.txt");
-            int checkResult = checkPrintSaleComming(listScript);
-            if (checkResult == -1)
-                fail("Не открыт экран продажи (режим свободной цены)");
-            if (checkResult == -2)
-                fail("Не найдены товары, которые необходимо добавить в чек");
-            if (checkResult == -3)
-                fail("Не найдены товары, которые необходимо добавить в чек в методе печати чека");
-            if (checkResult == -4)
-                fail("Не указан способ добавления товара в чек");
-            if (checkResult == -5)
-                fail("Не указано количество товара во входном файле сценария");
-            if (checkResult == -6)
-                fail("Не указан способ оплаты во входном файле сценария");
-            if (checkResult == -7)
-                fail("Не указан тип товара во входном файле сценария");
-            if (checkResult == 0) {
-                line = CashBoxConnect(getCheckCountCommand);
-                int countCheckTest = Integer.parseInt(line.get(0));
-                if ((countCheckTest - countCheck) == 1) {
-                    System.out.println("date = " + dateStr.get(0));
+            List<String> listScript = readDataScript("src\\test\\resourses\\sale_advent_treaning_mode_free_price.txt");
+            int testResult = checkPrintSaleComming(listScript, screenPicture.FREE_SALE_MODE_CHANGE_400);
+            switch (testResult) {
+                case -1: {
+                    fail("Не открыт экран продажи (режим свободной цены)");
+                    break;
+                }
+                case -2: {
+                    fail("Не найдены товары, которые необходимо добавить в чек");
+                    break;
+                }
+                case -3: {
+                    fail("Не найдены товары, которые необходимо добавить в чек в методе печати чека");
+                    break;
+                }
+                case -4: {
+                    fail("Не указан способ добавления товара в чек");
+                    break;
+                }
+                case -5: {
+                    fail("Не указано количество товара во входном файле сценария");
+                    break;
+                }
+                case -6: {
+                    fail("Не указан способ оплаты во входном файле сценария");
+                    break;
+                }
+                case -7: {
+                    fail("Не указан тип товара во входном файле сценария");
+                    break;
+                }
+                case -8: {
+                    fail("Не совпадает дисплей кассы с ожидаемым экраном сдачи");
+                    break;
+                }
+                case 0: {
+                    line = CashBoxConnect(sqlCommands.getRecieptCountCommand());
+                    int countCheckTest = Integer.parseInt(line.get(0));
+                    if ((countCheckTest - countCheck) == 1) {
+                        //сделать выборку из базы чеков, по дате
+                        String getCheckDateCommand = "echo \"attach '/FisGo/receiptsDb.db' as receipts; " +
+                                "select RECEIPT_CREATE_DATE from receipts.RECEIPTS ORDER BY ID DESC limit 1;\" | sqlite3 /FisGo/receiptsDb.db\n";
+                        line = CashBoxConnect(getCheckDateCommand);
+                        String receiptDate = line.get(0);
+                        if (receiptDate.length() == 12) {
+                            StringBuilder dateStrBuild = new StringBuilder();
+                            dateStrBuild.append(receiptDate.substring(0, 4));
+                            dateStrBuild.append(receiptDate.substring(6));
+                            receiptDate = dateStrBuild.toString();
+                        }
+                        writeLogFile("Тест печати чека в учебном режиме. Дата на кассе: " + dateStr.get(0) + "Дата чека: " + receiptDate);
 
-                    //сделать выборку из базы чеков, по дате
-                    String getCheckDateCommand = "echo \"attach '/FisGo/receiptsDb.db' as receipts; " +
-                            "select RECEIPT_CREATE_DATE from receipts.RECEIPTS ORDER BY ID DESC limit 1;\" | sqlite3 /FisGo/receiptsDb.db\n";
-                    line = CashBoxConnect(getCheckDateCommand);
-                    String receiptDate = line.get(0);
-                    System.out.println("RECEIPT_CREATE_DATE = " + receiptDate);
-                    System.out.println("receiptDate.length() = " + receiptDate.length() );
-                    if (receiptDate.length() == 12) {
-                        StringBuilder dateStrBuild = new StringBuilder();
-                        dateStrBuild.append(receiptDate.substring(0, 4));
-                        dateStrBuild.append(receiptDate.substring(6));
-                        receiptDate = dateStrBuild.toString();
+                        //делаем выборку из базы счетчиков
+                        int[] countAfter = parseCount.parseCountValueFromStr(CashBoxConnect(sqlCommands.getCountersAdventValueCommand()).get(0));
 
+                        //Подсчет общей суммы чека
+                      //  int totalSum = totalReceiptSum(listScript);
+                        String typePayStr = searchForKeyword("type_pay: ", listScript);
+                        int typePay = -1;
+                        if (typePayStr.equals("cash_pay"))
+                            typePay = 0;
+                        if (typePayStr.equals("card_pay"))
+                            typePay = 1;
+
+                        int assertCountRes = assertCount(countBegin, countAfter, 0, 10000, typePay);//totalSum);
+                        if (assertCountRes == 0) {
+                            assertEquals(dateStr.get(0), receiptDate);
+                        } else {
+                            fail("Неверное изменение в базе счетчиков, assertCount = " + assertCountRes);
+                        }
+                        //select * from RECEIPTS ORDER BY ID DESC limit 1;
+                        //POS_COUNT|RECEIVED|DELIVERY|SHIFT_NUM|IS_PAID_CARD|IS_PAID_CASH|ORGANIZATION_NAME|CALCULATION_ADDR|CALCULATION_PLACE|ORGANIZATION_INN|KKT_EMAIL|KKT_PLANT_NUM|CUR_TAX_SYSTEM|CUR_AGENT|OFFLINE_MODE|OFD_NAME|OFD_INN|OFD_SERVER_ADDR|OFD_SERVER_IP|OFD_CHECK_RECEIPT_ADDR|OFD_SERVER_PORT|FD_NUMBER|FPD_NUMBER|RECEIPT_NUM|TYPE|TEL_NUMBER|BYER_EMAIL|DAY|MONTH|YEAR|HOURS|MINUTES|SECONDS|QR_CODE|IS_CABINET_SEND|TOTAL_SUM_RECEIPT|TIMEZONE|EXCESS|TOTAL_SUM_DISPLAY|NDS_NO|NDS_0|NDS_10|NDS_18|NDS_10_110|NDS_18_118|
+                        //    7|    1000000|  975039|    1         0|              1|      ООО "Образец"|  Санкт-Петербург, ул. Мира 1||       012345678910|   kassa@dreamkas.ru|0496000001|1|0|0||||||0|0|0|6|1|||26|1|2018|13|53|4||1|27097|3|0|24961|23545|444|61|0|121|169|
+
+                    } else {
+                        fail("Чек не добавлен в базу receiptsDb.db");
                     }
-                    writeLogFile("Тест печати чека в учебном режиме. Дата на кассе: " + dateStr.get(0) + "Дата чека: " + receiptDate);
-                    assertEquals(dateStr.get(0), receiptDate);
-
-                    //select * from RECEIPTS ORDER BY ID DESC limit 1;
-                  //POS_COUNT|RECEIVED|DELIVERY|SHIFT_NUM|IS_PAID_CARD|IS_PAID_CASH|ORGANIZATION_NAME|CALCULATION_ADDR|CALCULATION_PLACE|ORGANIZATION_INN|KKT_EMAIL|KKT_PLANT_NUM|CUR_TAX_SYSTEM|CUR_AGENT|OFFLINE_MODE|OFD_NAME|OFD_INN|OFD_SERVER_ADDR|OFD_SERVER_IP|OFD_CHECK_RECEIPT_ADDR|OFD_SERVER_PORT|FD_NUMBER|FPD_NUMBER|RECEIPT_NUM|TYPE|TEL_NUMBER|BYER_EMAIL|DAY|MONTH|YEAR|HOURS|MINUTES|SECONDS|QR_CODE|IS_CABINET_SEND|TOTAL_SUM_RECEIPT|TIMEZONE|EXCESS|TOTAL_SUM_DISPLAY|NDS_NO|NDS_0|NDS_10|NDS_18|NDS_10_110|NDS_18_118|
-                  //    7|    1000000|  975039|    1         0|              1|      ООО "Образец"|  Санкт-Петербург, ул. Мира 1||       012345678910|   kassa@dreamkas.ru|0496000001|1|0|0||||||0|0|0|6|1|||26|1|2018|13|53|4||1|27097|3|0|24961|23545|444|61|0|121|169|
-
-                } else
-                    fail("Чек не добавлен в базу receiptsDb.db");
+                    break;
+                }
+                default:
+                    break;
             }
-        }
-        else {
+
+        } else {
             fail("Касса не в учебном режиме");
         }
     }
+    private int assertCount(int [] countBegin, int [] countAfter, int typeCheck, int totalSumReceipt, int typePay){
+        switch (typeCheck) {
+            //Чек продажи, приход
+            case 0: {
+                System.out.println("comming");
+                boolean corectCount = false;
+                //Наличными
+                if (typePay == 0) {
+                    System.out.println("(typePay == 0)");
+                    for (int i = 0; i < countBegin.length; i++) {
+                        System.out.println("i = " + i);
+                        if (countBegin[i] != countAfter[i]) {
+                            System.out.println("countBegin[i] != countAfter[i]");
+                            if ((i == parseCount.ADVENT) || (i == parseCount.CASH_IN_FINAL) ||
+                                    (i == parseCount.ADVENT_TOTAL) || (i == parseCount.REALIZATION_TOTAL) ||
+                                    (i == parseCount.CASH) || (i == parseCount.ADVENT_TOTAL_ABS) ||
+                                    (i == parseCount.REALIZATION_TOTAL_ABS)) {
+                                System.out.println("ADVENT, CASH_IN_FINAL, ADVENT_TOTAL, REALIZATION_TOTAL, CASH, ADVENT_TOTAL_ABS, REALIZATION_TOTAL_ABS");
+                                System.out.println("countAfter[i] - countBegin[i] = " + (countAfter[i] - countBegin[i]));
+                                if (countAfter[i] - countBegin[i] == totalSumReceipt) {
+                                    System.out.println("totalSum");
+                                    corectCount = true;
+                                }
+                                else {
+                                    corectCount = false;
+                                    return -3;
+                                }
+                            }
+                            else {
+                                if ((i == parseCount.ADVENT_CNT) || (i == parseCount.CASH_CNT) ||
+                                        (i == parseCount.CURR_RECEIPT_NUM)) {
+                                    System.out.println("ADVENT_CNT, CASH_CNT, CURR_RECEIPT_NUM");
+                                    if (countAfter[i] - countBegin[i] == 1) {
+                                        System.out.println("1");
+                                        corectCount = true;
+                                    } else {
+                                        corectCount = false;
+                                        return -4;
+                                    }
+                                } else {
+                                    corectCount = false;
+                                    return -2;
+                                }
+                            }
+                        }
+                    }
+                    if (corectCount == true)
+                        return 0;
+                }
+                //Электронными
+                if (typePay == 1) {
+                    for (int i = 0; i < countBegin.length; i++) {
+                        System.out.println("i = " + i);
+                        if (countBegin[i] != countAfter[i]) {
+                            System.out.println("countBegin[i] != countAfter[i]");
+                            if ((i == parseCount.ADVENT_CARD) || (i == parseCount.ADVENT_TOTAL) ||
+                                (i == parseCount.REALIZATION_TOTAL) || (i == parseCount.CARD) ||
+                                (i == parseCount.ADVENT_TOTAL_ABS) || (i == parseCount.REALIZATION_TOTAL_ABS)) {
+                            System.out.println("ADVENT_CARD, ADVENT_TOTAL, REALIZATION_TOTAL, CARD, ADVENT_TOTAL_ABS, REALIZATION_TOTAL_ABS");
+                            System.out.println("countAfter[i] - countBegin[i] = " + (countAfter[i] - countBegin[i]));
+                            if (countAfter[i] - countBegin[i] == totalSumReceipt) {
+                                System.out.println("totalSum");
+                                corectCount = true;
+                            }
+                            else {
+                                corectCount = false;
+                                return -5;
+                            }
+                        }
+                        else {
+                            if ((i == parseCount.ADVENT_CARD_CNT) || (i == parseCount.CARD_CNT) ||
+                                    (i == parseCount.CURR_RECEIPT_NUM)) {
+                                System.out.println("ADVENT_CARD_CNT, CARD_CNT, CURR_RECEIPT_NUM");
+                                if (countAfter[i] - countBegin[i] == 1) {
+                                    System.out.println("1");
+                                    corectCount = true;
+                                } else {
+                                    corectCount = false;
+                                    return -7;
+                                }
+                            } else {
+                                corectCount = false;
+                                return -6;
+                            }
+                        }
+                    }
+                }
+                if (corectCount == true)
+                    return 0;
+                }
+                break;
+            }
+
+                    //Чек продажи, расход
+                    case 1: {
+                        break;
+                    }
+                    //Чек возврата, приход
+                    case 2: {
+                        break;
+                    }
+                    //Чек возврата, расход
+                    case 3: {
+                        break;
+                    }
+                    //Внесение
+                    case 4: {
+                        break;
+                    }
+                    //Изъятие
+                    case 5: {
+                        break;
+                    }
+                    default:
+                        return -1;
+        }
+return 1;
+    }
+
+    private int totalReceiptSum(List <String> listScript) {
+        int countGoods = 0;
+        for (String tmpStr: listScript) {
+            if (tmpStr.contains("Good "))
+                countGoods++;
+        }
+        if (countGoods == 0)
+            return -1;
+
+        for (int i = 0; i < countGoods; i++) {
+
+        }
+        return 1;
+    }
+
     /***************************************Тесты на открытие смены*************************************/
     /***************************************ККТ в учебном режиме****************************************/
     @Test
@@ -1391,7 +1559,7 @@ X-отчет в логе:
             return -1;
     }
     //Продажа, приход
-    private int checkPrintSaleComming(List <String> keyWordArray) {
+    private int checkPrintSaleComming(List <String> keyWordArray, ScreenPicture screen) {
         sleepMiliSecond(1000);
         pressKeyBot(keyEnum.keyMenu, 0, 1);
         pressKeyBot(keyEnum.keyCancel, 0, 1);
@@ -1411,7 +1579,7 @@ X-отчет в логе:
             else {
                 int countChecks = Integer.parseInt(countCheckStr);
                 for (int i = 0; i < countChecks; i++) {
-                    int resPrintCheck = checkPrint(keyWordArray);
+                    int resPrintCheck = checkPrint(keyWordArray, screen);
                     switch (resPrintCheck) {
                         case -1:
                             return -3;
@@ -1423,7 +1591,8 @@ X-отчет в логе:
                             return -6;
                         case -4:
                             return -7;
-
+                        case -6:
+                            return -8;
                         default:
                             break;
                     }
@@ -1436,7 +1605,7 @@ X-отчет в логе:
         return 0;
     }
     //Формирование и печать чека
-    private int checkPrint(List <String> keyWordArray) {
+    private int checkPrint(List <String> keyWordArray, ScreenPicture screen) {
         dateStr.clear();
         int countGoods = 0;
         for (String tmpStr: keyWordArray) {
@@ -1551,12 +1720,19 @@ X-отчет в логе:
 
             pressKeyBot(keyEnum.keyEnter, 0, 1);
         }
-        //получить дату из кассы
-        String getDateCommand = " date '+%d%m%y%H%M'\n";
-        dateStr.add(CashBoxConnect(getDateCommand).get(0));
-
-        tcpSocket.setFlagPause(true, 20);
-        sleepMiliSecond(20000);
+        System.out.println("before slep");
+        sleepMiliSecond(3500);
+        boolean compare = compareScreen(screen);
+        if (compare) {
+            //получить дату из кассы
+            String getDateCommand = " date '+%d%m%y%H%M'\n";
+            dateStr.add(CashBoxConnect(getDateCommand).get(0));
+            tcpSocket.setFlagPause(true, 2);//20);
+            sleepMiliSecond(2000);//20000);
+        } else {
+            writeLogFile("Не совпадает дисплей кассы с ожидаемым экраном сдачи");
+            return -6;
+        }
         return 0;
     }
 
@@ -2040,18 +2216,7 @@ X-отчет в логе:
         tcpSocket.setFlagPause(true, 5);
     }*/
 
-    public void searchInstruction() {
-        System.out.println("in searchInstruction");
-        Vector<String> line;
-        line = readFromFileBot();
-        String tmpStr;
 
-        for (short i = 0; i < line.size(); i++) {
-            tmpStr = line.get(i);
-            if (tmpStr.indexOf("!") != -1)
-                instruction_table.add(tmpStr);
-        }
-    }
 
 
 
@@ -2930,6 +3095,9 @@ X-отчет в логе:
 
                 case NOT_ENOUGH_MONEY:
                     return strFromFile.equals(screens.notEnoughMoneyScreen);
+
+                case FREE_SALE_MODE_CHANGE_400:
+                    return strFromFile.equals(screens.freeSaleModeChange400Screen);
 
                 default:
                     return false;

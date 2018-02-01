@@ -31,7 +31,8 @@ public class Screens {
             lessMoneyInCashboxtScreen,
             freeSaleModeScreen,
             menuAfterPasswdScreen,
-            notEnoughMoneyScreen;
+            notEnoughMoneyScreen,
+            freeSaleModeChange400Screen;
 
     private String readScreenFile(String fileName) {
         try {
@@ -62,5 +63,6 @@ public class Screens {
         menuAfterPasswdScreen = readScreenFile("./screens/menuAfterPasswd.bmp");
         wrongRegNumberScreen = readScreenFile("./screens/wrongRegNumber.bmp");
         notEnoughMoneyScreen = readScreenFile("./screens/notEnoughMoney.bmp");
+        freeSaleModeChange400Screen = readScreenFile("./screens/freeSaleModeChange400.bmp");
     }
 }
