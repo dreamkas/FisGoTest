@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-/**
+/*
  * Created by v.bochechko on 04.12.2017.
  */
 public class CashTest {
@@ -66,7 +66,7 @@ public class CashTest {
          *************Сброс кассы (выполнение тех. обнуления)*************
          ****************************************************************/
         //проверяем, что открыт экран ввода пароля
-    /*    boolean compare = compareScreen(screenPicture.PASSWORD);
+        boolean compare = compareScreen(screenPicture.PASSWORD);
         //если полученный экран с кассы совпадает с экраном ввода пароля, то выполняем if
         if (compare) {
             //делаем выборку их БД users на кассе, получаем пароль одного из них
@@ -331,7 +331,7 @@ public class CashTest {
     /***************************************Тесты на продажу********************************************/
     /******ККТ в учебном режиме, продажа - приход, наличные, товар по свободной цене, итог 100 руб.*****/
     @Test
-    public void sale_advent_learning_mode() {
+    public void sale_advent_learning_mode_cash() {
         //проверяем, что stage кассы = 0
         List<String> line = CashBoxConnect(sqlCommands.getStageCommand());
         if (line.get(0).equals("0")) {
@@ -420,7 +420,7 @@ public class CashTest {
                         int[] countAfter = parseCount.parseCountValueFromStr(CashBoxConnect(sqlCommands.getCountersAdventValueCommand()).get(0));
 
                         //Подсчет общей суммы чека
-                      //  int totalSum = totalReceiptSum(listScript);
+                        //  int totalSum = totalReceiptSum(listScript);
                         String typePayStr = searchForKeyword("type_pay: ", listScript);
                         int typePay = -1;
                         if (typePayStr.equals("cash_pay"))
@@ -451,11 +451,245 @@ public class CashTest {
             fail("Касса не в учебном режиме");
         }
     }
+
+    /*****ККТ в учебном режиме, продажа - приход, электронные, товар по свободной цене, итог 100 руб.****/
+    @Test
+    public void sale_advent_learning_mode_card() {
+        //проверяем, что stage кассы = 0
+        List<String> line = CashBoxConnect(sqlCommands.getStageCommand());
+        if (line.get(0).equals("0")) {
+            //проверяем, что открыт экран ввода пароля; при необходимости вводим пароль
+            enterPasswordIfScreenOpen();
+
+            line.clear();
+            //делаем выборку их конфига на кассе, проверем, открыта смена или нет
+            line = CashBoxConnect(sqlCommands.getOpenShiftCommand());
+            if (line.get(0).isEmpty() && (Integer.parseInt(line.get(1)) == 0)) {
+                openShift();
+            }
+
+            //делаем выборку из базы чеков
+            line.clear();
+            line = CashBoxConnect(sqlCommands.getRecieptCountCommand());
+            int countCheckBeforeTest = Integer.parseInt(line.get(0));
+            line.clear();
+
+            //проверяем, включен терминал или нет. При необходимости включаем терминал
+            line = CashBoxConnect(sqlCommands.getTerminalModeCommand());
+            //если терминал выключен, то включаем
+            if (line.get(0).equals("0")) {
+                int result = externalTerninalTurnOn();
+                if (result == -1)
+                    fail("Банковский терминал выключен");
+            }
+            line.clear();
+
+            //делаем выборку из базы счетчиков
+            int [] countBegin = parseCount.parseCountValueFromStr(CashBoxConnect(sqlCommands.getCountersAdventValueCommand()).get(0));
+
+            //читаем из файла сценарий пробития чека
+            List<String> listScript = readDataScript("src\\test\\resourses\\sale_advent_treaning_mode_free_price_card.txt");
+            int testResult = checkPrintSaleComming(listScript, screenPicture.GIVE_CARD_AND_RECEIPT);
+            switch (testResult) {
+                case -1: {
+                    fail("Не открыт экран продажи (режим свободной цены)");
+                    break;
+                }
+                case -2: {
+                    fail("Не найдены товары, которые необходимо добавить в чек");
+                    break;
+                }
+                case -3: {
+                    fail("Не найдены товары, которые необходимо добавить в чек в методе печати чека");
+                    break;
+                }
+                case -4: {
+                    fail("Не указан способ добавления товара в чек");
+                    break;
+                }
+                case -5: {
+                    fail("Не указано количество товара во входном файле сценария");
+                    break;
+                }
+                case -6: {
+                    fail("Не указан способ оплаты во входном файле сценария");
+                    break;
+                }
+                case -7: {
+                    fail("Не указан тип товара во входном файле сценария");
+                    break;
+                }
+                case -8: {
+                    fail("Не совпадает дисплей кассы с ожидаемым экраном сдачи");
+                    break;
+                }
+                case 0: {
+                    line = CashBoxConnect(sqlCommands.getRecieptCountCommand());
+                    int countCheckAfterTest = Integer.parseInt(line.get(0));
+                    if ((countCheckAfterTest - countCheckBeforeTest) == 1) {
+                        //сделать выборку из базы чеков, по дате
+                        String getCheckDateCommand = "echo \"attach '/FisGo/receiptsDb.db' as receipts; " +
+                                "select RECEIPT_CREATE_DATE from receipts.RECEIPTS ORDER BY ID DESC limit 1;\" | sqlite3 /FisGo/receiptsDb.db\n";
+                        line = CashBoxConnect(getCheckDateCommand);
+                        String receiptDate = line.get(0);
+                        if (receiptDate.length() == 12) {
+                            StringBuilder dateStrBuild = new StringBuilder();
+                            dateStrBuild.append(receiptDate.substring(0, 4));
+                            dateStrBuild.append(receiptDate.substring(6));
+                            receiptDate = dateStrBuild.toString();
+                        }
+                        writeLogFile("Тест печати чека в учебном режиме. Дата на кассе: " + dateStr.get(0) + "Дата чека: " + receiptDate);
+
+                        //делаем выборку из базы счетчиков
+                        int[] countAfter = parseCount.parseCountValueFromStr(CashBoxConnect(sqlCommands.getCountersAdventValueCommand()).get(0));
+
+                        //Подсчет общей суммы чека
+                        //  int totalSum = totalReceiptSum(listScript);
+                        String typePayStr = searchForKeyword("type_pay: ", listScript);
+                        int typePay = -1;
+                        if (typePayStr.equals("cash_pay"))
+                            typePay = 0;
+                        if (typePayStr.equals("card_pay"))
+                            typePay = 1;
+
+                        int assertCountRes = assertCount(countBegin, countAfter, 0, 10000, typePay);//totalSum);
+                        if (assertCountRes == 0) {
+                            assertEquals(dateStr.get(0), receiptDate);
+                        } else {
+                            fail("Неверное изменение в базе счетчиков, assertCount = " + assertCountRes);
+                        }
+
+                    } else {
+                        fail("Чек не добавлен в базу receiptsDb.db");
+                    }
+                    break;
+                }
+                default:
+                    break;
+            }
+
+        } else {
+            fail("Касса не в учебном режиме");
+        }
+    }
+
+    /***************************************************************************************************/
+    //в функции проверяется экран на дисплее кассы,
+    // если экран совпадает, то выполняется выборка из БД пользователей и вводдится пароль
+    private void enterPasswordIfScreenOpen() {
+        //проверяем, что открыт экран ввода пароля
+        boolean compare = compareScreen(screenPicture.PASSWORD);
+        //если полученный экран с кассы совпадает с экраном ввода пароля, то выполняем if
+        if (compare) {
+            //делаем выборку их БД users на кассе, получаем пароль одного из них
+            String getPassCommand = "echo \"attach '/FisGo/usersDb.db' as users; " +
+                    "select PASS from users.USERS limit 1;\" | sqlite3 /FisGo/usersDb.db\n";
+            List<String> line = CashBoxConnect(getPassCommand);
+            //вводим пароль на кассе
+            strToKeypadConvert(line.get(0));
+        }
+    }
+
+    private void checkTerminalMode() {
+
+    }
+
     private int assertCount(int [] countBegin, int [] countAfter, int typeCheck, int totalSumReceipt, int typePay){
+        //0 - Чек продажи, приход
+        //1 - Чек продажи, расход
+        //2 - Чек возврата, приход
+        //3 - Чек возврата, расход
+        //4 - Внесение
+        //5 - Изъятие
         switch (typeCheck) {
             //Чек продажи, приход
             case 0: {
-                System.out.println("comming");
+                //System.out.println("comming");
+                boolean corectCount = false;
+                //Наличными
+                if (typePay == 0) {
+                  //  System.out.println("(typePay == 0)");
+                    for (int i = 0; i < countBegin.length; i++) {
+                    //    System.out.println("i = " + i);
+                        if (countBegin[i] != countAfter[i]) {
+                          //  System.out.println("countBegin[i] != countAfter[i]");
+                            if ((i == parseCount.ADVENT) || (i == parseCount.CASH_IN_FINAL) ||
+                                    (i == parseCount.ADVENT_TOTAL) || (i == parseCount.REALIZATION_TOTAL) ||
+                                    (i == parseCount.CASH) || (i == parseCount.ADVENT_TOTAL_ABS) ||
+                                    (i == parseCount.REALIZATION_TOTAL_ABS)) {
+                              //  System.out.println("ADVENT, CASH_IN_FINAL, ADVENT_TOTAL, REALIZATION_TOTAL, CASH, ADVENT_TOTAL_ABS, REALIZATION_TOTAL_ABS");
+                                //System.out.println("countAfter[i] - countBegin[i] = " + (countAfter[i] - countBegin[i]));
+                                if (countAfter[i] - countBegin[i] == totalSumReceipt) {
+                              //      System.out.println("totalSum");
+                                    corectCount = true;
+                                }
+                                else {
+                                    return -3;
+                                }
+                            }
+                            else {
+                                if ((i == parseCount.ADVENT_CNT) || (i == parseCount.CASH_CNT) ||
+                                        (i == parseCount.CURR_RECEIPT_NUM)) {
+                                  //  System.out.println("ADVENT_CNT, CASH_CNT, CURR_RECEIPT_NUM");
+                                    if (countAfter[i] - countBegin[i] == 1) {
+                                    //    System.out.println("1");
+                                        corectCount = true;
+                                    } else {
+                                        return -4;
+                                    }
+                                } else {
+                                    return -2;
+                                }
+                            }
+                        }
+                    }
+                    if (corectCount)
+                        return 0;
+                }
+                //Электронными
+                if (typePay == 1) {
+                    for (int i = 0; i < countBegin.length; i++) {
+                        System.out.println("i = " + i);
+                        if (countBegin[i] != countAfter[i]) {
+                           // System.out.println("countBegin[i] != countAfter[i]");
+                            if ((i == parseCount.ADVENT_CARD) || (i == parseCount.ADVENT_TOTAL) ||
+                                (i == parseCount.REALIZATION_TOTAL) || (i == parseCount.CARD) ||
+                                (i == parseCount.ADVENT_TOTAL_ABS) || (i == parseCount.REALIZATION_TOTAL_ABS)) {
+                           // System.out.println("ADVENT_CARD, ADVENT_TOTAL, REALIZATION_TOTAL, CARD, ADVENT_TOTAL_ABS, REALIZATION_TOTAL_ABS");
+                           // System.out.println("countAfter[i] - countBegin[i] = " + (countAfter[i] - countBegin[i]));
+                            if (countAfter[i] - countBegin[i] == totalSumReceipt) {
+                             //   System.out.println("totalSum");
+                                corectCount = true;
+                            }
+                            else {
+                                return -5;
+                            }
+                        }
+                        else {
+                            if ((i == parseCount.ADVENT_CARD_CNT) || (i == parseCount.CARD_CNT) ||
+                                    (i == parseCount.CURR_RECEIPT_NUM)) {
+                              //  System.out.println("ADVENT_CARD_CNT, CARD_CNT, CURR_RECEIPT_NUM");
+                                if (countAfter[i] - countBegin[i] == 1) {
+                                //    System.out.println("1");
+                                    corectCount = true;
+                                } else {
+                                    return -7;
+                                }
+                            } else {
+                                return -6;
+                            }
+                        }
+                    }
+                }
+                if (corectCount)
+                    return 0;
+                }
+                break;
+            }
+
+            //Чек продажи, расход
+            case 1: {
+                System.out.println("CONSUMPTION");
                 boolean corectCount = false;
                 //Наличными
                 if (typePay == 0) {
@@ -464,40 +698,37 @@ public class CashTest {
                         System.out.println("i = " + i);
                         if (countBegin[i] != countAfter[i]) {
                             System.out.println("countBegin[i] != countAfter[i]");
-                            if ((i == parseCount.ADVENT) || (i == parseCount.CASH_IN_FINAL) ||
-                                    (i == parseCount.ADVENT_TOTAL) || (i == parseCount.REALIZATION_TOTAL) ||
-                                    (i == parseCount.CASH) || (i == parseCount.ADVENT_TOTAL_ABS) ||
-                                    (i == parseCount.REALIZATION_TOTAL_ABS)) {
-                                System.out.println("ADVENT, CASH_IN_FINAL, ADVENT_TOTAL, REALIZATION_TOTAL, CASH, ADVENT_TOTAL_ABS, REALIZATION_TOTAL_ABS");
+                            if ((i == parseCount.CONSUMPTION) || (i == parseCount.CASH_IN_FINAL) ||
+                                (i == parseCount.CONSUMPTION_TOTAL) || (i == parseCount.REALIZATION_TOTAL) ||
+                                (i == parseCount.CASH) || (i == parseCount.CONSUMPTION_TOTAL_ABS) ||
+                                (i == parseCount.REALIZATION_TOTAL_ABS)) {
+                                System.out.println("CONSUMPTION, CASH_IN_FINAL, CONSUMPTION_TOTAL, REALIZATION_TOTAL, CASH, CONSUMPTION_TOTAL_ABS, REALIZATION_TOTAL_ABS");
                                 System.out.println("countAfter[i] - countBegin[i] = " + (countAfter[i] - countBegin[i]));
                                 if (countAfter[i] - countBegin[i] == totalSumReceipt) {
                                     System.out.println("totalSum");
                                     corectCount = true;
                                 }
                                 else {
-                                    corectCount = false;
-                                    return -3;
+                                    return -9;
                                 }
                             }
                             else {
-                                if ((i == parseCount.ADVENT_CNT) || (i == parseCount.CASH_CNT) ||
-                                        (i == parseCount.CURR_RECEIPT_NUM)) {
-                                    System.out.println("ADVENT_CNT, CASH_CNT, CURR_RECEIPT_NUM");
+                                if ((i == parseCount.CONSUMPTION_CNT) || (i == parseCount.CASH_CNT) ||
+                                    (i == parseCount.CURR_RECEIPT_NUM)) {
+                                    System.out.println("CONSUMPTION_CNT, CASH_CNT, CURR_RECEIPT_NUM");
                                     if (countAfter[i] - countBegin[i] == 1) {
                                         System.out.println("1");
                                         corectCount = true;
                                     } else {
-                                        corectCount = false;
-                                        return -4;
+                                        return -10;
                                     }
                                 } else {
-                                    corectCount = false;
-                                    return -2;
+                                    return -8;
                                 }
                             }
                         }
                     }
-                    if (corectCount == true)
+                    if (corectCount)
                         return 0;
                 }
                 //Электронными
@@ -506,68 +737,297 @@ public class CashTest {
                         System.out.println("i = " + i);
                         if (countBegin[i] != countAfter[i]) {
                             System.out.println("countBegin[i] != countAfter[i]");
-                            if ((i == parseCount.ADVENT_CARD) || (i == parseCount.ADVENT_TOTAL) ||
+                            if ((i == parseCount.CONSUMPTION_CARD) || (i == parseCount.CONSUMPTION_TOTAL) ||
                                 (i == parseCount.REALIZATION_TOTAL) || (i == parseCount.CARD) ||
-                                (i == parseCount.ADVENT_TOTAL_ABS) || (i == parseCount.REALIZATION_TOTAL_ABS)) {
-                            System.out.println("ADVENT_CARD, ADVENT_TOTAL, REALIZATION_TOTAL, CARD, ADVENT_TOTAL_ABS, REALIZATION_TOTAL_ABS");
-                            System.out.println("countAfter[i] - countBegin[i] = " + (countAfter[i] - countBegin[i]));
-                            if (countAfter[i] - countBegin[i] == totalSumReceipt) {
-                                System.out.println("totalSum");
-                                corectCount = true;
-                            }
-                            else {
-                                corectCount = false;
-                                return -5;
-                            }
-                        }
-                        else {
-                            if ((i == parseCount.ADVENT_CARD_CNT) || (i == parseCount.CARD_CNT) ||
-                                    (i == parseCount.CURR_RECEIPT_NUM)) {
-                                System.out.println("ADVENT_CARD_CNT, CARD_CNT, CURR_RECEIPT_NUM");
-                                if (countAfter[i] - countBegin[i] == 1) {
-                                    System.out.println("1");
+                                (i == parseCount.CONSUMPTION_TOTAL_ABS) || (i == parseCount.REALIZATION_TOTAL_ABS)) {
+                                System.out.println("CONSUMPTION_CARD, CONSUMPTION_TOTAL, REALIZATION_TOTAL, CARD, CONSUMPTION_TOTAL_ABS, REALIZATION_TOTAL_ABS");
+                                System.out.println("countAfter[i] - countBegin[i] = " + (countAfter[i] - countBegin[i]));
+                                if (countAfter[i] - countBegin[i] == totalSumReceipt) {
+                                    System.out.println("totalSum");
                                     corectCount = true;
-                                } else {
-                                    corectCount = false;
-                                    return -7;
                                 }
-                            } else {
-                                corectCount = false;
-                                return -6;
+                                else {
+                                    return -12;
+                                }
+                            }
+                                else {
+                                if ((i == parseCount.CONSUMPTION_CARD_CNT) || (i == parseCount.CARD_CNT) ||
+                                        (i == parseCount.CURR_RECEIPT_NUM)) {
+                                    System.out.println("CONSUMPTION_CARD_CNT, CARD_CNT, CURR_RECEIPT_NUM");
+                                    if (countAfter[i] - countBegin[i] == 1) {
+                                        System.out.println("1");
+                                        corectCount = true;
+                                    } else {
+                                        return -13;
+                                    }
+                                } else {
+                                    return -11;
+                                }
                             }
                         }
                     }
-                }
-                if (corectCount == true)
-                    return 0;
+                    if (corectCount)
+                        return 0;
                 }
                 break;
             }
+            //Чек возврата, приход
+            case 2: {
+                System.out.println("ADVENT_RETURN");
+                boolean corectCount = false;
+                //Наличными
+                if (typePay == 0) {
+                    System.out.println("(typePay == 0)");
+                    for (int i = 0; i < countBegin.length; i++) {
+                        System.out.println("i = " + i);
+                        if (countBegin[i] != countAfter[i]) {
+                            System.out.println("countBegin[i] != countAfter[i]");
+                            if ((i == parseCount.ADVENT_RETURN) || (i == parseCount.CASH_IN_FINAL) ||
+                                    (i == parseCount.ADVENT_RETURN_TOTAL) || (i == parseCount.REALIZATION_TOTAL) ||
+                                    (i == parseCount.CASH) || (i == parseCount.ADVENT_RETURN_TOTAL_ABS) ||
+                                    (i == parseCount.REALIZATION_TOTAL_ABS)) {
+                                System.out.println("ADVENT_RETURN, CASH_IN_FINAL, ADVENT_RETURN_TOTAL, REALIZATION_TOTAL, CASH, CONSUMPTION_TOTAL_ABS, REALIZATION_TOTAL_ABS");
+                                System.out.println("countAfter[i] - countBegin[i] = " + (countAfter[i] - countBegin[i]));
+                                if (countAfter[i] - countBegin[i] == totalSumReceipt) {
+                                    System.out.println("totalSum");
+                                    corectCount = true;
+                                }
+                                else {
+                                    return -15;
+                                }
+                            }
+                            else {
+                                if ((i == parseCount.ADVENT_RETURN_CNT) || (i == parseCount.CASH_CNT) ||
+                                        (i == parseCount.CURR_RECEIPT_NUM)) {
+                                    System.out.println("CONSUMPTION_CNT, CASH_CNT, CURR_RECEIPT_NUM");
+                                    if (countAfter[i] - countBegin[i] == 1) {
+                                        System.out.println("1");
+                                        corectCount = true;
+                                    } else {
+                                        return -16;
+                                    }
+                                } else {
+                                    return -14;
+                                }
+                            }
+                        }
+                    }
+                    if (corectCount)
+                        return 0;
+                }
+                //Электронными
+                if (typePay == 1) {
+                    for (int i = 0; i < countBegin.length; i++) {
+                        System.out.println("i = " + i);
+                        if (countBegin[i] != countAfter[i]) {
+                            System.out.println("countBegin[i] != countAfter[i]");
+                            if ((i == parseCount.ADVENT_RETURN_CARD) || (i == parseCount.ADVENT_RETURN_TOTAL) ||
+                                    (i == parseCount.REALIZATION_TOTAL) || (i == parseCount.CARD) ||
+                                    (i == parseCount.ADVENT_RETURN_TOTAL_ABS) || (i == parseCount.REALIZATION_TOTAL_ABS)) {
+                                System.out.println("CONSUMPTION_CARD, CONSUMPTION_TOTAL, REALIZATION_TOTAL, CARD, CONSUMPTION_TOTAL_ABS, REALIZATION_TOTAL_ABS");
+                                System.out.println("countAfter[i] - countBegin[i] = " + (countAfter[i] - countBegin[i]));
+                                if (countAfter[i] - countBegin[i] == totalSumReceipt) {
+                                    System.out.println("totalSum");
+                                    corectCount = true;
+                                }
+                                else {
+                                    return -18;
+                                }
+                            }
+                            else {
+                                if ((i == parseCount.ADVENT_RETURN_CARD_CNT) || (i == parseCount.CARD_CNT) ||
+                                        (i == parseCount.CURR_RECEIPT_NUM)) {
+                                    System.out.println("CONSUMPTION_CARD_CNT, CARD_CNT, CURR_RECEIPT_NUM");
+                                    if (countAfter[i] - countBegin[i] == 1) {
+                                        System.out.println("1");
+                                        corectCount = true;
+                                    } else {
+                                        return -19;
+                                    }
+                                } else {
+                                    return -17;
+                                }
+                            }
+                        }
+                    }
+                    if (corectCount)
+                        return 0;
+                }
+                break;
+            }
+            //Чек возврата, расход
+            case 3: {
+                System.out.println("CONSUMPTION_RETURN");
+                boolean corectCount = false;
+                //Наличными
+                if (typePay == 0) {
+                    System.out.println("(typePay == 0)");
+                    for (int i = 0; i < countBegin.length; i++) {
+                        System.out.println("i = " + i);
+                        if (countBegin[i] != countAfter[i]) {
+                            System.out.println("countBegin[i] != countAfter[i]");
+                            if ((i == parseCount.CONSUMPTION_RETURN) || (i == parseCount.CASH_IN_FINAL) ||
+                                    (i == parseCount.CONSUMPTION_RETURN_TOTAL) || (i == parseCount.REALIZATION_TOTAL) ||
+                                    (i == parseCount.CASH) || (i == parseCount.CONSUMPTION_RETURN_TOTAL_ABS) ||
+                                    (i == parseCount.REALIZATION_TOTAL_ABS)) {
+                                System.out.println("ADVENT_RETURN, CASH_IN_FINAL, ADVENT_RETURN_TOTAL, REALIZATION_TOTAL, CASH, CONSUMPTION_TOTAL_ABS, REALIZATION_TOTAL_ABS");
+                                System.out.println("countAfter[i] - countBegin[i] = " + (countAfter[i] - countBegin[i]));
+                                if (countAfter[i] - countBegin[i] == totalSumReceipt) {
+                                    System.out.println("totalSum");
+                                    corectCount = true;
+                                }
+                                else {
+                                    return -21;
+                                }
+                            }
+                            else {
+                                if ((i == parseCount.CONSUMPTION_RETURN_CNT) || (i == parseCount.CASH_CNT) ||
+                                        (i == parseCount.CURR_RECEIPT_NUM)) {
+                                    System.out.println("CONSUMPTION_CNT, CASH_CNT, CURR_RECEIPT_NUM");
+                                    if (countAfter[i] - countBegin[i] == 1) {
+                                        System.out.println("1");
+                                        corectCount = true;
+                                    } else {
+                                        return -22;
+                                    }
+                                } else {
+                                    return -20;
+                                }
+                            }
+                        }
+                    }
+                    if (corectCount)
+                        return 0;
+                }
+                //Электронными
+                if (typePay == 1) {
+                    for (int i = 0; i < countBegin.length; i++) {
+                        System.out.println("i = " + i);
+                        if (countBegin[i] != countAfter[i]) {
+                            System.out.println("countBegin[i] != countAfter[i]");
+                            if ((i == parseCount.CONSUMPTION_RETURN_CARD) || (i == parseCount.CONSUMPTION_RETURN_TOTAL) ||
+                                    (i == parseCount.REALIZATION_TOTAL) || (i == parseCount.CARD) ||
+                                    (i == parseCount.CONSUMPTION_RETURN_TOTAL_ABS) || (i == parseCount.REALIZATION_TOTAL_ABS)) {
+                                System.out.println("CONSUMPTION_CARD, CONSUMPTION_TOTAL, REALIZATION_TOTAL, CARD, CONSUMPTION_TOTAL_ABS, REALIZATION_TOTAL_ABS");
+                                System.out.println("countAfter[i] - countBegin[i] = " + (countAfter[i] - countBegin[i]));
+                                if (countAfter[i] - countBegin[i] == totalSumReceipt) {
+                                    System.out.println("totalSum");
+                                    corectCount = true;
+                                }
+                                else {
+                                    return -23;
+                                }
+                            }
+                            else {
+                                if ((i == parseCount.CONSUMPTION_RETURN_CARD_CNT) || (i == parseCount.CARD_CNT) ||
+                                        (i == parseCount.CURR_RECEIPT_NUM)) {
+                                    System.out.println("CONSUMPTION_CARD_CNT, CARD_CNT, CURR_RECEIPT_NUM");
+                                    if (countAfter[i] - countBegin[i] == 1) {
+                                        System.out.println("1");
+                                        corectCount = true;
+                                    } else {
+                                        return -25;
+                                    }
+                                } else {
+                                    return -24;
+                                }
+                            }
+                        }
+                    }
+                    if (corectCount)
+                        return 0;
+                }
+                break;
+            }
+            //Внесение
+            case 4: {
+                System.out.println("INSERTION");
+                boolean corectCount = false;
+                if (typePay == 0) {
+                    for (int i = 0; i < countBegin.length; i++) {
+                        System.out.println("i = " + i);
+                        if (countBegin[i] != countAfter[i]) {
+                            System.out.println("countBegin[i] != countAfter[i]");
+                            if ((i == parseCount.INSERTION) || (i == parseCount.CASH_IN_FINAL)) {
+                                System.out.println("INSERTION, CASH_IN_FINAL");
+                                System.out.println("countAfter[i] - countBegin[i] = " + (countAfter[i] - countBegin[i]));
+                                if (countAfter[i] - countBegin[i] == totalSumReceipt) {
+                                    System.out.println("totalSum");
+                                    corectCount = true;
+                                }
+                                else {
+                                    return -27;
+                                }
+                            }
+                            else {
+                                if ((i == parseCount.INSERTION_CNT) || (i == parseCount.CURR_RECEIPT_NUM)) {
+                                    System.out.println("INSERTION_CNT, CURR_RECEIPT_NUM");
+                                    if (countAfter[i] - countBegin[i] == 1) {
+                                        System.out.println("1");
+                                        corectCount = true;
+                                    } else {
+                                        return -29;
+                                    }
+                                } else {
+                                    return -28;
+                                }
+                            }
+                        }
+                    }
+                    if (corectCount)
+                        return 0;
+                } else {
+                    return -26;
+                }
+                break;
+            }
+            //Изъятие
+            case 5: {
+                System.out.println("RESERVE");
+                boolean corectCount = false;
+                if (typePay == 0) {
+                    for (int i = 0; i < countBegin.length; i++) {
+                        System.out.println("i = " + i);
+                        if (countBegin[i] != countAfter[i]) {
+                            System.out.println("countBegin[i] != countAfter[i]");
+                            if ((i == parseCount.RESERVE) || (i == parseCount.CASH_IN_FINAL)) {
+                                System.out.println("RESERVE, CASH_IN_FINAL");
+                                System.out.println("countAfter[i] - countBegin[i] = " + (countAfter[i] - countBegin[i]));
+                                if (countAfter[i] - countBegin[i] == totalSumReceipt) {
+                                    System.out.println("totalSum");
+                                    corectCount = true;
+                                }
+                                else {
+                                    return -30;
+                                }
+                            }
+                            else {
+                                if ((i == parseCount.RESERVE_CNT) || (i == parseCount.CURR_RECEIPT_NUM)) {
+                                    System.out.println("RESERVE, CARD_CNT, CURR_RECEIPT_NUM");
+                                    if (countAfter[i] - countBegin[i] == 1) {
+                                        System.out.println("1");
+                                        corectCount = true;
+                                    } else {
+                                        return -32;
+                                    }
+                                } else {
+                                    return -31;
+                                }
+                            }
+                        }
+                    }
+                    if (corectCount)
+                        return 0;
 
-                    //Чек продажи, расход
-                    case 1: {
-                        break;
-                    }
-                    //Чек возврата, приход
-                    case 2: {
-                        break;
-                    }
-                    //Чек возврата, расход
-                    case 3: {
-                        break;
-                    }
-                    //Внесение
-                    case 4: {
-                        break;
-                    }
-                    //Изъятие
-                    case 5: {
-                        break;
-                    }
-                    default:
-                        return -1;
+                } else {
+                    return -27;
+                }
+                break;
+            }
+            default:
+                return -1;
         }
-return 1;
+        return 1;
     }
 
     private int totalReceiptSum(List <String> listScript) {
@@ -584,6 +1044,7 @@ return 1;
         }
         return 1;
     }
+
 
     /***************************************Тесты на открытие смены*************************************/
     /***************************************ККТ в учебном режиме****************************************/
@@ -1735,6 +2196,27 @@ X-отчет в логе:
         }
         return 0;
     }
+    //включить внешний банковский терминал
+    private int externalTerninalTurnOn() {
+        System.out.println("externalTerninalTurnOn");
+        List<String> line = CashBoxConnect(sqlCommands.getTerminalModeCommand());
+        System.out.println("line.get(0) = " + line.get(0));
+        if (line.get(0).equals("0")) {
+            System.out.println("in equals");
+            pressKeyBot(keyEnum.keyMenu, 0, 1);
+            pressKeyBot(keyEnum.key5, 0, 2);
+            pressKeyBot(keyEnum.key2, 0, 1);
+            pressKeyBot(keyEnum.keyEnter, 0, 1);
+        }
+        line.clear();
+        line = CashBoxConnect(sqlCommands.getTerminalModeCommand());
+        System.out.println("line.get(0) = " + line.get(0));
+        if (line.get(0).equals("1")) {
+            return 0;
+        } else {
+            return -1;
+        }
+    }
 
     //Добавление товаров на кассу
     //FIXME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!разобраться с русскими символами!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1765,16 +2247,11 @@ X-отчет в логе:
             idLine = parts[0];
             articleLine = parts[1];
 
-            StringBuilder insertGoodCodeCmd = new StringBuilder();
-            insertGoodCodeCmd.append("echo \"attach '/FisGo/goodsDb.db' as goods; ");
-            insertGoodCodeCmd.append("insert into goods.GOODS_CODE (GOODS_ID, HASH_VAL, TYPE) values (");
-            insertGoodCodeCmd.append(idLine);
-            insertGoodCodeCmd.append(", ");
-            insertGoodCodeCmd.append(hashArticle.get(Integer.parseInt(articleLine) - 1));
-            insertGoodCodeCmd.append(", 2);");
-            insertGoodCodeCmd.append("\" | sqlite3 /FisGo/goodsDb.db\n");
+            String insertGoodCodeCmd = "echo \"attach '/FisGo/goodsDb.db' as goods; " +
+                    "insert into goods.GOODS_CODE (GOODS_ID, HASH_VAL, TYPE) values (" + idLine + ", " +
+                    hashArticle.get(Integer.parseInt(articleLine) - 1) + ", 2);" + "\" | sqlite3 /FisGo/goodsDb.db\n";
 
-            CashBoxConnect(insertGoodCodeCmd.toString());
+            CashBoxConnect(insertGoodCodeCmd);//.toString());
         }
     }
     //Устанавливаем уровень лога
@@ -3098,6 +3575,9 @@ X-отчет в логе:
 
                 case FREE_SALE_MODE_CHANGE_400:
                     return strFromFile.equals(screens.freeSaleModeChange400Screen);
+
+                case GIVE_CARD_AND_RECEIPT:
+                    return strFromFile.equals(screens.giveCardAndReceiptScreen);
 
                 default:
                     return false;

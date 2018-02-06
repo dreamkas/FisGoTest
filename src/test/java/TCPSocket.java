@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 import static java.lang.Boolean.FALSE;
 
-/**
+/*
  * Created by v.bochechko on 4.12.2017.
  */
 public class TCPSocket {
@@ -88,9 +88,9 @@ public class TCPSocket {
         return pressCount;
     }
 
-    private ArrayList<Integer> keyNumArray = new ArrayList<Integer>();
-    private ArrayList<Integer> pressCountArray = new ArrayList<Integer>();
-    private static ArrayList<Integer> keyActionArray = new ArrayList<Integer>();
+    private ArrayList<Integer> keyNumArray = new ArrayList<>();
+    private ArrayList<Integer> pressCountArray = new ArrayList<>();
+    private static ArrayList<Integer> keyActionArray = new ArrayList<>();
 
   //  private Controller controller = new Controller();
 
@@ -126,7 +126,7 @@ public class TCPSocket {
             DATA_SIZE = LEN;
 
 
-    private static List<byte[]> commandArray = new ArrayList<byte[]>();
+    private static List<byte[]> commandArray = new ArrayList<>();
     //private static String strPrintDoc = new String();
     private void addDataToCommandArray(byte[] bytes) {
         commandArray.add(bytes);
@@ -256,7 +256,7 @@ public class TCPSocket {
                 //   System.out.println("tmpCrcDiv " + tmpCrcDiv);
                 int crcHexDiv = Integer.parseInt(tmpCrcDiv,16);
                 //  System.out.println("crcHexDiv " +crcHexDiv);
-                sendByte[HEADER_SIZE + PROTOCOL_VER_SIZE + PACKET_NUM_SIZE + CMD_SIZE + LEN_SIZE + DATA_SIZE] = Byte.parseByte("0");;
+                sendByte[HEADER_SIZE + PROTOCOL_VER_SIZE + PACKET_NUM_SIZE + CMD_SIZE + LEN_SIZE + DATA_SIZE] = Byte.parseByte("0");
                 sendByte[HEADER_SIZE + PROTOCOL_VER_SIZE + PACKET_NUM_SIZE + CMD_SIZE + LEN_SIZE + DATA_SIZE + 1] = (byte) crcHexDiv;
             }
         }
@@ -407,7 +407,7 @@ public class TCPSocket {
                 //   System.out.println("tmpCrcDiv " + tmpCrcDiv);
                 int crcHexDiv = Integer.parseInt(tmpCrcDiv,16);
                 //  System.out.println("crcHexDiv " +crcHexDiv);
-                sendByte[HEADER_SIZE + PROTOCOL_VER_SIZE + PACKET_NUM_SIZE + CMD_SIZE + LEN_SIZE + DATA_SIZE] = Byte.parseByte("0");;
+                sendByte[HEADER_SIZE + PROTOCOL_VER_SIZE + PACKET_NUM_SIZE + CMD_SIZE + LEN_SIZE + DATA_SIZE] = Byte.parseByte("0");
                 sendByte[HEADER_SIZE + PROTOCOL_VER_SIZE + PACKET_NUM_SIZE + CMD_SIZE + LEN_SIZE + DATA_SIZE + 1] = (byte) crcHexDiv;
             }
         }
@@ -733,7 +733,7 @@ public class TCPSocket {
                     byte tmp[] = new byte[r];
                     for (int k = 0; k < r; k++)
                         tmp[k] = buf[k];
-                    if (data.indexOf("BM>") != -1)
+                    if (data.contains("BM>"))
                         savePicture(tmp);
                     i++;
                     if (i == 255) i = 0;
@@ -752,7 +752,7 @@ public class TCPSocket {
                             byte tmpAfter[] = new byte[rAfter];
                             for (int k = 0; k < rAfter; k++)
                                 tmpAfter[k] = bufAfter[k];
-                            if (dataAfter.indexOf("BM>") != -1)
+                            if (data.contains("BM>"))
                                 savePicture(tmpAfter);
 
                             i++;

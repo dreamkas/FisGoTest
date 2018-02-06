@@ -3,7 +3,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-/**
+/*
  * Created by v.bochechko on 02.10.2017.
  * Этот класс возвращает строку из bmp-файдов (экранов с кассы)
  */
@@ -32,7 +32,8 @@ public class Screens {
             freeSaleModeScreen,
             menuAfterPasswdScreen,
             notEnoughMoneyScreen,
-            freeSaleModeChange400Screen;
+            freeSaleModeChange400Screen,
+            giveCardAndReceiptScreen;
 
     private String readScreenFile(String fileName) {
         try {
@@ -64,5 +65,6 @@ public class Screens {
         wrongRegNumberScreen = readScreenFile("./screens/wrongRegNumber.bmp");
         notEnoughMoneyScreen = readScreenFile("./screens/notEnoughMoney.bmp");
         freeSaleModeChange400Screen = readScreenFile("./screens/freeSaleModeChange400.bmp");
+        giveCardAndReceiptScreen = readScreenFile("./screens/giveCardAndReceipt.bmp");
     }
 }
