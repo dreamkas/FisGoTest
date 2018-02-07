@@ -33,7 +33,8 @@ public class Screens {
             menuAfterPasswdScreen,
             notEnoughMoneyScreen,
             freeSaleModeChange400Screen,
-            giveCardAndReceiptScreen;
+            giveCardAndReceiptScreen,
+            consuptionReaultScreen_100Screen;
 
     private String readScreenFile(String fileName) {
         try {
@@ -66,5 +67,6 @@ public class Screens {
         notEnoughMoneyScreen = readScreenFile("./screens/notEnoughMoney.bmp");
         freeSaleModeChange400Screen = readScreenFile("./screens/freeSaleModeChange400.bmp");
         giveCardAndReceiptScreen = readScreenFile("./screens/giveCardAndReceipt.bmp");
+        consuptionReaultScreen_100Screen = readScreenFile("./screens/consuptionReaultScreen_100.bmp");
     }
 }

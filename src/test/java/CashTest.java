@@ -90,7 +90,7 @@ public class CashTest {
         tcpSocket.setFlagGetScreen(true);
         tcpSocket.createSocket(CashboxIP, Integer.parseInt(CashboxPort));
         //добавляем в БД товаров все виды товаров
-        addGoodsOnCash();
+      //  addGoodsOnCash();
         /*****************************************************************/
     }
 
@@ -573,6 +573,140 @@ public class CashTest {
         }
     }
 
+    /******ККТ в учебном режиме, продажа - расход, наличные, товар по свободной цене, итог 100 руб.*****/
+    @Test
+    public void sale_consumption_learning_mode_cash() {
+        //проверяем, что stage кассы = 0
+        List<String> line = CashBoxConnect(sqlCommands.getStageCommand());
+        if (line.get(0).equals("0")) {
+            //проверяем, что открыт экран ввода пароля
+            enterPasswordIfScreenOpen();
+
+            line.clear();
+            //делаем выборку их конфига на кассе, проверем, открыта смена или нет
+            line = CashBoxConnect(sqlCommands.getOpenShiftCommand());
+            if (line.get(0).isEmpty() && (Integer.parseInt(line.get(1)) == 0)) {
+                openShift();
+            }
+
+            line.clear();
+            //делаем выборку из базы счетчиков, проверяем что сумма в кассе > 10000 (коп)
+            line = CashBoxConnect(sqlCommands.getCashInFinalCunterCommand());
+            //если сумма меньше, то делаем внесение на 100 р
+            if (Integer.parseInt(line.get(0)) < 10000) {
+                int resInsertion = insertion(readDataScript("src\\test\\resourses\\insertion_100.txt"));
+                if (resInsertion == 0) {
+                    //делаем выборку из базы счетчиков, проверяем что сумма в кассе => 10000 (коп)
+                    line.clear();
+                    sleepMiliSecond(2000);
+                    line = CashBoxConnect(sqlCommands.getCashInFinalCunterCommand());
+                    System.out.println("getCashInFinalCunterCommand = " + line.get(0));
+                    if (Integer.parseInt(line.get(0)) < 10000) {
+                        fail("Сумма в кассе меньше 100 р.");
+                    }
+                } else {
+                    fail("Ошибка выполнения внесения. Функция вернула " + resInsertion);
+                }
+            }
+
+            //делаем выборку из базы чеков
+            line.clear();
+            line = CashBoxConnect(sqlCommands.getRecieptCountCommand());
+            int countCheck = Integer.parseInt(line.get(0));
+            line.clear();
+
+            //делаем выборку из базы счетчиков
+            int [] countBegin = parseCount.parseCountValueFromStr(CashBoxConnect(sqlCommands.getCountersAdventValueCommand()).get(0));
+
+            //читаем из файла сценарий пробития чека
+            List<String> listScript = readDataScript("src\\test\\resourses\\sale_advent_treaning_mode_free_price.txt");
+            int testResult = checkPrintSaleConsumption(listScript, screenPicture.CONSUMTION_RESULT_SCREEN_100);
+            switch (testResult) {
+                case -1: {
+                    fail("Не открыт экран продажи (режим свободной цены)");
+                    break;
+                }
+                case -2: {
+                    fail("Не найдены товары, которые необходимо добавить в чек");
+                    break;
+                }
+                case -3: {
+                    fail("Не найдены товары, которые необходимо добавить в чек в методе печати чека");
+                    break;
+                }
+                case -4: {
+                    fail("Не указан способ добавления товара в чек");
+                    break;
+                }
+                case -5: {
+                    fail("Не указано количество товара во входном файле сценария");
+                    break;
+                }
+                case -6: {
+                    fail("Не указан способ оплаты во входном файле сценария");
+                    break;
+                }
+                case -7: {
+                    fail("Не указан тип товара во входном файле сценария");
+                    break;
+                }
+                case -8: {
+                    fail("Не совпадает дисплей кассы с ожидаемым экраном сдачи");
+                    break;
+                }
+                case 0: {
+                    line = CashBoxConnect(sqlCommands.getRecieptCountCommand());
+                    int countCheckTest = Integer.parseInt(line.get(0));
+                    if ((countCheckTest - countCheck) == 1) {
+                        //сделать выборку из базы чеков, по дате
+                        String getCheckDateCommand = "echo \"attach '/FisGo/receiptsDb.db' as receipts; " +
+                                "select RECEIPT_CREATE_DATE from receipts.RECEIPTS ORDER BY ID DESC limit 1;\" | sqlite3 /FisGo/receiptsDb.db\n";
+                        line = CashBoxConnect(getCheckDateCommand);
+                        String receiptDate = line.get(0);
+                        if (receiptDate.length() == 12) {
+                            StringBuilder dateStrBuild = new StringBuilder();
+                            dateStrBuild.append(receiptDate.substring(0, 4));
+                            dateStrBuild.append(receiptDate.substring(6));
+                            receiptDate = dateStrBuild.toString();
+                        }
+                        writeLogFile("Тест печати чека в учебном режиме. Дата на кассе: " + dateStr.get(0) + "Дата чека: " + receiptDate);
+
+                        //делаем выборку из базы счетчиков
+                        int[] countAfter = parseCount.parseCountValueFromStr(CashBoxConnect(sqlCommands.getCountersAdventValueCommand()).get(0));
+
+                        //Подсчет общей суммы чека
+                        //  int totalSum = totalReceiptSum(listScript);
+                        String typePayStr = searchForKeyword("type_pay: ", listScript);
+                        int typePay = -1;
+                        if (typePayStr.equals("cash_pay"))
+                            typePay = 0;
+                        if (typePayStr.equals("card_pay"))
+                            typePay = 1;
+
+                        int assertCountRes = assertCount(countBegin, countAfter, 1, 10000, typePay);//totalSum);
+                        if (assertCountRes == 0) {
+                            assertEquals(dateStr.get(0), receiptDate);
+                        } else {
+                            fail("Неверное изменение в базе счетчиков, assertCount = " + assertCountRes);
+                        }
+                        //select * from RECEIPTS ORDER BY ID DESC limit 1;
+                        //POS_COUNT|RECEIVED|DELIVERY|SHIFT_NUM|IS_PAID_CARD|IS_PAID_CASH|ORGANIZATION_NAME|CALCULATION_ADDR|CALCULATION_PLACE|ORGANIZATION_INN|KKT_EMAIL|KKT_PLANT_NUM|CUR_TAX_SYSTEM|CUR_AGENT|OFFLINE_MODE|OFD_NAME|OFD_INN|OFD_SERVER_ADDR|OFD_SERVER_IP|OFD_CHECK_RECEIPT_ADDR|OFD_SERVER_PORT|FD_NUMBER|FPD_NUMBER|RECEIPT_NUM|TYPE|TEL_NUMBER|BYER_EMAIL|DAY|MONTH|YEAR|HOURS|MINUTES|SECONDS|QR_CODE|IS_CABINET_SEND|TOTAL_SUM_RECEIPT|TIMEZONE|EXCESS|TOTAL_SUM_DISPLAY|NDS_NO|NDS_0|NDS_10|NDS_18|NDS_10_110|NDS_18_118|
+                        //    7|    1000000|  975039|    1         0|              1|      ООО "Образец"|  Санкт-Петербург, ул. Мира 1||       012345678910|   kassa@dreamkas.ru|0496000001|1|0|0||||||0|0|0|6|1|||26|1|2018|13|53|4||1|27097|3|0|24961|23545|444|61|0|121|169|
+
+                    } else {
+                        fail("Чек не добавлен в базу receiptsDb.db");
+                    }
+                    break;
+                }
+                default:
+                    break;
+            }
+
+        } else {
+            fail("Касса не в учебном режиме");
+        }
+    }
+
     /***************************************************************************************************/
     //в функции проверяется экран на дисплее кассы,
     // если экран совпадает, то выполняется выборка из БД пользователей и вводдится пароль
@@ -604,35 +738,24 @@ public class CashTest {
         switch (typeCheck) {
             //Чек продажи, приход
             case 0: {
-                //System.out.println("comming");
                 boolean corectCount = false;
                 //Наличными
                 if (typePay == 0) {
-                  //  System.out.println("(typePay == 0)");
                     for (int i = 0; i < countBegin.length; i++) {
-                    //    System.out.println("i = " + i);
                         if (countBegin[i] != countAfter[i]) {
-                          //  System.out.println("countBegin[i] != countAfter[i]");
                             if ((i == parseCount.ADVENT) || (i == parseCount.CASH_IN_FINAL) ||
                                     (i == parseCount.ADVENT_TOTAL) || (i == parseCount.REALIZATION_TOTAL) ||
                                     (i == parseCount.CASH) || (i == parseCount.ADVENT_TOTAL_ABS) ||
                                     (i == parseCount.REALIZATION_TOTAL_ABS)) {
-                              //  System.out.println("ADVENT, CASH_IN_FINAL, ADVENT_TOTAL, REALIZATION_TOTAL, CASH, ADVENT_TOTAL_ABS, REALIZATION_TOTAL_ABS");
-                                //System.out.println("countAfter[i] - countBegin[i] = " + (countAfter[i] - countBegin[i]));
                                 if (countAfter[i] - countBegin[i] == totalSumReceipt) {
-                              //      System.out.println("totalSum");
                                     corectCount = true;
-                                }
-                                else {
+                                } else {
                                     return -3;
                                 }
-                            }
-                            else {
+                            } else {
                                 if ((i == parseCount.ADVENT_CNT) || (i == parseCount.CASH_CNT) ||
                                         (i == parseCount.CURR_RECEIPT_NUM)) {
-                                  //  System.out.println("ADVENT_CNT, CASH_CNT, CURR_RECEIPT_NUM");
                                     if (countAfter[i] - countBegin[i] == 1) {
-                                    //    System.out.println("1");
                                         corectCount = true;
                                     } else {
                                         return -4;
@@ -643,13 +766,11 @@ public class CashTest {
                             }
                         }
                     }
-                    if (corectCount)
-                        return 0;
                 }
                 //Электронными
                 if (typePay == 1) {
                     for (int i = 0; i < countBegin.length; i++) {
-                        System.out.println("i = " + i);
+                        //System.out.println("i = " + i);
                         if (countBegin[i] != countAfter[i]) {
                            // System.out.println("countBegin[i] != countAfter[i]");
                             if ((i == parseCount.ADVENT_CARD) || (i == parseCount.ADVENT_TOTAL) ||
@@ -657,33 +778,31 @@ public class CashTest {
                                 (i == parseCount.ADVENT_TOTAL_ABS) || (i == parseCount.REALIZATION_TOTAL_ABS)) {
                            // System.out.println("ADVENT_CARD, ADVENT_TOTAL, REALIZATION_TOTAL, CARD, ADVENT_TOTAL_ABS, REALIZATION_TOTAL_ABS");
                            // System.out.println("countAfter[i] - countBegin[i] = " + (countAfter[i] - countBegin[i]));
-                            if (countAfter[i] - countBegin[i] == totalSumReceipt) {
-                             //   System.out.println("totalSum");
-                                corectCount = true;
-                            }
-                            else {
-                                return -5;
-                            }
-                        }
-                        else {
-                            if ((i == parseCount.ADVENT_CARD_CNT) || (i == parseCount.CARD_CNT) ||
-                                    (i == parseCount.CURR_RECEIPT_NUM)) {
-                              //  System.out.println("ADVENT_CARD_CNT, CARD_CNT, CURR_RECEIPT_NUM");
-                                if (countAfter[i] - countBegin[i] == 1) {
-                                //    System.out.println("1");
+                                if (countAfter[i] - countBegin[i] == totalSumReceipt) {
+                                 //   System.out.println("totalSum");
                                     corectCount = true;
                                 } else {
-                                    return -7;
+                                    return -5;
                                 }
                             } else {
-                                return -6;
+                                if ((i == parseCount.ADVENT_CARD_CNT) || (i == parseCount.CARD_CNT) ||
+                                    (i == parseCount.CURR_RECEIPT_NUM)) {
+                                  //  System.out.println("ADVENT_CARD_CNT, CARD_CNT, CURR_RECEIPT_NUM");
+                                    if (countAfter[i] - countBegin[i] == 1) {
+                                    //    System.out.println("1");
+                                        corectCount = true;
+                                    } else {
+                                        return -7;
+                                    }
+                                } else {
+                                    return -6;
+                                }
                             }
                         }
                     }
                 }
                 if (corectCount)
                     return 0;
-                }
                 break;
             }
 
@@ -707,12 +826,10 @@ public class CashTest {
                                 if (countAfter[i] - countBegin[i] == totalSumReceipt) {
                                     System.out.println("totalSum");
                                     corectCount = true;
-                                }
-                                else {
+                                } else {
                                     return -9;
                                 }
-                            }
-                            else {
+                            } else {
                                 if ((i == parseCount.CONSUMPTION_CNT) || (i == parseCount.CASH_CNT) ||
                                     (i == parseCount.CURR_RECEIPT_NUM)) {
                                     System.out.println("CONSUMPTION_CNT, CASH_CNT, CURR_RECEIPT_NUM");
@@ -728,8 +845,7 @@ public class CashTest {
                             }
                         }
                     }
-                    if (corectCount)
-                        return 0;
+
                 }
                 //Электронными
                 if (typePay == 1) {
@@ -766,9 +882,9 @@ public class CashTest {
                             }
                         }
                     }
-                    if (corectCount)
-                        return 0;
                 }
+                if (corectCount)
+                    return 0;
                 break;
             }
             //Чек возврата, приход
@@ -1053,16 +1169,7 @@ public class CashTest {
         List<String> line = CashBoxConnect(sqlCommands.getStageCommand());
         if (line.get(0).equals("0")) {
             //проверяем, что открыт экран ввода пароля
-            boolean compare = compareScreen(screenPicture.PASSWORD);
-            //если полученный экран с кассы совпадает с экраном ввода пароля, то выполняем if
-            if (compare) {
-                //делаем выборку их БД users на кассе, получаем пароль одного из них
-                String getPassCommand = "echo \"attach '/FisGo/usersDb.db' as users; " +
-                        "select PASS from users.USERS limit 1;\" | sqlite3 /FisGo/usersDb.db\n";
-                line = CashBoxConnect(getPassCommand);
-                //вводим пароль на кассе
-                strToKeypadConvert(line.get(0));
-            }
+            enterPasswordIfScreenOpen();
 
             line.clear();
             //делаем выборку их конфига на кассе, проверем, открыта смена или нет
@@ -2036,8 +2143,7 @@ X-отчет в логе:
             if (tmpGoodsStr.equals("CANNOT FIND KEYWORD")) {
                 writeLogFile("Не найдены товары, которые необходимо добавить в чек");
                 return -2;
-            }
-            else {
+            } else {
                 int countChecks = Integer.parseInt(countCheckStr);
                 for (int i = 0; i < countChecks; i++) {
                     int resPrintCheck = checkPrint(keyWordArray, screen);
@@ -2063,8 +2169,61 @@ X-отчет в логе:
             writeLogFile("Не открыт экран продажи (режим свободной цены)");
             return -1;
         }
-        return 0;
+        return 1;
     }
+    //Продажа, расход
+    private int checkPrintSaleConsumption(List <String> keyWordArray, ScreenPicture screen) {
+        System.out.println("in checkPrintSaleConsuption");
+        sleepMiliSecond(1000);
+        pressKeyBot(keyEnum.keyMenu, 0, 1);
+        pressKeyBot(keyEnum.key3, 0, 1);
+        pressKeyBot(keyEnum.key1, 0, 1);
+        sleepMiliSecond(1000);
+        boolean compare = compareScreen(screenPicture.FREE_SALE_MODE);
+        if (compare) {
+            String countCheckStr = searchForKeyword("check_count: ", keyWordArray);
+            if (countCheckStr.equals("CANNOT FIND KEYWORD")) {
+                writeLogFile("В сценарии не указано количество чеков, считаем, что необходимо напечатать один чек...");
+                countCheckStr = "1";
+            }
+            String tmpGoodsStr = searchForKeyword("Good ", keyWordArray);
+            if (tmpGoodsStr.equals("CANNOT FIND KEYWORD")) {
+                writeLogFile("Не найдены товары, которые необходимо добавить в чек");
+                return -2;
+            } else {
+                int countChecks = Integer.parseInt(countCheckStr);
+                for (int i = 0; i < countChecks; i++) {
+                    int resPrintCheck = checkPrint(keyWordArray, screen);
+                    //tcpSocket.setFlagPause(true, 15);
+                    //sleepMiliSecond(15000);
+                    switch (resPrintCheck) {
+                        case -1:
+                            return -3;
+                        case -2:
+                            return -4;
+                        case -3:
+                            return -5;
+                        case -5:
+                            return -6;
+                        case -4:
+                            return -7;
+                        case -6:
+                            return -8;
+                        default:
+                            break;
+                    }
+                }
+            }
+        }
+        else {
+            writeLogFile("Не открыт экран продажи (режим свободной цены)");
+            return -1;
+        }
+        return 1;
+    }
+
+
+
     //Формирование и печать чека
     private int checkPrint(List <String> keyWordArray, ScreenPicture screen) {
         dateStr.clear();
@@ -2188,8 +2347,8 @@ X-отчет в логе:
             //получить дату из кассы
             String getDateCommand = " date '+%d%m%y%H%M'\n";
             dateStr.add(CashBoxConnect(getDateCommand).get(0));
-            tcpSocket.setFlagPause(true, 2);//20);
-            sleepMiliSecond(2000);//20000);
+            tcpSocket.setFlagPause(true, 2);
+            sleepMiliSecond(2000);
         } else {
             writeLogFile("Не совпадает дисплей кассы с ожидаемым экраном сдачи");
             return -6;
@@ -2292,6 +2451,28 @@ X-отчет в логе:
             return;
         }
     }
+    //Внесение
+    private int insertion(List <String> keyWordArray) {
+        pressKeyBot(keyEnum.keyMenu, 0, 1);
+        pressKeyBot(keyEnum.key1, 0, 1);
+        boolean compare = compareScreen(screenPicture.SHIFT_MENU_OPEN_SHIFT);
+        if (compare) {
+            pressKeyBot(keyEnum.key5, 0, 1);
+            String sumInsertion = searchForKeyword("sum_insertion: ", keyWordArray);
+            if (sumInsertion.equals("CANNOT FIND KEYWORD")) {
+                writeLogFile("В сценарии не задана сумма внесения.\nЗавершение выполнения внесения невозможно");
+                return -2;
+            }
+            strToKeypadConvert(sumInsertion);
+            pressKeyBot(keyEnum.keyEnter, 0, 2);
+            tcpSocket.setFlagPause(true, 5);
+            return 0;
+        }
+        else {
+            writeLogFile("Сменп закрыта. Пункт меню внесения не доступен");
+            return -1;
+        }
+    }
 
    // @Test
  /*   public void testCash () {
@@ -2330,9 +2511,7 @@ X-отчет в логе:
                 //изъятие
                 if (instruction.equals("Reserve!"))
                     reserve();
-                //внесение
-                if (instruction.equals("Insertion!"))
-                    insertion();
+
                 //отчет о тек. состоянии
                 if (instruction.equals("Current_status_report_print!"))
                     currentStatusReportPrint();
@@ -2652,20 +2831,7 @@ X-отчет в логе:
         tcpSocket.setFlagPause(true, 5);
     }
 
-    private void insertion() throws IOException {
-        pressKeyBot(keyEnum.keyMenu, 0, 1);
-        pressKeyBot(keyEnum.key1, 0, 1);
-        //добавить проверку, что смена открыта
-        pressKeyBot(keyEnum.key5, 0, 1);
-        String sumInsertion = searchForKeyword("sum_insertion: ");
-        if (sumInsertion.equals("CANNOT FIND KEYWORD")) {
-            writeLogFile("Cannot find summ insertion in input file");
-            return;
-        }
-        strToKeypadConvert(sumInsertion);
-        pressKeyBot(keyEnum.keyEnter, 0, 2);
-        tcpSocket.setFlagPause(true, 5);
-    }
+
 
 
     private void closeShift() {
@@ -3579,6 +3745,8 @@ X-отчет в логе:
                 case GIVE_CARD_AND_RECEIPT:
                     return strFromFile.equals(screens.giveCardAndReceiptScreen);
 
+                case CONSUMTION_RESULT_SCREEN_100:
+                    return strFromFile.equals(screens.consuptionReaultScreen_100Screen);
                 default:
                     return false;
             }
