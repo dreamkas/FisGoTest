@@ -84,7 +84,7 @@ public class TCPSocket {
     //----------------------------------------------------------------------------
 
     // открываем сокет, коннектимся к IP кассы, порт 3245 и получаем сокет сервера
-    //запускается поток получения экрана
+    // запускается поток получения экрана
     public void createSocket(String host, int port) {
         try {
             workSocket = new Socket(host, port);
@@ -99,6 +99,7 @@ public class TCPSocket {
     //функция останавливает получение экрана с кассы и запускает поток получения режима ввода
     public void serverGetKepadMode() {
         try {
+            setFlagKeypadMode(true);
             GetKepadModeThread getKepadModeThread = new GetKepadModeThread(workSocket);
             getKepadModeThread.t.join();
         } catch (InterruptedException e) {
@@ -144,7 +145,6 @@ public class TCPSocket {
         }
         public void run() {
             try {
-                System.out.println("t.isAlive() = " + t.isAlive());
                 int i = 0;
                 // Берем входной и выходной потоки сокета, теперь можем получать и отсылать данные клиентом.
                 InputStream sin = socket.getInputStream();
@@ -163,6 +163,7 @@ public class TCPSocket {
                     if (getFlagKeypadMode() || getFlagPressKey())
                         Thread.sleep(1);
                 }
+                Thread.sleep(100);
                 socket.close();
             } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
@@ -209,12 +210,10 @@ public class TCPSocket {
                     byte bufClose[] = new byte[64 * 1024];
                     int rClose = sin.read(bufClose);
                     setKeypadMode(bufClose[rClose - 3]);
-                    //  String data = new String(bufClose, 0, rClose);
-                    //  System.out.println("keypadMode socket = " + keypadMode);
-                    //  System.out.println("data = " + data);
+                    String data = new String(bufClose, 0, rClose);
                     setFlagKeypadMode(false);
                 }
-            } catch (IOException e){
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }
@@ -229,10 +228,11 @@ public class TCPSocket {
         int pressAction;
         Thread t;
 
-        public SendPressKeyThread(Socket socket, int keyNum, int keyNum2, int pressAction) { // через конструтор передадим параметр
+        // передаём в конструктор все параметры, которые могут пигодится потоку сохраняем параметры как поля
+        public SendPressKeyThread(Socket socket, int keyNum, int keyNum2, int pressAction) {
             t = new Thread(this, "PressKeyThread");
             t.start();
-            this.socket = socket;           // передаём в конструктор все параметры, которые могут пигодится потоку сохраняем параметры как поля
+            this.socket = socket;
             this.keyNum = keyNum;
             this.keyNum2 = keyNum2;
             this.pressAction = pressAction;
@@ -241,7 +241,7 @@ public class TCPSocket {
         public void run() {
             try {
                 if (getFlagPressKey()) {
-                    TimeUnit.MILLISECONDS.sleep(850);
+                    TimeUnit.MILLISECONDS.sleep(800);
                     int i = 0;
                     // Берем входной и выходной потоки сокета, теперь можем получать и отсылать данные клиентом.
                     InputStream sin = socket.getInputStream();
@@ -258,7 +258,7 @@ public class TCPSocket {
                     setFlagPressKey(false);
                     setFlagPause(false, 0);
                 }
-             } catch (InterruptedException | IOException e) {
+            } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
             }
         }
