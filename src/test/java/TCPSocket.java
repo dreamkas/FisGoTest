@@ -1,150 +1,274 @@
-import sun.awt.windows.ThemeReader;
-
 import java.io.*;
-import java.net.HttpRetryException;
 import java.net.Socket;
-import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Vector;
 import java.util.concurrent.TimeUnit;
-
-import static java.lang.Boolean.FALSE;
 
 /*
  * Created by v.bochechko on 4.12.2017.
+ * Класс работы с сокетом
  */
+
 public class TCPSocket {
-    //*****************Работа с сокетом****************/
-    private static String host;
-
-    boolean flagTcpSocket = false;
-
-
-
-    public boolean getFlagTcpSocket() {
-        return flagTcpSocket;
+    //флаг получения экрана с кассы. true - получаем экран, false, соответственно нет
+    //используется в потоке получения экрана
+    private boolean flagReceiveScreen = false;
+    private boolean getFlagReceiveScreen() {
+        return flagReceiveScreen;
     }
-    public void setFlagTcpSocket(boolean flag) {
-        flagTcpSocket = flag;
+    public void setFlagReceiveScreen(boolean flag) {
+        flagReceiveScreen = flag;
     }
-
-    boolean flagGetScreen = false;
-    public boolean getFlagGetScreen() {
-        return flagGetScreen;
-    }
-    public void setFlagGetScreen(boolean flag) {
-        flagGetScreen = flag;
-    }
-    ///*
-    boolean flagKeypadMode = false;
-    public boolean getFlagKeypadMode() {
+    //----------------------------------------------------------------------------
+    //флаг получения режима ввода клавиатуры кассы. true - получить режим ввода, false, соответственно нет
+    //используется в потоке получения режима работы клавиатуры
+    private boolean flagKeypadMode = false;
+    private boolean getFlagKeypadMode() {
         return flagKeypadMode;
     }
     public void setFlagKeypadMode(boolean flag) {
         flagKeypadMode = flag;
-    }//*/
-    boolean flagPressKey = false;
-    public boolean getFlagPressKey() {
+    }
+    //----------------------------------------------------------------------------
+
+    //флаг нажатия кнопки на кассе. true - нажать на кнопу
+    //используется в потоке нажатия на кнопку
+    private boolean flagPressKey = false;
+    private boolean getFlagPressKey() {
         return flagPressKey;
     }
-    public void setFlagPressKey(boolean flag) {
+    private void setFlagPressKey(boolean flag) {
         flagPressKey = flag;
     }
+    //----------------------------------------------------------------------------
 
+    //сохранение режима ввода, полученного с кассы
     private static short keypadMode = 0;
     public short getKeypadMode() {
         return keypadMode;
     }
-    public void setKeypadMode(short data) {
+    private void setKeypadMode(short data) {
         keypadMode = data;
     }
+    //----------------------------------------------------------------------------
 
-    private static boolean readAllInstruction = false;
-    public boolean getReadAllInstruction() {
-        return readAllInstruction;
-    }
-    public void setReadAllInstruction(boolean flag) {
-        readAllInstruction = flag;
-    }
-    //*************************************************/
-
-    //*****************Получаем даннные о нажатии***************/
-    int keyNumber, pressCount;
-    public void setKeyNumber(int keyNum) {
-        keyNumber = keyNum;
-        addKeyNumArray(keyNumber);
-    }
-    public void setPressCount(int pressCounts) {
-        pressCount = pressCounts;
-        addPressCountArray(pressCount);
-    }
-    public int getKeyNumber() {
-        return keyNumber;
-    }
-    public int getPressCount() {
-        return pressCount;
-    }
-
-    private ArrayList<Integer> keyNumArray = new ArrayList<>();
-    private ArrayList<Integer> pressCountArray = new ArrayList<>();
-    private static ArrayList<Integer> keyActionArray = new ArrayList<>();
-
-  //  private Controller controller = new Controller();
-
-    public void clearArrayList () {
-        keyNumArray.clear();
-        pressCountArray.clear();
-    }
-
-    public void addKeyActionArray(int keyAction) {
-        keyActionArray.add(keyAction);
-    }
-    private void addKeyNumArray(int keyNumber) {
-        keyNumArray.add(getKeyNumber());
-    }
-    private void addPressCountArray(int pressCount) {
-        pressCountArray.add(getPressCount());
-    }
-
-    //****************Формируем команды для передачи************/
-    String HEADER = "FisGo", // Заголовок сообщений
+    //данные для формирование команды, которая будет передана на сервер
+    private String HEADER = "FisGo", // Заголовок сообщений
             PROTOCOL = "1.1"; // Версия протокола
-    int PACKET_NUM = 1,
+    private int PACKET_NUM = 1,
             CMD = 1,
             LEN = 3,
             DATA = 0,
             CRC = 0;
-    int HEADER_SIZE = 5,    // Длинна заголовка
+    private int HEADER_SIZE = 5,    // Длинна заголовка
             PROTOCOL_VER_SIZE = 3, // Длинна версии протокола
             PACKET_NUM_SIZE = 8, // Длинна номера пакета
             CMD_SIZE = 2, // Длинна команды
             LEN_SIZE = 2, // Размер поля длинны данных;
             CRC_SIZE = 2,
             DATA_SIZE = LEN;
+    //----------------------------------------------------------------------------
 
+    //сокет для соединения с сервером
+    private static Socket workSocket;
 
-    private static List<byte[]> commandArray = new ArrayList<>();
-    //private static String strPrintDoc = new String();
-    private void addDataToCommandArray(byte[] bytes) {
-        commandArray.add(bytes);
-    }
-
+    //флаг паузы, поток спит на время timePause
     private static boolean flagPause;
     private static int timePause;
     public void setFlagPause(boolean flag, int time) {
         flagPause = flag;
         timePause = time;
     }
-    public boolean getFlagPause() {
+    private boolean getFlagPause() {
         return flagPause;
     }
+    //----------------------------------------------------------------------------
+
+    // открываем сокет, коннектимся к IP кассы, порт 3245 и получаем сокет сервера
+    //запускается поток получения экрана
+    public void createSocket(String host, int port) {
+        try {
+            workSocket = new Socket(host, port);
+            GetScreenThread getScreenThread = new GetScreenThread(workSocket);
+            getScreenThread.t.start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    //----------------------------------------------------------------------------
+
+    //функция останавливает получение экрана с кассы и запускает поток получения режима ввода
+    public void serverGetKepadMode() {
+        try {
+            GetKepadModeThread getKepadModeThread = new GetKepadModeThread(workSocket);
+            getKepadModeThread.t.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+    //----------------------------------------------------------------------------
+
+    //функция запускает поток нажатия кнопки
+    public void sendPressKey(int keyNum, int keyNum2, int pressAction) {
+        try {
+            setFlagPressKey(true);
+            SendPressKeyThread sendPressKeyThread = new SendPressKeyThread(workSocket, keyNum, keyNum2, pressAction);
+            sendPressKeyThread.t.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+    //----------------------------------------------------------------------------
+
+    //закрытие сокета
+    public void socketClose() {
+        try {
+            setFlagReceiveScreen(false);
+            setFlagKeypadMode(false);
+            setFlagPressKey(false);
+            // передаем команду закрытия соединения
+            workSocket.getOutputStream().write(createData(1));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    //----------------------------------------------------------------------------
+
+    //поток получения экрана с кассы
+    public class GetScreenThread implements Runnable {
+        Socket socket;
+        Thread t;
+
+        public GetScreenThread(Socket socket) { // через конструтор передадим параметр
+            t = new Thread(this, "ScreenThread");
+            this.socket = socket;            // передаём в конструктор все параметры, которые могут пигодится потоку, сохраняем параметры как поля
+        }
+        public void run() {
+            try {
+                System.out.println("t.isAlive() = " + t.isAlive());
+                int i = 0;
+                // Берем входной и выходной потоки сокета, теперь можем получать и отсылать данные клиентом.
+                InputStream sin = socket.getInputStream();
+                OutputStream sout = socket.getOutputStream();
+                while (getFlagReceiveScreen() && !socket.isClosed()) {
+                    // передаем данные, читаем ответ
+                    sout.write(createDataGetScreen(i));
+                    byte buf[] = new byte[64 * 1024];
+                    int r = sin.read(buf);
+                    String data = new String(buf, 0, r);
+                    if (data.contains("BM>"))
+                        savePicture(buf);
+                    i++;
+                    if (i == 255) i = 0;
+                    Thread.sleep(200);
+                    if (getFlagKeypadMode() || getFlagPressKey())
+                        Thread.sleep(1);
+                }
+                socket.close();
+            } catch (InterruptedException | IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    //----------------------------------------------------------------------------
+
+    //Преобразование полученного массива байт в картинку
+    private void savePicture(byte byteRead[]) {
+        byte byteToFile[] = new byte[1086];
+        for (int i = 0; i < byteToFile.length; i++)
+            byteToFile[i] = byteRead[i + HEADER_SIZE + PROTOCOL_VER_SIZE + PACKET_NUM_SIZE + CMD_SIZE + LEN_SIZE];
+        try {FileOutputStream fos = new FileOutputStream(new File("reciveData\\tmpScreen.bmp"));
+            fos.write(byteToFile);
+            fos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    //----------------------------------------------------------------------------
+
+    //поток получения режима ввода клавиатуры
+    public class GetKepadModeThread implements Runnable {
+        Socket socket;
+        Thread t;
+
+        public GetKepadModeThread(Socket socket ) { // через конструтор передадим параметр
+            t = new Thread(this, "GetKepadModeThread");
+            this.socket = socket;           // передаём в конструктор все параметры, которые могут пигодится потоку сохраняем параметры как поля
+            t.start();
+        }
+
+        public void run() {
+            try {
+                short i = 0;
+                setKeypadMode(i);
+                // Берем входной и выходной потоки сокета, теперь можем получать и отсылать данные клиентом.
+                InputStream sin = socket.getInputStream();
+                OutputStream sout = socket.getOutputStream();
+                if (getFlagKeypadMode()) {
+                    // передаем данные, читаем ответ
+                    sout.write(createData(i));
+                    byte bufClose[] = new byte[64 * 1024];
+                    int rClose = sin.read(bufClose);
+                    setKeypadMode(bufClose[rClose - 3]);
+                    //  String data = new String(bufClose, 0, rClose);
+                    //  System.out.println("keypadMode socket = " + keypadMode);
+                    //  System.out.println("data = " + data);
+                    setFlagKeypadMode(false);
+                }
+            } catch (IOException e){
+                e.printStackTrace();
+            }
+        }
+    }
+    //----------------------------------------------------------------------------
+
+    //поток нажатия на кнопку
+    public class SendPressKeyThread  implements Runnable {
+        Socket socket;
+        int keyNum;
+        int keyNum2;
+        int pressAction;
+        Thread t;
+
+        public SendPressKeyThread(Socket socket, int keyNum, int keyNum2, int pressAction) { // через конструтор передадим параметр
+            t = new Thread(this, "PressKeyThread");
+            t.start();
+            this.socket = socket;           // передаём в конструктор все параметры, которые могут пигодится потоку сохраняем параметры как поля
+            this.keyNum = keyNum;
+            this.keyNum2 = keyNum2;
+            this.pressAction = pressAction;
+        }
+
+        public void run() {
+            try {
+                if (getFlagPressKey()) {
+                    TimeUnit.MILLISECONDS.sleep(850);
+                    int i = 0;
+                    // Берем входной и выходной потоки сокета, теперь можем получать и отсылать данные клиентом.
+                    InputStream sin = socket.getInputStream();
+                    OutputStream sout = socket.getOutputStream();
+                    // передаем данные, читаем ответ
+                    sout.write(createDataPressBtn(i, 1, 3, keyNum, keyNum2, pressAction));
+                    byte bufClose[] = new byte[64 * 1024];
+                    int rClose = sin.read(bufClose);
+                    //String data = new String(bufClose, 0, rClose);
+                    //System.out.println("data = " + data);
+                    if (getFlagPause()) {
+                        TimeUnit.SECONDS.sleep(timePause);
+                    }
+                    setFlagPressKey(false);
+                    setFlagPause(false, 0);
+                }
+             } catch (InterruptedException | IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    //----------------------------------------------------------------------------
 
     //------------формирование данных------------/
     //в результате выполнения функции должны получить строку для отправки на сервер
-    public byte[] createDataGetScreen(int PACKET_NUM_) throws UnsupportedEncodingException {
+    //466973476f312e31010000000000000003000000BA66
+    private byte[] createDataGetScreen(int PACKET_NUM_) throws UnsupportedEncodingException {
         PACKET_NUM = PACKET_NUM_;
         CMD = 2;
         LEN = 0;
@@ -295,7 +419,7 @@ public class TCPSocket {
         return sendByte;
     }
 
-    public byte[] createData(int PACKET_NUM_) throws UnsupportedEncodingException {
+    private byte[] createData(int PACKET_NUM_) throws UnsupportedEncodingException {
         PACKET_NUM = PACKET_NUM_;
         if (getFlagKeypadMode())
             CMD = 3;
@@ -442,11 +566,11 @@ public class TCPSocket {
             }
         }
 
-       // System.out.println("tmpStrBldr = " + tmpStrBldr);
+        // System.out.println("tmpStrBldr = " + tmpStrBldr);
         return sendByte;
     }
 
-    public byte[] createDataPressBtn(int PACKET_NUM_, int CMD_, int LEN_, int KEYNUM1_, int KEYNUM2_, int ACTION_ ) throws UnsupportedEncodingException {
+    private byte[] createDataPressBtn(int PACKET_NUM_, int CMD_, int LEN_, int KEYNUM1_, int KEYNUM2_, int ACTION_ ) throws UnsupportedEncodingException {
         PACKET_NUM = PACKET_NUM_;
         CMD = CMD_;
         LEN = LEN_;
@@ -606,7 +730,7 @@ public class TCPSocket {
                 //   System.out.println("tmpCrcDiv " + tmpCrcDiv);
                 int crcHexDiv = Integer.parseInt(tmpCrcDiv,16);
                 //  System.out.println("crcHexDiv " +crcHexDiv);
-                sendByte[HEADER_SIZE + PROTOCOL_VER_SIZE + PACKET_NUM_SIZE + CMD_SIZE + LEN_SIZE + DATA_SIZE] = Byte.parseByte("0");;
+                sendByte[HEADER_SIZE + PROTOCOL_VER_SIZE + PACKET_NUM_SIZE + CMD_SIZE + LEN_SIZE + DATA_SIZE] = Byte.parseByte("0");
                 sendByte[HEADER_SIZE + PROTOCOL_VER_SIZE + PACKET_NUM_SIZE + CMD_SIZE + LEN_SIZE + DATA_SIZE + 1] = (byte) crcHexDiv;
             }
         }
@@ -639,7 +763,7 @@ public class TCPSocket {
             }
         }
 
-       // System.out.println("tmpStrBldr = " + tmpStrBldr);
+        // System.out.println("tmpStrBldr = " + tmpStrBldr);
         return sendByte;
     }
 
@@ -690,245 +814,7 @@ public class TCPSocket {
         return crc;
     }
 
-    private static Socket workSocket;
-    //466973476f312e31010000000000000003000000BA66
-    public int createSocket(String host, int port) {
-        try {
-           // System.out.println("in create sock");
-            // открываем сокет и коннектимся к IP кассы, порт 3245, получаем сокет сервера
-            Socket socket = new Socket(host, port);
-            workSocket = socket;
-            GetScreenThread getScreenThread = new GetScreenThread(workSocket);
-            getScreenThread.t.start();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return 0;
-    }
-
-    public class GetScreenThread  implements Runnable {
-
-        Socket socket;
-        Thread t;
-
-        public GetScreenThread(Socket socket) { // через конструтор передадим параметр
-            //  System.out.println("GetScreenThread 1");
-            t = new Thread(this, "ScreenThread");
-            this.socket = socket;            // передаём в конструктор все параметры, которые могут пигодится потоку
-            // сохраняем параметры как поля
-        }
-        public void run() {
-            try {
-                int i = 0;
-                //   System.out.println("****************in get screen thread***********************");
-                // Берем входной и выходной потоки сокета, теперь можем получать и отсылать данные клиентом.
-                InputStream sin = socket.getInputStream();
-                OutputStream sout = socket.getOutputStream();
-                while (flagGetScreen) {
-                    // передаем данные, читаем ответ
-                    sout.write(createDataGetScreen(i));
-                    byte buf[] = new byte[64 * 1024];
-                    int r = sin.read(buf);
-                    String data = new String(buf, 0, r);
-                    byte tmp[] = new byte[r];
-                    for (int k = 0; k < r; k++)
-                        tmp[k] = buf[k];
-                    if (data.contains("BM>"))
-                        savePicture(tmp);
-                    i++;
-                    if (i == 255) i = 0;
-                    Thread.sleep(200);
-
-                    if (getReadAllInstruction()) {
-                        System.out.println("getReadAllInstruction = true");
-                        for (int afterInst = 0; afterInst < 40; afterInst++) {
-                            // передаем данные, читаем ответ
-                            sout.write(createDataGetScreen(i));
-                            byte bufAfter[] = new byte[64 * 1024];
-                            int rAfter = sin.read(bufAfter);
-                            //System.out.println("rAfter = " + rAfter);
-                            String dataAfter = new String(bufAfter, 0, rAfter);
-                            // System.out.println("dataAfter = " + dataAfter);
-                            byte tmpAfter[] = new byte[rAfter];
-                            for (int k = 0; k < rAfter; k++)
-                                tmpAfter[k] = bufAfter[k];
-                            if (data.contains("BM>"))
-                                savePicture(tmpAfter);
-
-                            i++;
-                            if (i == 255) i = 0;
-                            Thread.sleep(200);
-                        }
-                        setFlagGetScreen(false);
-                    }
-                }
-                sout.write(createData(i));
-                socket.close();
-            } catch (InterruptedException | IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-    //**********************************************************/
-    private void savePicture(byte byteRead[]) {
-        // System.out.println("*in savePicture* - enter");
-        byte byteToFile[] = new byte[1086];
-        for (int i = 0; i < byteToFile.length; i++)
-            byteToFile[i] = byteRead[i + HEADER_SIZE + PROTOCOL_VER_SIZE + PACKET_NUM_SIZE + CMD_SIZE + LEN_SIZE];
-        try {FileOutputStream fos = new FileOutputStream(new File("reciveData\\tmpScreen.bmp"));
-            fos.write(byteToFile);
-            fos.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        //     System.out.println("savePicture exit");
-        //controller.setUpdateImgFlag(true);
-    }
-
-    public void serverGetKepadMode() {
-        try {
-            //  System.out.println("sendData 1");
-            GetKepadModeThread getKepadModeThread = new GetKepadModeThread(workSocket);
-            getKepadModeThread.t.join();
-            //System.out.println("senddata 3");
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-    private static int keypadSleep = 0;
-    public void setKeypadSleep (int data) {
-        keypadSleep = data;
-    }
-    public class GetKepadModeThread implements Runnable {
-
-        Socket socket;
-        Thread t;
-
-        public GetKepadModeThread(Socket socket ) { // через конструтор передадим параметр
-            t = new Thread(this, "GetKepadModeThread");
-            this.socket = socket;           // передаём в конструктор все параметры, которые могут пигодится потоку сохраняем параметры как поля
-            t.start();
-            //  System.out.println("GetKepadModeThread 1");
-        }
-
-        public void run() {
-            try {
-                //  System.out.println("GetKepadModeThread 2");
-                short i = 0;
-                setKeypadMode(i);
-                // Берем входной и выходной потоки сокета, теперь можем получать и отсылать данные клиентом.
-                InputStream sin = workSocket.getInputStream();
-                OutputStream sout = workSocket.getOutputStream();
-
-                if (flagKeypadMode) {
-                    if (keypadSleep != 0)
-                        TimeUnit.SECONDS.sleep(keypadSleep);
-                    //       System.out.println("GetKepadModeThread 3");
-                    // передаем данные, читаем ответ
-                    sout.write(createData(i));
-                    byte bufClose[] = new byte[64 * 1024];
-                    int rClose = sin.read(bufClose);
-                    keypadMode = bufClose[rClose - 3] ;
-                    String data = new String(bufClose, 0, rClose);
-                    //System.out.println("keypadMode socket = " + keypadMode);
-                    //System.out.println("data = " + data);
-                    setFlagKeypadMode(false);
-                    keypadSleep = 0;
-                }
-            } catch (IOException | InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-
-    private static boolean flagPauseEnter = true;
-    public void setFlagPauseEnter (boolean flag) {
-        flagPauseEnter = flag;
-    }
-
-    public void sendPressKey(int keyNum, int keyNum2, int pressAction) {
-        try {
-            setFlagPressKey(true);
-            SendPressKeyThread sendPressKeyThread = new SendPressKeyThread(workSocket, keyNum, keyNum2, pressAction);
-            sendPressKeyThread.t.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public class SendPressKeyThread  implements Runnable {
-        Socket socket;
-        int keyNum;
-        int keyNum2;
-        int pressAction;
-        Thread t;
-
-        public SendPressKeyThread(Socket socket, int keyNum, int keyNum2, int pressAction) { // через конструтор передадим параметр
-            ///System.out.println("SendPressKeyThread 1");
-            t = new Thread(this, "PressKeyThread");
-            t.start();
-            this.socket = socket;           // передаём в конструктор все параметры, которые могут пигодится потоку сохраняем параметры как поля
-            this.keyNum = keyNum;
-            this.keyNum2 = keyNum2;
-            this.pressAction = pressAction;
-        }
-
-        public void run() {
-            try {
-                //  System.out.println("flagPauseEnter = " +flagPauseEnter );
-                TimeUnit.MILLISECONDS.sleep(300);
-                if (flagPauseEnter) {
-                 //   System.out.println("IN PAUSE");
-                    TimeUnit.MILLISECONDS.sleep(500);
-                    //System.out.println("with pause");
-                }
-                if (keypadSleep != 0)
-                    TimeUnit.SECONDS.sleep(keypadSleep);
-                //   System.out.println("SendPressKeyThread 2");
-                int i = 0;
-                // Берем входной и выходной потоки сокета, теперь можем получать и отсылать данные клиентом.
-                InputStream sin = workSocket.getInputStream();
-                OutputStream sout = workSocket.getOutputStream();
-
-                if (flagPressKey) {
-                    //     System.out.println("SendPressKeyThread 3");
-                    // передаем данные, читаем ответ
-                    sout.write(createDataPressBtn(i, 1, 3, keyNum, keyNum2, pressAction));
-                    byte bufClose[] = new byte[64 * 1024];
-                    int rClose = sin.read(bufClose);
-                    String data = new String(bufClose, 0, rClose);
-                //    System.out.println("data = " + data);
-                    if (getFlagPause()) {
-                     //   System.out.println("flagPause = true");
-                        TimeUnit.SECONDS.sleep(timePause);
-                    }
-                    setFlagPressKey(false);
-                    setFlagPause(false, 0);
-                }
-            } catch (InterruptedException | IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-
-
-
-    public void socketClose() {
-        try {
-
-            setFlagKeypadMode(false);
-            setFlagGetScreen(false);
-            createData(1);
-            setFlagTcpSocket(false);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    /******************************DEBUG**********************************************************/
+    //------------------------DEBUG------------------------/
     private void listPrint(List<byte[]> commandArray) {
         System.out.println("commandArray:");
         for (byte[] array : commandArray) {
@@ -938,7 +824,4 @@ public class TCPSocket {
             System.out.println();
         }
     }
-
-
 }
-
