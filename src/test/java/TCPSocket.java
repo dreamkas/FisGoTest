@@ -25,7 +25,7 @@ public class TCPSocket {
     private boolean getFlagKeypadMode() {
         return flagKeypadMode;
     }
-    public void setFlagKeypadMode(boolean flag) {
+    private void setFlagKeypadMode(boolean flag) {
         flagKeypadMode = flag;
     }
     //----------------------------------------------------------------------------
@@ -161,10 +161,10 @@ public class TCPSocket {
                     if (i == 255) i = 0;
                     Thread.sleep(200);
                     if (getFlagKeypadMode() || getFlagPressKey())
-                        Thread.sleep(1);
+                        Thread.sleep(100);
                 }
-                Thread.sleep(100);
-                socket.close();
+                //Thread.sleep(1000);
+                //socket.close();
             } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
             }

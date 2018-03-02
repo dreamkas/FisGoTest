@@ -48,12 +48,39 @@ public class SQLCommands {
         return terminalModeCommand;
     }
 
-
     private static final String cashInFinalCunterCommand = attachCounters + "select CASH_IN_FINAL from counters.COUNTERS;\" " + sqliteCounters + "\n";
     public String getCashInFinalCunterCommand() {
         System.out.println("cashInFinalCunterCommand = " + cashInFinalCunterCommand);
         return cashInFinalCunterCommand;
     }
 
+    private static final String organiztionInnCommand = attachConfig + "select ORGANIZATION_INN from config.CONFIG;\"" + sqliteConfig + "\n";
+    public String getOrganiztionInnCommand () {
+        return  organiztionInnCommand;
+    }
 
+    private static final String organiztionNameCommand = attachConfig + "select ORGANIZATION_NAME from config.CONFIG;\" " + sqliteConfig + "\n";
+    public String getOrganiztionNameCommand () {
+        return  organiztionNameCommand;
+    }
+
+    private static final String clcAddressCommand = attachConfig + "select CALCULATION_ADDRESS from config.CONFIG;\"" + sqliteConfig + "\n";
+    public String getClcAddressCommand () {
+        return  clcAddressCommand;
+    }
+
+    private static final String clcPlaceCommand = attachConfig + "select CALCULATION_PLACE from config.CONFIG;\"" + sqliteConfig + "\n";
+    public String getClcPlaceCommand () {
+        return  clcPlaceCommand;
+    }
+
+    private static final String regNumCommand = attachConfig + "select KKT_REG_NUM from config.CONFIG;\"" + sqliteConfig + "\n";
+    public String getRegNumCommand () {
+        return  regNumCommand ;
+    }
+
+    private static final String taxSystemCommand = attachConfig + "select TAX_SYSTEMS from config.CONFIG;\"" + sqliteConfig + "\n";
+    public String getTaxSystemCommand() {
+        return  taxSystemCommand;
+    }
 }

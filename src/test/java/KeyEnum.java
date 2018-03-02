@@ -4,7 +4,7 @@
 public class KeyEnum {
     private Config config = new Config();
 
-    public static int keyCancel = 0,
+    public int keyCancel = 0,
             keyCheckInSms = 0,
             keyGoods = 0,
             keyMenu = 0,

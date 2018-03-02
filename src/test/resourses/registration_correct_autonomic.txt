@@ -1,9 +1,9 @@
 registration_type: Регистрация через ККТ
-reg_num: 0000000001048236
-organization_inn: 2632810596
-organization_name: Ш
+reg_num: 0000000001030029
+organization_inn: 012345678910
+organization_name: ШЩ
 calculation_address: Ф
-calculation_place: М
+calculation_place: МН
 tax_systems: ОСН;УСН доход;УСН дох./расх.;ЕСХН;ЕНВД;Патент;
 signs: Подакциз.товар;Расч. за услуги;Азартн.игры;Лотерея;Пл. агент;
 agent_type: Банковский платежный агент;Банковский платежный субагент;Платежный агент;Платежный субагент;Поверенный;Комиссионер;Агент;
