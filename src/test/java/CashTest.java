@@ -71,19 +71,20 @@ public class CashTest {
         dataFromCashbox.initSession(CashboxIP, USERNAME, PORT, PASSWORD);
 
         //проверяем, что открыт экран ввода пароля
-      /*  enterPasswordIfScreenOpen();
+        enterPasswordIfScreenOpen();
         //делаем тех. обнуление на кассе
         techNull();
         tcpSocket.socketClose();
         //перезапускаем фискат
         CashBoxConnect("/sbin/reboot");
         sleepMiliSecond(25000);
-
+        tcpSocket.setFlagPause(true, 25);
         dataFromCashbox.initSession(CashboxIP, USERNAME, PORT, PASSWORD);
         tcpSocket.setFlagReceiveScreen(true);
         tcpSocket.createSocket(CashboxIP, CashboxPort);
+        tcpSocket.setFlagPause(false, 0);
         //добавляем в БД товаров все виды товаров
-        //addGoodsOnCash(); */
+        //addGoodsOnCash();
     }
 
     //---------------------------Постусловия--------------------------/
@@ -119,7 +120,7 @@ public class CashTest {
         }
     }
 
-    //Ввод корректного пароля
+    //Ввод корректного пароля, касса после тех. обнуления
     @Test
     public void correct_password() throws IOException {
         List<String> listScript = readDataScript("src\\test\\resourses\\passwd_1234.txt");
@@ -139,6 +140,59 @@ public class CashTest {
             default:
                 fail("Неизвестное значение");
                 break;
+        }
+    }
+
+    //Ввод корректного пароля, на кассе открыта смена
+    @Test
+    public void correct_password_open_shift() throws IOException {
+        //делаем выборку из конфига на кассе, проверем, открыта смена или нет
+        List <String> line = CashBoxConnect(sqlCommands.getOpenShiftCommand());
+        if (line.get(0).isEmpty() && (Integer.parseInt(line.get(1)) == 0)) {
+            enterPasswordIfScreenOpen();
+            int openShiftResult = openShift();
+            System.out.println("openShiftResult = " + openShiftResult);
+            if (openShiftResult != 0)
+                fail("Ошибка при открытии смены");
+            //если смена открыта, то перезапускаем кассу, чтобы попасть на экран авторизации
+            else {
+                //перезапускаем фискат
+                tcpSocket.setFlagPause(false, 0);
+                tcpSocket.socketClose();
+                CashBoxConnect("/sbin/reboot");
+                sleepMiliSecond(25000);
+                tcpSocket.setFlagPause(true, 25);
+                dataFromCashbox.initSession(CashboxIP, USERNAME, PORT, PASSWORD);
+                tcpSocket.setFlagReceiveScreen(true);
+                tcpSocket.createSocket(CashboxIP, CashboxPort);
+                tcpSocket.setFlagPause(false, 0);
+            }
+        }
+
+        line.clear();
+        //делаем выборку из конфига на кассе, проверем, открыта смена или нет
+        line = CashBoxConnect(sqlCommands.getOpenShiftCommand());
+        if (line.get(0).isEmpty() && (Integer.parseInt(line.get(1)) == 0)) {
+            fail("Смена закрыта");
+        } else {
+            List<String> listScript = readDataScript("src\\test\\resourses\\passwd_1234.txt");
+            int testResult = enterPassword(listScript);
+            switch (testResult) {
+                case -1:
+                    fail("Введен неверный пароль.");
+                    break;
+                case -2:
+                    fail("Не открыт экран ввода пароля.");
+                    break;
+                case 0: {
+                    String strFromFile = br.readLine();
+                    assertEquals(screens.freeSaleModeScreen, strFromFile);
+                    break;
+                }
+                default:
+                    fail("Неизвестное значение");
+                    break;
+            }
         }
     }
     //------------------------------------------------------------------------------/
@@ -304,7 +358,7 @@ public class CashTest {
         if (line.get(0).equals("0")) {
             enterPasswordIfScreenOpen();
             line.clear();
-            //делаем выборку их конфига на кассе, проверем, открыта смена или нет
+            //делаем выборку из конфига на кассе, проверем, открыта смена или нет
             line = CashBoxConnect(sqlCommands.getOpenShiftCommand());
             if (line.get(0).isEmpty() && (Integer.parseInt(line.get(1)) == 0)) {
                 if (openShift() != 0)
