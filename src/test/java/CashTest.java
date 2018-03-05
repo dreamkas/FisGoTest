@@ -99,24 +99,47 @@ public class CashTest {
     //Ввод некорректного пароля
     @Test
     public void incorrect_password() throws IOException {
-        List<String> listScript = new ArrayList<>();
-        listScript.add("password: 1235");
-        enterPassword(listScript);
-        pressKeyBot(keyEnum.keyCancel, 0, 1);
-
-        String strFromFile = br.readLine();
-        assertEquals(screens.incorrectPasswodScreen, strFromFile);
+        List<String> listScript = readDataScript("src\\test\\resourses\\passwd_1235.txt");
+        int testResult = enterPassword(listScript);
+        switch (testResult) {
+            case -1: {
+                String strFromFile = br.readLine();
+                assertEquals(strFromFile, screens.incorrectPasswodScreen);
+                break;
+            }
+            case -2:
+                fail("Не открыт экран ввода пароля.");
+                break;
+            case 0:
+                fail("Введен верный пароль.");
+                break;
+            default:
+                fail("Неизвестное значение");
+                break;
+        }
     }
 
     //Ввод корректного пароля
     @Test
     public void correct_password() throws IOException {
-        List<String> listScript = new ArrayList<>();
-        listScript.add("password: 1234");
-        enterPassword(listScript);
-
-        String strFromFile = br.readLine();
-        assertEquals(screens.menuAfterPasswdScreen, strFromFile);
+        List<String> listScript = readDataScript("src\\test\\resourses\\passwd_1234.txt");
+        int testResult = enterPassword(listScript);
+        switch (testResult) {
+            case -1:
+                fail("Введен неверный пароль.");
+                break;
+            case -2:
+                fail("Не открыт экран ввода пароля.");
+                break;
+            case 0: {
+                String strFromFile = br.readLine();
+                assertEquals(screens.menuAfterPasswdScreen, strFromFile);
+                break;
+            }
+            default:
+                fail("Неизвестное значение");
+                break;
+        }
     }
     //------------------------------------------------------------------------------/
 
@@ -606,6 +629,7 @@ public class CashTest {
         }
     }
     //------------------------------------------------------------------------------------/
+
     //--------------------------------Тесты на открытие смены-----------------------------/
     //---------------------------------ККТ в учебном режиме-------------------------------/
     @Test
@@ -652,9 +676,8 @@ public class CashTest {
             fail("Касса не в учебном режиме");
         }
     }
-
-
     //------------------------------------------------------------------------------------/
+
     //----------------------------------Печать Х-отчета-----------------------------------/
     /*FIXME условия прохождения теста - ??? */
     @Test
@@ -750,7 +773,7 @@ public class CashTest {
         }
     }
     //Ввод пароля
-    private void enterPassword(List <String> keyWordArray) {
+    private int enterPassword(List <String> keyWordArray) {
         writeLogFile("Выполняется функция ввода пароля.");
         boolean compare = compareScreen(ScreenPicture.PASSWORD);
         //если полученный экран с кассы совпадает с экраном ввода пароля, то выполняем if
@@ -761,15 +784,21 @@ public class CashTest {
                 writeLogFile("Пароль не найден в файле сценария.");
             strToKeypadConvert(pass);
             compare = compareScreen(ScreenPicture.INCORRECT_PASSWORD);
-            if (compare) writeLogFile("Введен неверный пароль.");
-            else writeLogFile("Введен верный пароль.");
+            if (compare) {
+                writeLogFile("Введен неверный пароль.");
+                tcpSocket.setFlagPause(true, 1);
+                sleepMiliSecond(1000);
+                return -1;
+            }
+            else {
+                writeLogFile("Введен верный пароль.");
+                tcpSocket.setFlagPause(true, 1);
+                sleepMiliSecond(1000);
+                return 0;
+            }
         } else {
             writeLogFile("Экран ввода пароля не открыт.");
-        }
-        try {
-            TimeUnit.MILLISECONDS.sleep(1000);
-        } catch (InterruptedException e ) {
-            e.printStackTrace();
+            return -2;
         }
     }
     //Регистрация
