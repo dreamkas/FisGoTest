@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 /*
- * Created by v.bochechko on 02.10.2017.
  * Этот класс возвращает строку из bmp-файдов (экранов с кассы)
  */
 

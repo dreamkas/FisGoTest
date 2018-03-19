@@ -12,10 +12,7 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-/*
- * Created by v.bochechko on 04.12.2017.
- * Содержит тесты, которые будут выполняться на кассе
- */
+//Содержит тесты, которые будут выполняться на кассе
 
 public class CashTest {
     public CashTest() throws FileNotFoundException {
@@ -26,13 +23,13 @@ public class CashTest {
 
     //параметры для открытия сокета с кассой
     private static final String CashBoxType = "DreamkasF"; //DreamkasRF
-    private static final String CashboxIP = "192.168.243.12";
+    private static final String CashboxIP = "192.168.242.58";
     private static final int CashboxPort = 3425;
     //----------------------------------------------------------------------------
 
     //параметры подключения по ssh
     private static final String USERNAME = "root";
-    private static final String PASSWORD = "root1";
+    private static final String PASSWORD = "root";
     private static final int PORT = 22;
     //----------------------------------------------------------------------------
 
@@ -71,7 +68,7 @@ public class CashTest {
         dataFromCashbox.initSession(CashboxIP, USERNAME, PORT, PASSWORD);
 
         //проверяем, что открыт экран ввода пароля
-        enterPasswordIfScreenOpen();
+   /*     enterPasswordIfScreenOpen();
         //делаем тех. обнуление на кассе
         techNull();
         tcpSocket.socketClose();
@@ -84,7 +81,7 @@ public class CashTest {
         tcpSocket.createSocket(CashboxIP, CashboxPort);
         tcpSocket.setFlagPause(false, 0);
         //добавляем в БД товаров все виды товаров
-        //addGoodsOnCash();
+        //addGoodsOnCash(); */
     }
 
     //---------------------------Постусловия--------------------------/
@@ -123,23 +120,29 @@ public class CashTest {
     //Ввод корректного пароля, касса после тех. обнуления
     @Test
     public void correct_password() throws IOException {
-        List<String> listScript = readDataScript("src\\test\\resourses\\passwd_1234.txt");
-        int testResult = enterPassword(listScript);
-        switch (testResult) {
-            case -1:
-                fail("Введен неверный пароль.");
-                break;
-            case -2:
-                fail("Не открыт экран ввода пароля.");
-                break;
-            case 0: {
-                String strFromFile = br.readLine();
-                assertEquals(screens.menuAfterPasswdScreen, strFromFile);
-                break;
+        //делаем выборку из конфига на кассе, проверем, открыта смена или нет
+        List <String> line = CashBoxConnect(sqlCommands.getOpenShiftCommand());
+        if (line.get(0).isEmpty() && (Integer.parseInt(line.get(1)) == 0)) {
+            List<String> listScript = readDataScript("src\\test\\resourses\\passwd_1234.txt");
+            int testResult = enterPassword(listScript);
+            switch (testResult) {
+                case -1:
+                    fail("Введен неверный пароль.");
+                    break;
+                case -2:
+                    fail("Не открыт экран ввода пароля.");
+                    break;
+                case 0: {
+                    String strFromFile = br.readLine();
+                    assertEquals(screens.menuAfterPasswdScreen, strFromFile);
+                    break;
+                }
+                default:
+                    fail("Неизвестное значение");
+                    break;
             }
-            default:
-                fail("Неизвестное значение");
-                break;
+        } else {
+            fail("Касса после тех обнуления, но смена открыта");
         }
     }
 
@@ -725,12 +728,66 @@ public class CashTest {
             else {
                 fail("Смена уже открыта");
             }
-
         } else {
             fail("Касса не в учебном режиме");
         }
     }
     //------------------------------------------------------------------------------------/
+
+    //--------------------------------Тесты на закрытие смены-----------------------------/
+    //-------------------------ККТ в учебном режиме, смена открыта------------------------/
+    @Test
+    public void close_shift_training_mode() throws IOException {
+        List<String> line = CashBoxConnect(sqlCommands.getStageCommand());
+        if (line.get(0).equals("0")) {
+            //проверяем, что открыт экран ввода пароля
+            enterPasswordIfScreenOpen();
+            line.clear();
+            //делаем выборку их конфига на кассе, проверем, открыта смена или нет
+            line = CashBoxConnect(sqlCommands.getOpenShiftCommand());
+            //открываем смену, если она закрыта
+            if (line.get(0).isEmpty() && (Integer.parseInt(line.get(1)) == 0)) {
+                int openShiftInt = openShift();
+                if (openShiftInt != 0)
+                    fail("Ошибка при откытии смены, результат выполнения " + openShiftInt);
+            }
+            int testResult = closeShift();
+            switch (testResult) {
+                case -1:
+                    fail("Смена закрыта");
+                    break;
+                case -2:
+                    fail("Пункт закрытия смены не доступен");
+                    break;
+                case -3:
+                    fail("Экран после закрытия смены не совпадает с ожидаемым (нет пункта открытия смены)");
+                    break;
+                case  -4:
+                    fail("Поля OPEN_SHIFT_DATE и SHIFT_TIMER не пустые в конфиге");
+                    break;
+                case 0: {
+                    line.clear();
+                    line = CashBoxConnect(sqlCommands.getOpenShiftCommand());
+                    if (line.get(0).isEmpty() && (Integer.parseInt(line.get(1)) == 0)) {
+                        String strFromFile = br.readLine();
+                        assertEquals(strFromFile, screens.openShiftMenuScreen);
+                    } else {
+                        fail("Поля OPEN_SHIFT_DATE и SHIFT_TIMER не пустые в конфиге");
+                    }
+                    break;
+                }
+                default:
+                    fail("Неизвестное значение");
+                    break;
+            }
+        } else {
+            fail("Касса не в учебном режиме");
+        }
+    }
+    //------------------------------------------------------------------------------------/
+
+
+
 
     //----------------------------------Печать Х-отчета-----------------------------------/
     /*FIXME условия прохождения теста - ??? */
@@ -809,6 +866,7 @@ public class CashTest {
         }
     }
     //-----------------------------------------------------------------------------------------------/
+
 
 
     // в функции проверяется экран на дисплее кассы,
@@ -2527,6 +2585,52 @@ public class CashTest {
 
     }
 
+    private int closeShift() {
+        //делаем выборку их конфига на кассе, проверем, открыта смена или нет
+        List <String> line = CashBoxConnect(sqlCommands.getOpenShiftCommand());
+        if (!line.get(0).isEmpty() && (Integer.parseInt(line.get(1)) != 0)) {
+            pressKeyBot(keyEnum.keyMenu, 0, 1);
+            pressKeyBot(keyEnum.key1, 0, 1);
+            //проверка, что на экране есть пункт закрытия смены
+            boolean compare = compareScreen(ScreenPicture.SHIFT_MENU_OPEN_SHIFT);
+            if (compare) {
+                pressKeyBot(keyEnum.key2, 0, 1);
+                pressKeyBot(keyEnum.keyEnter, 0, 1);
+                sleepMiliSecond(8000);
+                tcpSocket.setFlagPause(true, 8);
+                pressKeyBot(keyEnum.key1, 0, 1);
+                compare = compareScreen(ScreenPicture.OPEN_SHIFT_MENU);
+                if (compare) {
+                    line.clear();
+                    line = CashBoxConnect(sqlCommands.getOpenShiftCommand());
+                    if (line.get(0).isEmpty() && (Integer.parseInt(line.get(1)) == 0)) {
+                        return 0;
+                    }
+                    else {
+                        writeLogFile("Смена не закрыта");
+                        return -4;
+                    }
+                } else {
+                    writeLogFile("Экран после закрытия смены не совпадает с ожидаемым");
+                    return -3;
+                }
+
+            } else {
+                writeLogFile("Пункт закрытия смены не доступен");
+                return -2;
+            }
+        } else {
+            writeLogFile("Смена закрыта");
+            return -1;
+        }
+    }
+
+
+
+
+
+
+
     /*
     private void re_registrationChangeOFD() {
         pressKeyBot(keyEnum.keyMenu, 0, 1);
@@ -2705,14 +2809,7 @@ public class CashTest {
         tcpSocket.setFlagPause(true, 5);
     }
 
-    private void closeShift() {
-        pressKeyBot(keyEnum.keyMenu, 0, 1);
-        pressKeyBot(keyEnum.key1, 0, 1);
-        //добавить проверку, что на экране есть пункт закрытия смены
-        pressKeyBot(keyEnum.key2, 0, 1);
-        pressKeyBot(keyEnum.keyEnter, 0, 1);
-        tcpSocket.setFlagPause(true, 7);
-    }
+
 
     private void xCount() {
         pressKeyBot(keyEnum.keyMenu, 0, 1);
