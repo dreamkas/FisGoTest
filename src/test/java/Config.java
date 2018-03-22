@@ -1,5 +1,5 @@
-/*
- * Created by v.bochechko on 04.12.2017.
+/**
+ * @author v.bochechko on 04.12.2017.
  */
 public class Config {
     //0 - дримкас Ф, 1 - дримкас РФ

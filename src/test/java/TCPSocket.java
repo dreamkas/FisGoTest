@@ -1,54 +1,44 @@
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.io.*;
 import java.net.Socket;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-/*
+/**
  * Created by v.bochechko on 4.12.2017.
  * Класс работы с сокетом
  */
 
 public class TCPSocket {
+
     //флаг получения экрана с кассы. true - получаем экран, false, соответственно нет
     //используется в потоке получения экрана
+    @Getter (AccessLevel.PRIVATE)
+    @Setter
     private boolean flagReceiveScreen = false;
-    private boolean getFlagReceiveScreen() {
-        return flagReceiveScreen;
-    }
-    public void setFlagReceiveScreen(boolean flag) {
-        flagReceiveScreen = flag;
-    }
     //----------------------------------------------------------------------------
+
     //флаг получения режима ввода клавиатуры кассы. true - получить режим ввода, false, соответственно нет
     //используется в потоке получения режима работы клавиатуры
+    @Getter (AccessLevel.PRIVATE)
+    @Setter (AccessLevel.PRIVATE)
     private boolean flagKeypadMode = false;
-    private boolean getFlagKeypadMode() {
-        return flagKeypadMode;
-    }
-    private void setFlagKeypadMode(boolean flag) {
-        flagKeypadMode = flag;
-    }
     //----------------------------------------------------------------------------
 
     //флаг нажатия кнопки на кассе. true - нажать на кнопу
     //используется в потоке нажатия на кнопку
+    @Getter (AccessLevel.PRIVATE)
+    @Setter (AccessLevel.PRIVATE)
     private boolean flagPressKey = false;
-    private boolean getFlagPressKey() {
-        return flagPressKey;
-    }
-    private void setFlagPressKey(boolean flag) {
-        flagPressKey = flag;
-    }
     //----------------------------------------------------------------------------
 
     //сохранение режима ввода, полученного с кассы
+    @Getter
+    @Setter (AccessLevel.PRIVATE)
     private static short keypadMode = 0;
-    public short getKeypadMode() {
-        return keypadMode;
-    }
-    private void setKeypadMode(short data) {
-        keypadMode = data;
-    }
     //----------------------------------------------------------------------------
 
     //данные для формирование команды, которая будет передана на сервер
@@ -72,14 +62,12 @@ public class TCPSocket {
     private static Socket workSocket;
 
     //флаг паузы, поток спит на время timePause
+    @Getter (AccessLevel.PRIVATE)
     private static boolean flagPause;
     private static int timePause;
     public void setFlagPause(boolean flag, int time) {
         flagPause = flag;
         timePause = time;
-    }
-    private boolean getFlagPause() {
-        return flagPause;
     }
     //----------------------------------------------------------------------------
 
@@ -149,7 +137,7 @@ public class TCPSocket {
                 // Берем входной и выходной потоки сокета, теперь можем получать и отсылать данные клиентом.
                 InputStream sin = socket.getInputStream();
                 OutputStream sout = socket.getOutputStream();
-                while (getFlagReceiveScreen() && !socket.isClosed()) {
+                while (isFlagReceiveScreen() && !socket.isClosed()) {
                     // передаем данные, читаем ответ
                     sout.write(createDataGetScreen(i));
                     byte buf[] = new byte[64 * 1024];
@@ -160,11 +148,9 @@ public class TCPSocket {
                     i++;
                     if (i == 255) i = 0;
                     Thread.sleep(200);
-                    if (getFlagKeypadMode() || getFlagPressKey())
+                    if (isFlagKeypadMode() || isFlagPressKey())
                         Thread.sleep(100);
                 }
-                //Thread.sleep(1000);
-                //socket.close();
             } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
             }
@@ -204,7 +190,7 @@ public class TCPSocket {
                 // Берем входной и выходной потоки сокета, теперь можем получать и отсылать данные клиентом.
                 InputStream sin = socket.getInputStream();
                 OutputStream sout = socket.getOutputStream();
-                if (getFlagKeypadMode()) {
+                if (isFlagKeypadMode()) {
                     // передаем данные, читаем ответ
                     sout.write(createData(i));
                     byte bufClose[] = new byte[64 * 1024];
@@ -240,7 +226,7 @@ public class TCPSocket {
 
         public void run() {
             try {
-                if (getFlagPressKey()) {
+                if (isFlagPressKey()) {
                     TimeUnit.MILLISECONDS.sleep(800);
                     int i = 0;
                     // Берем входной и выходной потоки сокета, теперь можем получать и отсылать данные клиентом.
@@ -252,7 +238,7 @@ public class TCPSocket {
                     int rClose = sin.read(bufClose);
                     //String data = new String(bufClose, 0, rClose);
                     //System.out.println("data = " + data);
-                    if (getFlagPause()) {
+                    if (isFlagPause()) {
                         TimeUnit.SECONDS.sleep(timePause);
                     }
                     setFlagPressKey(false);
@@ -421,7 +407,7 @@ public class TCPSocket {
 
     private byte[] createData(int PACKET_NUM_) throws UnsupportedEncodingException {
         PACKET_NUM = PACKET_NUM_;
-        if (getFlagKeypadMode())
+        if (isFlagKeypadMode())
             CMD = 3;
         else
             CMD = 4;

@@ -19,18 +19,18 @@ public class CashTest {
     }
 
     private FileInputStream fstream = new FileInputStream("./reciveData/tmpScreen.bmp");
-    private BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
+    public BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
 
     //параметры для открытия сокета с кассой
     private static final String CashBoxType = "DreamkasF"; //DreamkasRF
-    private static final String CashboxIP = "192.168.242.58";
-    private static final int CashboxPort = 3425;
+    public static final String CashboxIP = "192.168.242.58";
+    public static final int CashboxPort = 3425;
     //----------------------------------------------------------------------------
 
     //параметры подключения по ssh
-    private static final String USERNAME = "root";
-    private static final String PASSWORD = "root";
-    private static final int PORT = 22;
+    public static final String USERNAME = "root";
+    public static final String PASSWORD = "root";
+    public static final int PORT = 22;
     //----------------------------------------------------------------------------
 
     //Текущая дата, используется для записи в лог
@@ -50,35 +50,43 @@ public class CashTest {
     private ParseCount parseCount = new ParseCount();
 
     // возвращает данные с кассы
-    private List<String> CashBoxConnect(String command) {
+    public List<String> cashBoxConnect(String command) {
         return dataFromCashbox.executeListCommand(command);
     }
+
+    //Инициализация клавиатуры в зависимости от типа кассы
+    public void initializationKeyboard() {
+        if (CashBoxType.equals("DreamkasF")) config.setCashType(0);
+        if (CashBoxType.equals("DreamkasRF")) config.setCashType(1);
+        keyEnum.initKeyEnum();
+    }
+
+    //установка соединения
+    public void connectionSetup () {
+        tcpSocket.setFlagReceiveScreen(true);
+        tcpSocket.createSocket(CashboxIP, CashboxPort);
+        dataFromCashbox.initSession(CashboxIP, USERNAME, PORT, PASSWORD);
+    }
+
 
     //---------------------------Предусловия--------------------------/
     // Инициализация клавиатуры, установка ssh-соединения, создания сокета
     // Сброс кассы (выполнение тех. обнуления), добавление товаров
     @Before
     public void before_test_clear_cashbox() {
-        if (CashBoxType.equals("DreamkasF")) config.setCashType(0);
-        if (CashBoxType.equals("DreamkasRF")) config.setCashType(1);
-
-        keyEnum.initKeyEnum();
-        tcpSocket.setFlagReceiveScreen(true);
-        tcpSocket.createSocket(CashboxIP, CashboxPort);
-        dataFromCashbox.initSession(CashboxIP, USERNAME, PORT, PASSWORD);
+        initializationKeyboard();
+        connectionSetup();
 
         //проверяем, что открыт экран ввода пароля
-   /*     enterPasswordIfScreenOpen();
+        enterPasswordIfScreenOpen();
         //делаем тех. обнуление на кассе
         techNull();
         tcpSocket.socketClose();
         //перезапускаем фискат
-        CashBoxConnect("/sbin/reboot");
+        cashBoxConnect("/sbin/reboot");
         sleepMiliSecond(25000);
         tcpSocket.setFlagPause(true, 25);
-        dataFromCashbox.initSession(CashboxIP, USERNAME, PORT, PASSWORD);
-        tcpSocket.setFlagReceiveScreen(true);
-        tcpSocket.createSocket(CashboxIP, CashboxPort);
+        connectionSetup();
         tcpSocket.setFlagPause(false, 0);
         //добавляем в БД товаров все виды товаров
         //addGoodsOnCash(); */
@@ -92,121 +100,13 @@ public class CashTest {
         tcpSocket.socketClose();
     }
 
-    //----------------------------Тесты на ввод пароля------------------------------/
-    //---------------------------ККТ не зарегистирована-----------------------------/
-    //Ввод некорректного пароля
-    @Test
-    public void incorrect_password() throws IOException {
-        List<String> listScript = readDataScript("src\\test\\resourses\\passwd_1235.txt");
-        int testResult = enterPassword(listScript);
-        switch (testResult) {
-            case -1: {
-                String strFromFile = br.readLine();
-                assertEquals(strFromFile, screens.incorrectPasswodScreen);
-                break;
-            }
-            case -2:
-                fail("Не открыт экран ввода пароля.");
-                break;
-            case 0:
-                fail("Введен верный пароль.");
-                break;
-            default:
-                fail("Неизвестное значение");
-                break;
-        }
-    }
-
-    //Ввод корректного пароля, касса после тех. обнуления
-    @Test
-    public void correct_password() throws IOException {
-        //делаем выборку из конфига на кассе, проверем, открыта смена или нет
-        List <String> line = CashBoxConnect(sqlCommands.getOpenShiftCommand());
-        if (line.get(0).isEmpty() && (Integer.parseInt(line.get(1)) == 0)) {
-            List<String> listScript = readDataScript("src\\test\\resourses\\passwd_1234.txt");
-            int testResult = enterPassword(listScript);
-            switch (testResult) {
-                case -1:
-                    fail("Введен неверный пароль.");
-                    break;
-                case -2:
-                    fail("Не открыт экран ввода пароля.");
-                    break;
-                case 0: {
-                    String strFromFile = br.readLine();
-                    assertEquals(screens.menuAfterPasswdScreen, strFromFile);
-                    break;
-                }
-                default:
-                    fail("Неизвестное значение");
-                    break;
-            }
-        } else {
-            fail("Касса после тех обнуления, но смена открыта");
-        }
-    }
-
-    //Ввод корректного пароля, на кассе открыта смена
-    @Test
-    public void correct_password_open_shift() throws IOException {
-        //делаем выборку из конфига на кассе, проверем, открыта смена или нет
-        List <String> line = CashBoxConnect(sqlCommands.getOpenShiftCommand());
-        if (line.get(0).isEmpty() && (Integer.parseInt(line.get(1)) == 0)) {
-            enterPasswordIfScreenOpen();
-            int openShiftResult = openShift();
-            System.out.println("openShiftResult = " + openShiftResult);
-            if (openShiftResult != 0)
-                fail("Ошибка при открытии смены");
-            //если смена открыта, то перезапускаем кассу, чтобы попасть на экран авторизации
-            else {
-                //перезапускаем фискат
-                tcpSocket.setFlagPause(false, 0);
-                tcpSocket.socketClose();
-                CashBoxConnect("/sbin/reboot");
-                sleepMiliSecond(25000);
-                tcpSocket.setFlagPause(true, 25);
-                dataFromCashbox.initSession(CashboxIP, USERNAME, PORT, PASSWORD);
-                tcpSocket.setFlagReceiveScreen(true);
-                tcpSocket.createSocket(CashboxIP, CashboxPort);
-                tcpSocket.setFlagPause(false, 0);
-            }
-        }
-
-        line.clear();
-        //делаем выборку из конфига на кассе, проверем, открыта смена или нет
-        line = CashBoxConnect(sqlCommands.getOpenShiftCommand());
-        if (line.get(0).isEmpty() && (Integer.parseInt(line.get(1)) == 0)) {
-            fail("Смена закрыта");
-        } else {
-            List<String> listScript = readDataScript("src\\test\\resourses\\passwd_1234.txt");
-            int testResult = enterPassword(listScript);
-            switch (testResult) {
-                case -1:
-                    fail("Введен неверный пароль.");
-                    break;
-                case -2:
-                    fail("Не открыт экран ввода пароля.");
-                    break;
-                case 0: {
-                    String strFromFile = br.readLine();
-                    assertEquals(screens.freeSaleModeScreen, strFromFile);
-                    break;
-                }
-                default:
-                    fail("Неизвестное значение");
-                    break;
-            }
-        }
-    }
-    //------------------------------------------------------------------------------/
-
     //-------------------------Тесты на регистрацию---------------------------------/
     //------------Тест на регистрацию через ККТ, в автономном режиме----------------/
     @Test
     public void correct_registration_autonomic() throws IOException {
         //проверяем, что stage кассы = 0
         String getStageCommand = sqlCommands.getStageCommand();
-        List<String> line = CashBoxConnect(getStageCommand);
+        List<String> line = cashBoxConnect(getStageCommand);
         if (!line.get(0).equals("2")) {
             enterPasswordIfScreenOpen();
             List<String> listScript = readDataScript("src\\test\\resourses\\registration_correct_autonomic.txt");
@@ -238,7 +138,7 @@ public class CashTest {
                     break;
             }
 
-            line = CashBoxConnect(getStageCommand);
+            line = cashBoxConnect(getStageCommand);
             if (line.get(0).equals("2")) {
                 pressKeyBot(keyEnum.key1, 0, 1);
                 String strFromFile = br.readLine();
@@ -254,7 +154,7 @@ public class CashTest {
     public void correct_registration_not_autonomic() throws IOException {
         //проверяем, что stage кассы = 0
         String getStageCommand = sqlCommands.getStageCommand();
-        List<String> line = CashBoxConnect(getStageCommand);
+        List<String> line = cashBoxConnect(getStageCommand);
         if (!line.get(0).equals("2")) {
             enterPasswordIfScreenOpen();
             List<String> listScript = readDataScript("src\\test\\resourses\\correct_registration_not_autonomic.txt");
@@ -286,7 +186,7 @@ public class CashTest {
                     break;
             }
 
-            line = CashBoxConnect(getStageCommand);
+            line = cashBoxConnect(getStageCommand);
             if (line.get(0).equals("2")) {
                 pressKeyBot(keyEnum.key1, 0, 1);
                 String strFromFile = br.readLine();
@@ -304,7 +204,7 @@ public class CashTest {
     public void correct_re_registration_legal_entity() throws IOException {
         //проверяем, что stage кассы = 2
         String getStage = sqlCommands.getStageCommand();
-        List<String> line = CashBoxConnect(getStage);
+        List<String> line = cashBoxConnect(getStage);
         enterPasswordIfScreenOpen();
 
         //регистрируем кассу, если она не зарегистирована
@@ -315,7 +215,7 @@ public class CashTest {
                 fail("Касса не зарегисрирована, перерегистрация невозможна.");
         }
 
-        line = CashBoxConnect(getStage);
+        line = cashBoxConnect(getStage);
         if (line.get(0).equals("2")) {
             List<String> listScript = readDataScript("src\\test\\resourses\\correct_reregistration_legal_entity.txt");
             int testResul = re_registrationLegalEntity(listScript);
@@ -326,7 +226,7 @@ public class CashTest {
                     "select CALCULATION_ADDRESS from config.CONFIG;" +
                     "select CALCULATION_PLACE from config.CONFIG;\"" +
                     " | sqlite3 /FisGo/configDb.db\n";
-            line = CashBoxConnect(getData);
+            line = cashBoxConnect(getData);
 
             List<String> dataFromFile = new ArrayList<>();
             String tmpAddDataStr = searchForKeyword("organization_name: ", listScript);
@@ -357,12 +257,12 @@ public class CashTest {
     @Test
     public void sale_advent_learning_mode_cash() {
         //проверяем, что stage кассы = 0
-        List<String> line = CashBoxConnect(sqlCommands.getStageCommand());
+        List<String> line = cashBoxConnect(sqlCommands.getStageCommand());
         if (line.get(0).equals("0")) {
             enterPasswordIfScreenOpen();
             line.clear();
             //делаем выборку из конфига на кассе, проверем, открыта смена или нет
-            line = CashBoxConnect(sqlCommands.getOpenShiftCommand());
+            line = cashBoxConnect(sqlCommands.getOpenShiftCommand());
             if (line.get(0).isEmpty() && (Integer.parseInt(line.get(1)) == 0)) {
                 if (openShift() != 0)
                     fail("Ошибка при открытии смены");
@@ -370,12 +270,12 @@ public class CashTest {
 
             //делаем выборку из базы чеков
             line.clear();
-            line = CashBoxConnect(sqlCommands.getRecieptCountCommand());
+            line = cashBoxConnect(sqlCommands.getRecieptCountCommand());
             int countCheck = Integer.parseInt(line.get(0));
             line.clear();
 
             //делаем выборку из базы счетчиков
-            int [] countBegin = parseCount.parseCountValueFromStr(CashBoxConnect(sqlCommands.getCountersAdventValueCommand()).get(0));
+            int [] countBegin = parseCount.parseCountValueFromStr(cashBoxConnect(sqlCommands.getCountersAdventValueCommand()).get(0));
 
             //читаем из файла сценарий пробития чека
             List<String> listScript = readDataScript("src\\test\\resourses\\free_price_total_100_cash.txt");
@@ -406,13 +306,13 @@ public class CashTest {
                     fail("Не совпадает дисплей кассы с ожидаемым экраном сдачи");
                     break;
                 case 0: {
-                    line = CashBoxConnect(sqlCommands.getRecieptCountCommand());
+                    line = cashBoxConnect(sqlCommands.getRecieptCountCommand());
                     int countCheckTest = Integer.parseInt(line.get(0));
                     if ((countCheckTest - countCheck) == 1) {
                         //сделать выборку из базы чеков, по дате
                         String getCheckDateCommand = "echo \"attach '/FisGo/receiptsDb.db' as receipts; " +
                                 "select RECEIPT_CREATE_DATE from receipts.RECEIPTS ORDER BY ID DESC limit 1;\" | sqlite3 /FisGo/receiptsDb.db\n";
-                        line = CashBoxConnect(getCheckDateCommand);
+                        line = cashBoxConnect(getCheckDateCommand);
                         String receiptDate = line.get(0);
                         if (receiptDate.length() == 12) {
                             StringBuilder dateStrBuild = new StringBuilder();
@@ -423,7 +323,7 @@ public class CashTest {
                         writeLogFile("Тест печати чека в учебном режиме. Дата на кассе: " + dateStr.get(0) + "Дата чека: " + receiptDate);
 
                         //делаем выборку из базы счетчиков
-                        int[] countAfter = parseCount.parseCountValueFromStr(CashBoxConnect(sqlCommands.getCountersAdventValueCommand()).get(0));
+                        int[] countAfter = parseCount.parseCountValueFromStr(cashBoxConnect(sqlCommands.getCountersAdventValueCommand()).get(0));
 
                         //Подсчет общей суммы чека
                         //  int totalSum = totalReceiptSum(listScript);
@@ -456,26 +356,26 @@ public class CashTest {
     @Test
     public void sale_advent_learning_mode_card() {
         //проверяем, что stage кассы = 0
-        List<String> line = CashBoxConnect(sqlCommands.getStageCommand());
+        List<String> line = cashBoxConnect(sqlCommands.getStageCommand());
         if (line.get(0).equals("0")) {
             //проверяем, что открыт экран ввода пароля; при необходимости вводим пароль
             enterPasswordIfScreenOpen();
 
             line.clear();
             //делаем выборку их конфига на кассе, проверем, открыта смена или нет
-            line = CashBoxConnect(sqlCommands.getOpenShiftCommand());
+            line = cashBoxConnect(sqlCommands.getOpenShiftCommand());
             if (line.get(0).isEmpty() && (Integer.parseInt(line.get(1)) == 0)) {
                 openShift();
             }
 
             //делаем выборку из базы чеков
             line.clear();
-            line = CashBoxConnect(sqlCommands.getRecieptCountCommand());
+            line = cashBoxConnect(sqlCommands.getRecieptCountCommand());
             int countCheckBeforeTest = Integer.parseInt(line.get(0));
             line.clear();
 
             //проверяем, включен терминал или нет. При необходимости включаем терминал
-            line = CashBoxConnect(sqlCommands.getTerminalModeCommand());
+            line = cashBoxConnect(sqlCommands.getTerminalModeCommand());
             //если терминал выключен, то включаем
             if (line.get(0).equals("0")) {
                 int result = externalTerninalTurnOn();
@@ -485,7 +385,7 @@ public class CashTest {
             line.clear();
 
             //делаем выборку из базы счетчиков
-            int [] countBegin = parseCount.parseCountValueFromStr(CashBoxConnect(sqlCommands.getCountersAdventValueCommand()).get(0));
+            int [] countBegin = parseCount.parseCountValueFromStr(cashBoxConnect(sqlCommands.getCountersAdventValueCommand()).get(0));
 
             //читаем из файла сценарий пробития чека
             List<String> listScript = readDataScript("src\\test\\resourses\\sale_advent_treaning_mode_free_price_card.txt");
@@ -516,13 +416,13 @@ public class CashTest {
                     fail("Не совпадает дисплей кассы с ожидаемым экраном сдачи");
                     break;
                 case 0: {
-                    line = CashBoxConnect(sqlCommands.getRecieptCountCommand());
+                    line = cashBoxConnect(sqlCommands.getRecieptCountCommand());
                     int countCheckAfterTest = Integer.parseInt(line.get(0));
                     if ((countCheckAfterTest - countCheckBeforeTest) == 1) {
                         //сделать выборку из базы чеков, по дате
                         String getCheckDateCommand = "echo \"attach '/FisGo/receiptsDb.db' as receipts; " +
                                 "select RECEIPT_CREATE_DATE from receipts.RECEIPTS ORDER BY ID DESC limit 1;\" | sqlite3 /FisGo/receiptsDb.db\n";
-                        line = CashBoxConnect(getCheckDateCommand);
+                        line = cashBoxConnect(getCheckDateCommand);
                         String receiptDate = line.get(0);
                         if (receiptDate.length() == 12) {
                             StringBuilder dateStrBuild = new StringBuilder();
@@ -533,7 +433,7 @@ public class CashTest {
                         writeLogFile("Тест печати чека в учебном режиме. Дата на кассе: " + dateStr.get(0) + "Дата чека: " + receiptDate);
 
                         //делаем выборку из базы счетчиков
-                        int[] countAfter = parseCount.parseCountValueFromStr(CashBoxConnect(sqlCommands.getCountersAdventValueCommand()).get(0));
+                        int[] countAfter = parseCount.parseCountValueFromStr(cashBoxConnect(sqlCommands.getCountersAdventValueCommand()).get(0));
 
                         //Подсчет общей суммы чека
                         //  int totalSum = totalReceiptSum(listScript);
@@ -568,21 +468,21 @@ public class CashTest {
     @Test
     public void sale_consumption_learning_mode_cash() {
         //проверяем, что stage кассы = 0
-        List<String> line = CashBoxConnect(sqlCommands.getStageCommand());
+        List<String> line = cashBoxConnect(sqlCommands.getStageCommand());
         if (line.get(0).equals("0")) {
             //проверяем, что открыт экран ввода пароля
             enterPasswordIfScreenOpen();
 
             line.clear();
             //делаем выборку их конфига на кассе, проверем, открыта смена или нет
-            line = CashBoxConnect(sqlCommands.getOpenShiftCommand());
+            line = cashBoxConnect(sqlCommands.getOpenShiftCommand());
             if (line.get(0).isEmpty() && (Integer.parseInt(line.get(1)) == 0)) {
                 openShift();
             }
 
             line.clear();
             //делаем выборку из базы счетчиков, проверяем что сумма в кассе > 10000 (коп)
-            line = CashBoxConnect(sqlCommands.getCashInFinalCunterCommand());
+            line = cashBoxConnect(sqlCommands.getCashInFinalCunterCommand());
             //если сумма меньше, то делаем внесение на 100 р
             if (Integer.parseInt(line.get(0)) < 10000) {
                 int resInsertion = insertion(readDataScript("src\\test\\resourses\\insertion_100.txt"));
@@ -590,7 +490,7 @@ public class CashTest {
                     //делаем выборку из базы счетчиков, проверяем что сумма в кассе => 10000 (коп)
                     line.clear();
                     sleepMiliSecond(2000);
-                    line = CashBoxConnect(sqlCommands.getCashInFinalCunterCommand());
+                    line = cashBoxConnect(sqlCommands.getCashInFinalCunterCommand());
                     System.out.println("getCashInFinalCunterCommand = " + line.get(0));
                     if (Integer.parseInt(line.get(0)) < 10000) {
                         fail("Сумма в кассе меньше 100 р.");
@@ -602,12 +502,12 @@ public class CashTest {
 
             //делаем выборку из базы чеков
             line.clear();
-            line = CashBoxConnect(sqlCommands.getRecieptCountCommand());
+            line = cashBoxConnect(sqlCommands.getRecieptCountCommand());
             int countCheck = Integer.parseInt(line.get(0));
             line.clear();
 
             //делаем выборку из базы счетчиков
-            int [] countBegin = parseCount.parseCountValueFromStr(CashBoxConnect(sqlCommands.getCountersAdventValueCommand()).get(0));
+            int [] countBegin = parseCount.parseCountValueFromStr(cashBoxConnect(sqlCommands.getCountersAdventValueCommand()).get(0));
 
             //читаем из файла сценарий пробития чека
             List<String> listScript = readDataScript("src\\test\\resourses\\free_price_total_100_cash.txt");
@@ -638,13 +538,13 @@ public class CashTest {
                     fail("Не совпадает дисплей кассы с ожидаемым экраном сдачи");
                     break;
                 case 0: {
-                    line = CashBoxConnect(sqlCommands.getRecieptCountCommand());
+                    line = cashBoxConnect(sqlCommands.getRecieptCountCommand());
                     int countCheckTest = Integer.parseInt(line.get(0));
                     if ((countCheckTest - countCheck) == 1) {
                         //сделать выборку из базы чеков, по дате
                         String getCheckDateCommand = "echo \"attach '/FisGo/receiptsDb.db' as receipts; " +
                                 "select RECEIPT_CREATE_DATE from receipts.RECEIPTS ORDER BY ID DESC limit 1;\" | sqlite3 /FisGo/receiptsDb.db\n";
-                        line = CashBoxConnect(getCheckDateCommand);
+                        line = cashBoxConnect(getCheckDateCommand);
                         String receiptDate = line.get(0);
                         if (receiptDate.length() == 12) {
                             StringBuilder dateStrBuild = new StringBuilder();
@@ -655,7 +555,7 @@ public class CashTest {
                         writeLogFile("Тест печати чека в учебном режиме. Дата на кассе: " + dateStr.get(0) + "Дата чека: " + receiptDate);
 
                         //делаем выборку из базы счетчиков
-                        int[] countAfter = parseCount.parseCountValueFromStr(CashBoxConnect(sqlCommands.getCountersAdventValueCommand()).get(0));
+                        int[] countAfter = parseCount.parseCountValueFromStr(cashBoxConnect(sqlCommands.getCountersAdventValueCommand()).get(0));
 
                         //Подсчет общей суммы чека
                         //  int totalSum = totalReceiptSum(listScript);
@@ -691,14 +591,14 @@ public class CashTest {
     //---------------------------------ККТ в учебном режиме-------------------------------/
     @Test
     public void open_shift_training_mode() {
-        List<String> line = CashBoxConnect(sqlCommands.getStageCommand());
+        List<String> line = cashBoxConnect(sqlCommands.getStageCommand());
         if (line.get(0).equals("0")) {
             //проверяем, что открыт экран ввода пароля
             enterPasswordIfScreenOpen();
 
             line.clear();
             //делаем выборку их конфига на кассе, проверем, открыта смена или нет
-            line = CashBoxConnect(sqlCommands.getOpenShiftCommand());
+            line = cashBoxConnect(sqlCommands.getOpenShiftCommand());
             if (line.get(0).isEmpty() && (Integer.parseInt(line.get(1)) == 0)) {
                 int testResult = openShift();
                 switch (testResult) {
@@ -713,7 +613,7 @@ public class CashTest {
                         break;
                     case 0:
                         line.clear();
-                        line = CashBoxConnect(sqlCommands.getOpenShiftCommand());
+                        line = cashBoxConnect(sqlCommands.getOpenShiftCommand());
                         if (Integer.parseInt(line.get(1)) == 1) {
                             //делаем выборку даты с кассы
                             assertEquals(dateStr.get(0), line.get(0));
@@ -734,17 +634,18 @@ public class CashTest {
     }
     //------------------------------------------------------------------------------------/
 
+
     //--------------------------------Тесты на закрытие смены-----------------------------/
     //-------------------------ККТ в учебном режиме, смена открыта------------------------/
     @Test
     public void close_shift_training_mode() throws IOException {
-        List<String> line = CashBoxConnect(sqlCommands.getStageCommand());
+        List<String> line = cashBoxConnect(sqlCommands.getStageCommand());
         if (line.get(0).equals("0")) {
             //проверяем, что открыт экран ввода пароля
             enterPasswordIfScreenOpen();
             line.clear();
             //делаем выборку их конфига на кассе, проверем, открыта смена или нет
-            line = CashBoxConnect(sqlCommands.getOpenShiftCommand());
+            line = cashBoxConnect(sqlCommands.getOpenShiftCommand());
             //открываем смену, если она закрыта
             if (line.get(0).isEmpty() && (Integer.parseInt(line.get(1)) == 0)) {
                 int openShiftInt = openShift();
@@ -767,7 +668,7 @@ public class CashTest {
                     break;
                 case 0: {
                     line.clear();
-                    line = CashBoxConnect(sqlCommands.getOpenShiftCommand());
+                    line = cashBoxConnect(sqlCommands.getOpenShiftCommand());
                     if (line.get(0).isEmpty() && (Integer.parseInt(line.get(1)) == 0)) {
                         String strFromFile = br.readLine();
                         assertEquals(strFromFile, screens.openShiftMenuScreen);
@@ -791,13 +692,13 @@ public class CashTest {
 
     //----------------------------------Печать Х-отчета-----------------------------------/
     /*FIXME условия прохождения теста - ??? */
-    @Test
+ /*   @Test
     public void print_x_count() {
         //проверяем, что stage кассы = 0
         String getStageCommand = "echo \"attach '/FisGo/configDb.db' as config; " +
                 "select STAGE from config.CONFIG;\"" +
                 " | sqlite3 /FisGo/configDb.db\n";
-        List<String> line = CashBoxConnect(getStageCommand);
+        List<String> line = cashBoxConnect(getStageCommand);
         if (line.get(0).equals("0")) {
             //проверяем, что открыт экран ввода пароля
             boolean compare = compareScreen(ScreenPicture.PASSWORD);
@@ -806,7 +707,7 @@ public class CashTest {
                 //делаем выборку их БД users на кассе, получаем пароль одного из них
                 String getPassCommand = "echo \"attach '/FisGo/usersDb.db' as users; " +
                         "select PASS from users.USERS limit 1;\" | sqlite3 /FisGo/usersDb.db\n";
-                line = CashBoxConnect(getPassCommand);
+                line = cashBoxConnect(getPassCommand);
                 //вводим пароль на кассе
                 strToKeypadConvert(line.get(0));
             }
@@ -815,7 +716,7 @@ public class CashTest {
             //делаем выборку их конфига на кассе, проверем, открыта смена или нет
             String getOpenShiftCommand = "echo \"attach '/FisGo/configDb.db' as config; " +
                     "select OPEN_SHIFT_DATE from config.CONFIG;\" | sqlite3 /FisGo/configDb.db\n";
-            line = CashBoxConnect(getOpenShiftCommand);
+            line = cashBoxConnect(getOpenShiftCommand);
             if (line.isEmpty()) {
                 openShift();
             }
@@ -832,12 +733,12 @@ public class CashTest {
                     "RET_CONSUMPTION_CARD_CNT = 32, ADVENT_TOTAL_ABS = 33, CONSUMPTION_TOTAL_ABS = 34, ADVENT_RETURN_TOTAL_ABS = 35,\n" +
                     "CONSUMPTION_RETURN_TOTAL_ABS = 36, REALIZATION_TOTAL_ABS = 37, CURR_RECEIPT_NUM = 38, CURR_SHIFT_NUM = 39 WHERE ID = 1;\n" +
                     "\" | sqlite3 /FisGo/configDb.db";
-            CashBoxConnect(insertCounts);
+            cashBoxConnect(insertCounts);
             //перезапускаем фискат
             tcpSocket.socketClose();
 
             //перезапускаем фискат
-            CashBoxConnect("/sbin/reboot");
+            cashBoxConnect("/sbin/reboot");
             sleepMiliSecond(25000);
 
             dataFromCashbox.initSession(CashboxIP, USERNAME, PORT, PASSWORD);
@@ -852,7 +753,7 @@ public class CashTest {
                 //делаем выборку их БД users на кассе, получаем пароль одного из них
                 String getPassCommand = "echo \"attach '/FisGo/usersDb.db' as users; " +
                         "select PASS from users.USERS limit 1;\" | sqlite3 /FisGo/usersDb.db\n";
-                line = CashBoxConnect(getPassCommand);
+                line = cashBoxConnect(getPassCommand);
                 //вводим пароль на кассе
                 strToKeypadConvert(line.get(0));
             }
@@ -866,12 +767,12 @@ public class CashTest {
         }
     }
     //-----------------------------------------------------------------------------------------------/
-
+*/
 
 
     // в функции проверяется экран на дисплее кассы,
     // если экран совпадает, то выполняется выборка из БД пользователей и вводдится пароль
-    private void enterPasswordIfScreenOpen() {
+    public void enterPasswordIfScreenOpen() {
         //проверяем, что открыт экран ввода пароля
         boolean compare = compareScreen(ScreenPicture.PASSWORD);
         //если полученный экран с кассы совпадает с экраном ввода пароля, то выполняем if
@@ -879,13 +780,13 @@ public class CashTest {
             //делаем выборку их БД users на кассе, получаем пароль одного из них
             String getPassCommand = "echo \"attach '/FisGo/usersDb.db' as users; " +
                     "select PASS from users.USERS limit 1;\" | sqlite3 /FisGo/usersDb.db\n";
-            List<String> line = CashBoxConnect(getPassCommand);
+            List<String> line = cashBoxConnect(getPassCommand);
             //вводим пароль на кассе
             strToKeypadConvert(line.get(0));
         }
     }
     //Ввод пароля
-    private int enterPassword(List <String> keyWordArray) {
+    public int enterPassword(List <String> keyWordArray) {
         writeLogFile("Выполняется функция ввода пароля.");
         boolean compare = compareScreen(ScreenPicture.PASSWORD);
         //если полученный экран с кассы совпадает с экраном ввода пароля, то выполняем if
@@ -958,7 +859,7 @@ public class CashTest {
             else {
                 //делаем выборку поля ИНН из БД config на кассе, получаем пароль одного из них
                 String regitrationDataFromCashbox = sqlCommands.getOrganiztionInnCommand();
-                List <String> line = CashBoxConnect(regitrationDataFromCashbox);
+                List <String> line = cashBoxConnect(regitrationDataFromCashbox);
                 if (line.size() != 0) {
                     if (registrationData.equals(line.get(0)))
                         pressKeyBot(keyEnum.keyEnter, 0, 1);
@@ -993,7 +894,7 @@ public class CashTest {
             else {
                 //делаем выборку поля Наименование организации из БД config на кассе, получаем пароль одного из них
                 String regitrationDataFromCashbox = sqlCommands.getOrganiztionNameCommand();
-                List<String> line = CashBoxConnect(regitrationDataFromCashbox);
+                List<String> line = cashBoxConnect(regitrationDataFromCashbox);
                 if (line.size() != 0) {
                     if (registrationData.equals(line.get(0)))
                         pressKeyBot(keyEnum.keyEnter, 0, 1);
@@ -1029,7 +930,7 @@ public class CashTest {
 
                 //делаем выборку поля Адрес рассчетов из БД config на кассе, получаем пароль одного из них
                 String regitrationDataFromCashbox = sqlCommands.getClcAddressCommand();
-                List<String> line = CashBoxConnect(regitrationDataFromCashbox);
+                List<String> line = cashBoxConnect(regitrationDataFromCashbox);
                 if (line.size() != 0) {
                     if (registrationData.equals(line.get(0)))
                         pressKeyBot(keyEnum.keyEnter, 0, 1);
@@ -1064,7 +965,7 @@ public class CashTest {
             else {
                 //делаем выборку поля Место рассчетов из БД config на кассе, получаем пароль одного из них
                 String regitrationDataFromCashbox = sqlCommands.getClcPlaceCommand();
-                List<String> line = CashBoxConnect(regitrationDataFromCashbox);
+                List<String> line = cashBoxConnect(regitrationDataFromCashbox);
                 if (line.size() != 0) {
                     if (registrationData.equals(line.get(0)))
                         pressKeyBot(keyEnum.keyEnter, 0, 1);
@@ -1099,7 +1000,7 @@ public class CashTest {
             else {
                 //делаем выборку поля Рег. номер из БД config на кассе, получаем пароль одного из них
                 String regitrationDataFromCashbox = sqlCommands.getRegNumCommand();
-                List<String> line = CashBoxConnect(regitrationDataFromCashbox);
+                List<String> line = cashBoxConnect(regitrationDataFromCashbox);
                 if (line.size() != 0) {
                     if (registrationData.equals(line.get(0)))
                         pressKeyBot(keyEnum.keyEnter, 0, 1);
@@ -1369,7 +1270,7 @@ public class CashTest {
         for (int i = 0; i < maskLength; i++)
             maskBin[i] = '0';
 
-        List <String> line = CashBoxConnect(command);
+        List <String> line = cashBoxConnect(command);
         String binMaskString = Integer.toBinaryString(Integer.parseInt(line.get(0)));
 
         int charCount = maskLength - binMaskString.length();
@@ -1593,7 +1494,7 @@ public class CashTest {
                         "select FFD_KKT_VER from config.CONFIG; " +
                         "select KKT_MODE from config.CONFIG;\" " +
                         "| sqlite3 /FisGo/configDb.db\n";
-                List<String> line = CashBoxConnect(command);
+                List<String> line = cashBoxConnect(command);
 
                 String registrationVer = line.get(0);
                 int ENCRYPTION_SIGN = 0, EXCISABLE_SIGN = 0, CLC_SERVICE_SIGN  = 0, GAMBLING_SIGN = 0, LOTTERY_SIGN = 0, PAYING_AGENT_SIGN = 0;
@@ -1609,7 +1510,7 @@ public class CashTest {
                             "select PAYING_AGENT_SIGN from config.CONFIG; \" " +
                             "| sqlite3  /FisGo/configDb.db\n";
 
-                    List<String> lineSigns = CashBoxConnect(command);
+                    List<String> lineSigns = cashBoxConnect(command);
 
                     //TODO: Проверка граничных значений
                     ENCRYPTION_SIGN = Integer.parseInt(lineSigns.get(0));
@@ -1683,7 +1584,7 @@ public class CashTest {
                     "select CALCULATION_ADDRESS from config.CONFIG;" +
                     "select CALCULATION_PLACE from config.CONFIG;\"" +
                     " | sqlite3 /FisGo/configDb.db\n";
-            List <String> line = CashBoxConnect(regDataFromCashbox);
+            List <String> line = cashBoxConnect(regDataFromCashbox);
 
             writeLogFile("Пункты меню Перерегистрация доступны.");
             pressKeyBot(keyEnum.key2, 0, 1);
@@ -1735,9 +1636,9 @@ public class CashTest {
         return 0;
     }
     //Открытие смены
-    private int openShift() {
+    public int openShift() {
         //делаем выборку их конфига на кассе, проверем, открыта смена или нет
-        List <String> line = CashBoxConnect(sqlCommands.getOpenShiftCommand());
+        List <String> line = cashBoxConnect(sqlCommands.getOpenShiftCommand());
 
         if (line.get(0).isEmpty() && (Integer.parseInt(line.get(1)) == 0)) {
             pressKeyBot(keyEnum.keyMenu, 0, 1);
@@ -1745,7 +1646,7 @@ public class CashTest {
             boolean compare = compareScreen(ScreenPicture.OPEN_SHIFT_MENU);
             if (compare) {
                 dateStr.clear();
-                dateStr = CashBoxConnect(sqlCommands.getDateCommand());
+                dateStr = cashBoxConnect(sqlCommands.getDateCommand());
                 pressKeyBot(keyEnum.keyEnter, 0, 2);
                 sleepMiliSecond(8000);
                 tcpSocket.setFlagPause(true, 8);
@@ -1981,7 +1882,7 @@ public class CashTest {
         if (compare) {
             //получить дату из кассы
             String getDateCommand = " date '+%d%m%y%H%M'\n";
-            dateStr.add(CashBoxConnect(getDateCommand).get(0));
+            dateStr.add(cashBoxConnect(getDateCommand).get(0));
             tcpSocket.setFlagPause(true, 2);
             sleepMiliSecond(2000);
         } else {
@@ -2401,7 +2302,7 @@ public class CashTest {
         return 1;
     }
     //Тех. обнуление
-    private void techNull() {
+    public void techNull() {
         pressKeyBot(keyEnum.keyMenu, 0, 1);
         pressKeyBot(keyEnum.key4, 0, 1);
         pressKeyBot(keyEnum.key7, 0, 1);
@@ -2411,7 +2312,7 @@ public class CashTest {
     }
     //включить внешний банковский терминал
     private int externalTerninalTurnOn() {
-        List<String> line = CashBoxConnect(sqlCommands.getTerminalModeCommand());
+        List<String> line = cashBoxConnect(sqlCommands.getTerminalModeCommand());
         if (line.get(0).equals("0")) {
             pressKeyBot(keyEnum.keyMenu, 0, 1);
             pressKeyBot(keyEnum.key5, 0, 2);
@@ -2419,7 +2320,7 @@ public class CashTest {
             pressKeyBot(keyEnum.keyEnter, 0, 1);
         }
         line.clear();
-        line = CashBoxConnect(sqlCommands.getTerminalModeCommand());
+        line = cashBoxConnect(sqlCommands.getTerminalModeCommand());
         if (line.get(0).equals("1")) {
             return 0;
         } else {
@@ -2472,7 +2373,7 @@ public class CashTest {
         for (String tmpStr: insertsGoods)
             addGoodCmd.append(tmpStr);
         addGoodCmd.append("\" | sqlite3 /FisGo/goodsDb.db\n");
-        CashBoxConnect(addGoodCmd.toString());
+        cashBoxConnect(addGoodCmd.toString());
 
         //получаем список ID и артикулов из базы goods для всавки hash в goods_code
         StringBuilder selectGoodIDCmd = new StringBuilder();
@@ -2481,7 +2382,7 @@ public class CashTest {
             selectGoodIDCmd.append("select ID, ARTICUL from goods.GOODS where ARTICUL = '" + (i + 1) + "';");
         }
         selectGoodIDCmd.append("\" | sqlite3 /FisGo/goodsDb.db\n");
-        List<String> line = CashBoxConnect(selectGoodIDCmd.toString());
+        List<String> line = cashBoxConnect(selectGoodIDCmd.toString());
 
         //заполнение таблицы goods_code
         List<String> hashArticle = readDataScript("src\\test\\resourses\\hashTable.txt");
@@ -2495,7 +2396,7 @@ public class CashTest {
                     "insert into goods.GOODS_CODE (GOODS_ID, HASH_VAL, TYPE) values (" + idLine + ", " +
                     hashArticle.get(Integer.parseInt(articleLine) - 1) + ", 2);" + "\" | sqlite3 /FisGo/goodsDb.db\n";
 
-            CashBoxConnect(insertGoodCodeCmd);//.toString());
+            cashBoxConnect(insertGoodCodeCmd);//.toString());
         }
     }
     //Устанавливаем уровень лога
@@ -2587,7 +2488,7 @@ public class CashTest {
 
     private int closeShift() {
         //делаем выборку их конфига на кассе, проверем, открыта смена или нет
-        List <String> line = CashBoxConnect(sqlCommands.getOpenShiftCommand());
+        List <String> line = cashBoxConnect(sqlCommands.getOpenShiftCommand());
         if (!line.get(0).isEmpty() && (Integer.parseInt(line.get(1)) != 0)) {
             pressKeyBot(keyEnum.keyMenu, 0, 1);
             pressKeyBot(keyEnum.key1, 0, 1);
@@ -2602,7 +2503,7 @@ public class CashTest {
                 compare = compareScreen(ScreenPicture.OPEN_SHIFT_MENU);
                 if (compare) {
                     line.clear();
-                    line = CashBoxConnect(sqlCommands.getOpenShiftCommand());
+                    line = cashBoxConnect(sqlCommands.getOpenShiftCommand());
                     if (line.get(0).isEmpty() && (Integer.parseInt(line.get(1)) == 0)) {
                         return 0;
                     }
@@ -3192,7 +3093,7 @@ public class CashTest {
     }
 
     //нажатие на кнопку
-    private void pressKeyBot(int keyNum, int keyNum2,  int pressCount) {
+    public void pressKeyBot(int keyNum, int keyNum2,  int pressCount) {
         for (int i = 0; i < pressCount; i++)
             tcpSocket.sendPressKey(keyNum, keyNum2, 1);
     }
@@ -3204,7 +3105,7 @@ public class CashTest {
     }
 
     //Чтение параметров сценария из файла
-    private List<String> readDataScript(String fileName) {
+    public List<String> readDataScript(String fileName) {
         List<String> list = new ArrayList<>();
         try{
             FileInputStream fstream = new FileInputStream(fileName);
@@ -3743,7 +3644,7 @@ public class CashTest {
     }
 
     //задержка, милисекунды
-    private void sleepMiliSecond(int delay) {
+    public void sleepMiliSecond(int delay) {
         try {
             TimeUnit.MILLISECONDS.sleep(delay);
         } catch (InterruptedException e) {
