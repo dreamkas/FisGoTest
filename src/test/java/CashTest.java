@@ -21,18 +21,6 @@ public class CashTest {
     private FileInputStream fstream = new FileInputStream("./reciveData/tmpScreen.bmp");
     public BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
 
-    //параметры для открытия сокета с кассой
-    private static final String CashBoxType = "DreamkasF"; //DreamkasRF
-    public static final String CashboxIP = "192.168.242.58";
-    public static final int CashboxPort = 3425;
-    //----------------------------------------------------------------------------
-
-    //параметры подключения по ssh
-    public static final String USERNAME = "root";
-    public static final String PASSWORD = "root";
-    public static final int PORT = 22;
-    //----------------------------------------------------------------------------
-
     //Текущая дата, используется для записи в лог
     private Calendar curdate = Calendar.getInstance();
     private List<String> dateStr = new ArrayList<>();
@@ -56,23 +44,22 @@ public class CashTest {
 
     //Инициализация клавиатуры в зависимости от типа кассы
     public void initializationKeyboard() {
-        if (CashBoxType.equals("DreamkasF")) config.setCashType(0);
-        if (CashBoxType.equals("DreamkasRF")) config.setCashType(1);
         keyEnum.initKeyEnum();
     }
 
     //установка соединения
-    public void connectionSetup () {
-        tcpSocket.setFlagReceiveScreen(true);
-        tcpSocket.createSocket(CashboxIP, CashboxPort);
-        dataFromCashbox.initSession(CashboxIP, USERNAME, PORT, PASSWORD);
+    public void connectionSetup() {
+        //  tcpSocket.setFlagReceiveScreen(true);
+        tcpSocket.createSocket(Config.CASHBOX_IP, Config.CASHBOX_PORT);
+        dataFromCashbox.initSession(Config.CASHBOX_IP, Config.USERNAME, Config.PORT, Config.PASSWORD);
     }
 
+}
 
     //---------------------------Предусловия--------------------------/
     // Инициализация клавиатуры, установка ssh-соединения, создания сокета
     // Сброс кассы (выполнение тех. обнуления), добавление товаров
-    @Before
+  /*  @Before
     public void before_test_clear_cashbox() {
         initializationKeyboard();
         connectionSetup();
@@ -85,11 +72,12 @@ public class CashTest {
         //перезапускаем фискат
         cashBoxConnect("/sbin/reboot");
         sleepMiliSecond(25000);
-        tcpSocket.setFlagPause(true, 25);
+    //    tcpSocket.setFlagPause(true, 25);
         connectionSetup();
-        tcpSocket.setFlagPause(false, 0);
+     //   tcpSocket.setFlagPause(false, 0);
         //добавляем в БД товаров все виды товаров
-        //addGoodsOnCash(); */
+        //addGoodsOnCash(); *//*
+
     }
 
     //---------------------------Постусловия--------------------------/
@@ -691,8 +679,11 @@ public class CashTest {
 
 
     //----------------------------------Печать Х-отчета-----------------------------------/
-    /*FIXME условия прохождения теста - ??? */
- /*   @Test
+    */
+/*FIXME условия прохождения теста - ??? *//*
+
+ */
+/*   @Test
     public void print_x_count() {
         //проверяем, что stage кассы = 0
         String getStageCommand = "echo \"attach '/FisGo/configDb.db' as config; " +
@@ -767,45 +758,52 @@ public class CashTest {
         }
     }
     //-----------------------------------------------------------------------------------------------/
-*/
+*//*
+
 
 
     // в функции проверяется экран на дисплее кассы,
     // если экран совпадает, то выполняется выборка из БД пользователей и вводдится пароль
     public void enterPasswordIfScreenOpen() {
         //проверяем, что открыт экран ввода пароля
-        boolean compare = compareScreen(ScreenPicture.PASSWORD);
+     //   boolean compare = compareScreen(ScreenPicture.PASSWORD);
         //если полученный экран с кассы совпадает с экраном ввода пароля, то выполняем if
-        if (compare) {
+     //   if (compare) {
             //делаем выборку их БД users на кассе, получаем пароль одного из них
             String getPassCommand = "echo \"attach '/FisGo/usersDb.db' as users; " +
                     "select PASS from users.USERS limit 1;\" | sqlite3 /FisGo/usersDb.db\n";
-            List<String> line = cashBoxConnect(getPassCommand);
+            List<String> line = new ArrayList<>();//cashBoxConnect(getPassCommand);
+            line.add("1234");
+            System.out.println("line.get(0) = " + line.get(0));
             //вводим пароль на кассе
             strToKeypadConvert(line.get(0));
-        }
+         //   tcpSocket.sendPressKey();
+     //   }
     }
     //Ввод пароля
     public int enterPassword(List <String> keyWordArray) {
         writeLogFile("Выполняется функция ввода пароля.");
-        boolean compare = compareScreen(ScreenPicture.PASSWORD);
+        boolean compare = true;//compareScreen(ScreenPicture.PASSWORD);
         //если полученный экран с кассы совпадает с экраном ввода пароля, то выполняем if
         if (compare) {
             writeLogFile("Открыт экран ввода пароля.");
             String pass = searchForKeyword("password: ", keyWordArray);
             if (pass.equals("CANNOT FIND KEYWORD"))
                 writeLogFile("Пароль не найден в файле сценария.");
+            //определяем на какую кнопку нужно нажать и сколько раз
             strToKeypadConvert(pass);
+            //отправляем на кассу последовательность нажатия кнопок
+    //       tcpSocket.sendPressKey();
             compare = compareScreen(ScreenPicture.INCORRECT_PASSWORD);
             if (compare) {
                 writeLogFile("Введен неверный пароль.");
-                tcpSocket.setFlagPause(true, 1);
+        //        tcpSocket.setFlagPause(true, 1);
                 sleepMiliSecond(1000);
                 return -1;
             }
             else {
                 writeLogFile("Введен верный пароль.");
-                tcpSocket.setFlagPause(true, 1);
+      //          tcpSocket.setFlagPause(true, 1);
                 sleepMiliSecond(1000);
                 return 0;
             }
@@ -1042,7 +1040,7 @@ public class CashTest {
             changeSignsKkt("signs: ", true, keyWordArray);
             pressKeyBot(keyEnum.keyEnter, 0, 1);
             pressKeyBot(keyEnum.keyEnter, 0, 1);
-            tcpSocket.setFlagPause(true, 25);
+    //        tcpSocket.setFlagPause(true, 25);
             sleepMiliSecond(25000);
             return 0;
         }
@@ -1250,7 +1248,8 @@ public class CashTest {
 
             //for (int i = 0; i < taxSystemsTable.size(); i++){
             //if (taxSystemsTable.get(i).equals("ОСН"))
-            /*
+            */
+/*
             if (taxSystemsTable.get(i).equals("УСН доход"))
                 pressKeyBot(keyEnum.key2, 0, 1);
             if (taxSystemsTable.get(i).equals("УСН дох./расх."))
@@ -1261,7 +1260,8 @@ public class CashTest {
                 pressKeyBot(keyEnum.key5, 0, 1);
             if (taxSystemsTable.get(i).equals("Патент"))
                 pressKeyBot(keyEnum.key6, 0, 1);
-            * */
+            * *//*
+
         }
     }
     //Получение масок с кассы
@@ -1355,7 +1355,8 @@ public class CashTest {
                 }
             }
 
-        /*for (int i = 0; i < signsTable.size(); i++) {
+        */
+/*for (int i = 0; i < signsTable.size(); i++) {
             if (signsTable.get(i).equals("Шифрования")) {
                 if (modeKkt.equals("Автономный"))
                     writeLogFile("В автономном режиме признак шифрования скрыт.\n");
@@ -1419,7 +1420,8 @@ public class CashTest {
                     if (modeKkt.equals("Передачи данных"))
                         pressKeyBot(keyEnum.key0, 0, 1);
                 }
-            }*/
+            }*//*
+
 
             if (agentChange) {
                 pressKeyBot(keyEnum.keyEnter, 0, 1);
@@ -2307,6 +2309,7 @@ public class CashTest {
         pressKeyBot(keyEnum.key4, 0, 1);
         pressKeyBot(keyEnum.key7, 0, 1);
         pressKeyBot(keyEnum.keyEnter, 0, 2);
+        tcpSocket.sendPressKey();
         tcpSocket.setFlagPause(true, 17);
         sleepMiliSecond(20000);
     }
@@ -2532,7 +2535,8 @@ public class CashTest {
 
 
 
-    /*
+    */
+/*
     private void re_registrationChangeOFD() {
         pressKeyBot(keyEnum.keyMenu, 0, 1);
         pressKeyBot(keyEnum.key5, 0, 1);
@@ -2695,7 +2699,8 @@ public class CashTest {
         pressKeyBot(keyEnum.keyEnter, 0, 2); //
     }
 
-    /*private void reserve() throws IOException {
+    */
+/*private void reserve() throws IOException {
         pressKeyBot(keyEnum.keyMenu, 0,1);
         pressKeyBot(keyEnum.key1, 0,1);
         //добавить проверку, что смена открыта
@@ -2837,24 +2842,13 @@ public class CashTest {
         return 1;
     }
 
-    //Чтение параметров сценария из файла
-    private List<String> readDataScript(String fileName) {
-        List<String> list = new ArrayList<>();
-        try{
-            FileInputStream fstream = new FileInputStream(fileName);
-            BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
-            String strLine;
-            while ((strLine = br.readLine()) != null){
-                list.add(strLine);
-            }
-        }catch (IOException e){
-            e.printStackTrace();
-        }
-        return list;
-    }
 
 
-    */
+
+
+
+    *//*
+
 
 
 
@@ -2876,11 +2870,11 @@ public class CashTest {
         }
         return "CANNOT FIND KEYWORD";
     }
-
+*
     //Нажатие на кнопку (ввод данных) в зависимости от символа
     private void strToKeypadConvert(String str) {
-        tcpSocket.serverGetKepadMode();
-        keypad_mode = tcpSocket.getKeypadMode();
+       // tcpSocket.serverGetKepadMode();
+        keypad_mode = keypadMode.FREE_MODE;//tcpSocket.getKeypadMode();
 
         Short keyNumPrew = 40, keyNum = 0, pressCount;
         boolean exit;
@@ -2969,7 +2963,8 @@ public class CashTest {
                     }
 
                     //если спец. символы
-                    for (int k = 0; k < keys[j].spec_sym_code.size(); k++) {
+                 */
+/*   for (int k = 0; k < keys[j].spec_sym_code.size(); k++) {
                         if (exit)
                             break;
                         pressCount++;
@@ -2991,13 +2986,15 @@ public class CashTest {
                             pressKeyBot(keyNum, 0, pressCount);
                             exit = true;
                         }
-                        //*
+                        /*/
+/*
                         if (charsetNumber == 42) {
                             keyNum = 38;
                             pressKeyBot(keyNum, 0, pressCount);
                             exit = true;
                         }
-                    }
+                    } *//*
+
                 }
 
                 //Если русский + цифры, keypadMode == 5
@@ -3084,24 +3081,32 @@ public class CashTest {
                 }
                 keyNumPrew = keyNum;
 
-                /* // Английские символы + цифры
+                */
+/* // Английские символы + цифры
                 if (keypadMode == ENGLISH + NUMBERS)
                 {
-                } */
+                } *//*
+
             }
         }
     }
 
     //нажатие на кнопку
     public void pressKeyBot(int keyNum, int keyNum2,  int pressCount) {
+        */
+/*System.out.println("keyNum = " +keyNum);
+        System.out.println("keyNum2 = " +keyNum2);
+        System.out.println("pressCount = " +pressCount);*//*
+
         for (int i = 0; i < pressCount; i++)
-            tcpSocket.sendPressKey(keyNum, keyNum2, 1);
+            tcpSocket.pressButton(keyNum, keyNum2, KeypadActionEnum.KEY_DOWN);
+        //tcpSocket.sendPressKey(keyNum, keyNum2, 1);
     }
     //удержание кнопки
     private void holdKey(int keyNum, int keyNum2,  int pressCount) {
         sleepMiliSecond(500);
         tcpSocket.setFlagPause(true,500);
-        tcpSocket.sendPressKey(keyNum, keyNum2, 2);
+        tcpSocket.sendPressKey();//keyNum, keyNum2, 2);
     }
 
     //Чтение параметров сценария из файла
@@ -3196,19 +3201,24 @@ public class CashTest {
             e.printStackTrace();
         }
         return false;
-    }
+    }*
 
     //инициализация клавиатуры и режимов, в которых используются кнопки
     private void initKey(Keypad keys[]) {
         // Keypad[] keys = new Keypad[keypad.keys_table_size];
         //=======================================================================================================
         // KEY №0 - цифра 0 на клавиатуре
-        keys[0].key_code = 35;
+        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+            keys[0].key_code = 35;
+        else                     // Дримкас РФ
+            keys[0].key_code = 0x18;
         // Доступ в режимах
         keys[0].key_mode_available = (char) (keypadMode.FREE_MODE + keypadMode.NUMBERS + keypadMode.SPEC_SYMBOLS);
         // Цифра
         keys[0].key_number = 0x30;
         // Специальные символы
+        if (Config.CASHBOX_TYPE.equals("DreamkasF"))         // НЕ(Антон, прочти это!) Дримкас Ф!
+            keys[0].spec_sym_code.add( 0x20 );
         keys[0].spec_sym_code.add(0x40);
         keys[0].spec_sym_code.add(0x23);
         keys[0].spec_sym_code.add(0x24);
@@ -3218,7 +3228,10 @@ public class CashTest {
         //=======================================================================================================
         //=======================================================================================================
         // KEY №1 - цифра 1 на клавиатуре
-        keys[1].key_code = 27;
+        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+            keys[1].key_code = 27;
+        else                     // Дримкас РФ
+            keys[1].key_code = 0x12;
         // Доступ в режимах
         keys[1].key_mode_available = (char) (keypadMode.FREE_MODE + keypadMode.NUMBERS + keypadMode.CYRILLIC + keypadMode.ENGLISH);
         // Цифра
@@ -3247,7 +3260,10 @@ public class CashTest {
         //=======================================================================================================
         //=======================================================================================================
         // KEY №2
-        keys[2].key_code = 28;
+        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+            keys[2].key_code = 28;
+        else                     // Дримкас РФ
+            keys[2].key_code = 0x13;
         // Доступ в режимах
         keys[2].key_mode_available = (char) (keypadMode.FREE_MODE + keypadMode.NUMBERS + keypadMode.CYRILLIC + keypadMode.ENGLISH);
         // Цифра
@@ -3275,7 +3291,10 @@ public class CashTest {
         //=======================================================================================================
         //=======================================================================================================
         // KEY №3
-        keys[3].key_code = 29;
+        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+            keys[3].key_code = 29;
+        else                     // Дримкас РФ
+            keys[3].key_code = 0x14;
         // Цифра
         keys[3].key_number = 0x33;
 
@@ -3305,7 +3324,10 @@ public class CashTest {
         //=======================================================================================================
         //=======================================================================================================
         // KEY №4
-        keys[4].key_code = 19;
+        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+            keys[4].key_code = 19;
+        else                     // Дримкас РФ
+            keys[4].key_code = 0x0C;
         // Доступ в режимах
         keys[4].key_mode_available = (char) (keypadMode.FREE_MODE + keypadMode.NUMBERS + keypadMode.CYRILLIC + keypadMode.ENGLISH);
         // Цифра
@@ -3333,7 +3355,10 @@ public class CashTest {
         //=======================================================================================================
         //=======================================================================================================
         // KEY №5
-        keys[5].key_code = 20;
+        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+            keys[5].key_code = 20;
+        else                     // Дримкас РФ
+            keys[5].key_code = 0x0D;
         // Доступ в режимах
         keys[5].key_mode_available = (char) (keypadMode.FREE_MODE + keypadMode.NUMBERS + keypadMode.CYRILLIC + keypadMode.ENGLISH);
         // Цифра
@@ -3361,7 +3386,10 @@ public class CashTest {
         //=======================================================================================================
         //=======================================================================================================
         // KEY №6
-        keys[6].key_code = 21;
+        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+            keys[6].key_code = 21;
+        else                     // Дримкас РФ
+            keys[6].key_code = 0x0E;
         // Доступ в режимах
         keys[6].key_mode_available = (char) (keypadMode.FREE_MODE + keypadMode.NUMBERS + keypadMode.CYRILLIC + keypadMode.ENGLISH);
         // Цифра
@@ -3389,7 +3417,10 @@ public class CashTest {
         //=======================================================================================================
         //=======================================================================================================
         // KEY №7
-        keys[7].key_code = 11;
+        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+            keys[7].key_code = 11;
+        else                     // Дримкас РФ
+            keys[7].key_code = 0x06;
         // Цифра
         keys[7].key_number = 0x37;
 
@@ -3410,7 +3441,10 @@ public class CashTest {
         //=======================================================================================================
         //=======================================================================================================
         // KEY №8
-        keys[8].key_code = 12;
+        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+            keys[8].key_code = 12;
+        else                     // Дримкас РФ
+            keys[8].key_code = 0x07;
         // Доступ в режимах
         keys[8].key_mode_available = (char) (keypadMode.FREE_MODE + keypadMode.NUMBERS + keypadMode.CYRILLIC + keypadMode.ENGLISH);
         // Цифра
@@ -3438,7 +3472,10 @@ public class CashTest {
         //=======================================================================================================
         //=======================================================================================================
         // KEY №9
-        keys[9].key_code = 13;
+        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+            keys[9].key_code = 13;
+        else                     // Дримкас РФ
+            keys[9].key_code = 0x08;
         // Доступ в режимах
         keys[9].key_mode_available = (char) (keypadMode.FREE_MODE + keypadMode.NUMBERS + keypadMode.CYRILLIC + keypadMode.ENGLISH);
         // Цифра
@@ -3501,20 +3538,25 @@ public class CashTest {
         //=======================================================================================================
         //=======================================================================================================
         // KEY №6
-        keys[16].key_code = 6;
+        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+            keys[16].key_code = 6;
+        else
+            keys[16].key_code = 0x0a;
         // Доступ в режимах
         keys[16].key_mode_available = (char) keypadMode.ACTION_MODE;
-        //=======================================================================================================
-        // KEY №7
-        keys[17].key_code = 7;
-        // Доступ в режимах
-        keys[17].key_mode_available = (char) keypadMode.ACTION_MODE;
-        //=======================================================================================================
-        // KEY №8
-        keys[18].key_code = 8;
-        // Доступ в режимах
-        keys[18].key_mode_available = (char) keypadMode.ACTION_MODE;
-        //=======================================================================================================
+        if (Config.CASHBOX_TYPE.equals("DreamkasF")) {
+            //=======================================================================================================
+            // KEY №7
+            keys[17].key_code = 7;
+            // Доступ в режимах
+            keys[17].key_mode_available = (char) keypadMode.ACTION_MODE;
+            //=======================================================================================================
+            // KEY №8
+            keys[18].key_code = 8;
+            // Доступ в режимах
+            keys[18].key_mode_available = (char) keypadMode.ACTION_MODE;
+            //=======================================================================================================
+        }
         // KEY №9
         keys[19].key_code = 9;
         // Доступ в режимах
@@ -3526,7 +3568,11 @@ public class CashTest {
         keys[20].key_mode_available = (char) keypadMode.ACTION_MODE;
         //=======================================================================================================
         // KEY BACKSPACE
-        keys[21].key_code = 14;
+        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+            keys[21].key_code = 14;
+        else                     // Дримкас РФ
+            keys[21].key_code = 0x09;
+
         // Доступ в режимах
         keys[21].key_mode_available = (char) keypadMode.ACTION_MODE;
         //=======================================================================================================
@@ -3544,14 +3590,20 @@ public class CashTest {
         keys[24].key_code = 17;
         // Доступ в режимах
         keys[24].key_mode_available = (char) keypadMode.ACTION_MODE;
-        //=======================================================================================================
-        // KEY №18
-        keys[25].key_code = 18;
-        // Доступ в режимах
-        keys[25].key_mode_available = (char) keypadMode.ACTION_MODE;
-        //=======================================================================================================
-        // KEY №22
-        keys[26].key_code = 22;
+        if (Config.CASHBOX_TYPE.equals("DreamkasF")) {
+            //=======================================================================================================
+            // KEY №18
+            keys[25].key_code = 18;
+            // Доступ в режимах
+            keys[25].key_mode_available = (char) keypadMode.ACTION_MODE;
+            //=======================================================================================================
+            // KEY №22
+            keys[26].key_code = 22;
+        }
+        else                     // Дримкас РФ
+            //=======================================================================================================
+            // KEY №21
+            keys[26].key_code = 0x15;
         // Доступ в режимах
         keys[26].key_mode_available = (char) keypadMode.ACTION_MODE;
         //=======================================================================================================
@@ -3559,11 +3611,13 @@ public class CashTest {
         keys[27].key_code = 23;
         // Доступ в режимах
         keys[27].key_mode_available = (char) keypadMode.ACTION_MODE;
-        //=======================================================================================================
-        // KEY
-        keys[28].key_code = 24;
-        // Доступ в режимах
-        keys[28].key_mode_available = (char) keypadMode.ACTION_MODE;
+        if (Config.CASHBOX_TYPE.equals("DreamkasF")) {
+            //=======================================================================================================
+            // KEY
+            keys[28].key_code = 24;
+            // Доступ в режимах
+            keys[28].key_mode_available = (char) keypadMode.ACTION_MODE;
+        }
         //=======================================================================================================
         // KEY №25
         keys[29].key_code = 25;
@@ -3571,12 +3625,18 @@ public class CashTest {
         keys[29].key_mode_available = (char) keypadMode.ACTION_MODE;
         //=======================================================================================================
         // KEY №26
-        keys[30].key_code = 26;
+        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+            keys[30].key_code = 26;
+        else                     // Дримкас РФ
+            keys[30].key_code = 27;
         // Доступ в режимах
         keys[30].key_mode_available = (char) keypadMode.ACTION_MODE;
         //=======================================================================================================
         // KEY №30
-        keys[31].key_code = 30;
+        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+            keys[31].key_code = 30;
+        else                     // Дримкас РФ
+            keys[31].key_code = 0x16;
         // Доступ в режимах
         keys[31].key_mode_available = (char) keypadMode.ACTION_MODE;
         //=======================================================================================================
@@ -3606,7 +3666,10 @@ public class CashTest {
         keys[36].key_mode_available = (char) keypadMode.ACTION_MODE;
         //=======================================================================================================
         // KEY Comma
-        keys[37].key_code = 37;
+        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+            keys[37].key_code = 37;
+        else                     // Дримкас РФ
+            keys[37].key_code = 0x1A;
         // Доступ в режимах
         keys[37].key_mode_available = (char) (keypadMode.FREE_MODE + keypadMode.SPEC_SYMBOLS + keypadMode.NUMBERS + keypadMode.ACTION_MODE);
         keys[37].key_number = 0x2C;
@@ -3627,10 +3690,14 @@ public class CashTest {
         keys[38].key_mode_available = (char) keypadMode.ACTION_MODE;
         //=======================================================================================================
         // KEY №39
-        keys[39].key_code = 39;
+        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+            keys[39].key_code = 39;
+        else
+            keys[39].key_code = 0x1c;
         // Доступ в режимах
         keys[39].key_mode_available = (char) keypadMode.ACTION_MODE;
-        //=======================================================================================================*/
+        //=======================================================================================================*//*
+
     }
 
     //Запись в лог
@@ -3651,4 +3718,4 @@ public class CashTest {
             e.printStackTrace();
         }
     }
-}
+}*/

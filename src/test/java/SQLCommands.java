@@ -5,6 +5,7 @@ public class SQLCommands {
     private static final String attachCounters = "echo \"attach '/FisGo/countersDb.db' as counters; ";
     private static final String attachConfig = "echo \"attach '/FisGo/configDb.db' as config; ";
     private static final String attachReceipts = "echo \"attach '/FisGo/receiptsDb.db' as receipts; ";
+    private static final String attachUsers = "echo \"attach '/FisGo/usersDb.db' as users; ";
 
     private static final String sqliteCounters = "| sqlite3 /FisGo/countersDb.db";
     private static final String sqliteConfig = " | sqlite3 /FisGo/configDb.db";

@@ -1,13 +1,19 @@
 /**
- * @author v.bochechko on 04.12.2017.
+ * данные для прогона тестов
+ * UUID кассы, IP, порт, тип
  */
 public class Config {
-    //0 - дримкас Ф, 1 - дримкас РФ
-    private static int cashType = 0;
-    public int getCashType() {
-        return cashType;
-    }
-    public void setCashType(int type) {
-        cashType = type;
-    }
+    public static final String UUID = "12345678-1234-1234-1234-123456789012";
+
+    //параметры для открытия сокета с кассой
+    public static final String CASHBOX_TYPE = "DreamkasRF"; //DreamkasRF
+    public static final String CASHBOX_IP = "192.168.242.101";//101";//
+    public static final int CASHBOX_PORT = 3425;
+    //----------------------------------------------------------------------------
+
+    //параметры подключения по ssh
+    public static final String USERNAME = "root";
+    public static final String PASSWORD = "root";
+    public static final int PORT = 22;
+    //----------------------------------------------------------------------------
 }

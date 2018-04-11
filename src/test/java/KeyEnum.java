@@ -2,8 +2,6 @@
  * Created by v.bochechko on 04.12.2017.
  */
 public class KeyEnum {
-    private Config config = new Config();
-
     public int keyCancel = 0,
             keyCheckInSms = 0,
             keyGoods = 0,
@@ -33,7 +31,7 @@ public class KeyEnum {
 
     public void initKeyEnum() {
         //если дримкас Ф
-        if (config.getCashType() == 0) {
+        if (Config.CASHBOX_TYPE.equals("DreamkasF")) {
             keyCancel = 0x00;
             keyCheckInSms = 0x03;
             keyGoods = 0x06;
@@ -62,7 +60,7 @@ public class KeyEnum {
         }
 
         //если дримкас РФ
-        if (config.getCashType() == 1) {
+        if (Config.CASHBOX_TYPE.equals("DreamkasRF")) {
             key1 = 0x12;
             key2 = 0x13;
             key3 = 0x14;
@@ -73,8 +71,6 @@ public class KeyEnum {
             key8 = 0x07;
             key9 = 0x08;
             key0 = 0x18;
-            key00 = 1212;
-            //KEY_DIGIT        = 333,
             keyEnter = 0x1C;
             keyUp = 0x03;
             keyDown = 0x02;
@@ -83,16 +79,37 @@ public class KeyEnum {
             keyGoods = 0x0A;
             keyPayByCard = 0x10;
             keyPayByCash = 0x16;
-            // KEY_CD_UP_DIR    = 888,
             keyComma = 0x1A;
             keyMenu = 0x04;
-            //KEY_SPACE        = 99,
-            keyCheckInSms = 555;
             keyPlus = 0x0F;
             keyMinus = 0x15;
             keyQuantity = 0x1B;
-            // KEY_REPEAT       = 100,
-            // KEY_COST_GET     = 101
         }
+
+        /*
+        * keyCancel = 0x00; //01
+        * keyDown = 0x02;
+        * keyUp = 0x03;
+        * keyMenu = 0x04; //05
+        * key7 = 0x06;
+        * key8 = 0x07;
+        * key9 = 0x08;
+        * keyReversal = 0x09;
+        * keyGoods = 0x0A; //B
+        * key4 = 0x0C;
+        * key5 = 0x0D;
+        * key6 = 0x0E;
+        * keyPlus = 0x0F;
+        * keyPayByCard = 0x10; //11
+        * key1 = 0x12;
+        * key2 = 0x13;
+        * key3 = 0x14;
+        * keyMinus = 0x15;
+        * keyPayByCash = 0x16; //17
+        * key0 = 0x18; //19
+        * keyComma = 0x1A;
+        * keyQuantity = 0x1B;
+        * keyEnter = 0x1C;
+        * */
     }
 }
