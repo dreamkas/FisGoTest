@@ -88,7 +88,6 @@ public class PasswordTest {
             valueConfigList = bot.cfgGetJson(line);
 
             if (valueConfigList.get(0).equals("0") && (Integer.parseInt(valueConfigList.get(1)) == 0)) {
-                System.out.println("tut");
                 List<String> listScript = bot.readDataScript("src\\test\\resourses\\passwd_1234.txt");
                 int testResult = bot.enterPassword(listScript);
                 switch (testResult) {

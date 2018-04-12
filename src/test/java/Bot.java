@@ -121,7 +121,7 @@ public class Bot {
         writeLogFile("Выполняется функция ввода пароля.");
         getScreenJson();
         tcpSocket.sendDataToSocket(getTaskId(),resultJson());
-        boolean compare = compareScreen(ScreenPicture.PASSWORD);
+        boolean compare = screens.compareScreen(ScreenPicture.PASSWORD);
         //если полученный экран с кассы совпадает с экраном ввода пароля, то выполняем if
         if (compare) {
             writeLogFile("Открыт экран ввода пароля.");
@@ -132,7 +132,7 @@ public class Bot {
             tcpSocket.sendDataToSocket(getTaskId(),resultJson());
             getScreenJson();
             tcpSocket.sendDataToSocket(getTaskId(),resultJson());
-            compare = compareScreen(ScreenPicture.INCORRECT_PASSWORD);
+            compare = screens.compareScreen(ScreenPicture.INCORRECT_PASSWORD);
             if (compare) {
                 writeLogFile("Введен неверный пароль.");
                 return -1;
@@ -152,7 +152,7 @@ public class Bot {
     public void enterPasswordIfScreenOpen() {
         //проверяем, что открыт экран ввода пароля
         getScreenJson();
-        boolean compare = compareScreen(ScreenPicture.PASSWORD);
+        boolean compare = screens.compareScreen(ScreenPicture.PASSWORD);
         //если полученный экран с кассы совпадает с экраном ввода пароля, то выполняем if
         if (compare) {
         //делаем выборку их БД users на кассе, получаем пароль одного из них
@@ -181,7 +181,7 @@ public class Bot {
             pressKeyBot(keyEnum.key1, 0, 1);
             tcpSocket.sendDataToSocket(getTaskId(),resultJson());
             getScreenJson();
-            boolean compare = compareScreen(ScreenPicture.OPEN_SHIFT_MENU);
+            boolean compare = screens.compareScreen(ScreenPicture.OPEN_SHIFT_MENU);
             if (compare) {
                 //добавить обработку даты открытия смены
                 String getPassCommand = "date '+%d%m%y%H%M'\n";
@@ -197,7 +197,7 @@ public class Bot {
                     e.printStackTrace();
                 }
                 getScreenJson();
-                compare = compareScreen(ScreenPicture.FREE_SALE_MODE);
+                compare = screens.compareScreen(ScreenPicture.FREE_SALE_MODE);
                 if (compare) {
                     return 0;
                 } else {
@@ -466,82 +466,5 @@ public class Bot {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    //Сравниваем экран на кассе с экраном из "базы"
-    private boolean compareScreen(ScreenPicture action) {
-        try {
-            FileInputStream fstream = new FileInputStream("./reciveData/tmpScreen.bmp");
-            BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
-            String strFromFile = br.readLine();
-
-            switch (action) {
-                case PASSWORD:
-                    return strFromFile.equals(screens.passwodScreen);
-
-                case INCORRECT_PASSWORD:
-                    return strFromFile.equals(screens.incorrectPasswodScreen);
-
-                case AFTER_PASSWORD:
-                    return strFromFile.equals(screens.menuAfterPasswdScreen);
-
-                case MENU_REGISTRATION:
-                    return strFromFile.equals(screens.menuRegistrationScreen);
-
-                case WRONG_REG_NUMBER:
-                    return strFromFile.equals(screens.wrongRegNumberScreen);
-
-                case REGISTRATION_FISCAL_MODE:
-                    return strFromFile.equals(screens.registrationFiscalModeScreen);
-
-                case GET_REGISTRATION_DATA_FROM_CABINET:
-                    return strFromFile.equals(screens.getRegistrationDataFromCabinetScreen);
-
-                case EMPTY_SCREEN:
-                    return strFromFile.equals(screens.emptyScreen);
-
-                case RE_REGISTRATION_MENU:
-                    return strFromFile.equals(screens.reRegistrationMenuScreen);
-
-                case RE_REGISTRATION_MENU_NOT_AUTONOMIC:
-                    return strFromFile.equals(screens.reRegistrationMenuNotAutonomicScreen);
-
-                case DOCUMENT_NOT_SENDED_SCREEN:
-                    return strFromFile.equals(screens.documentNotSendedScreen);
-
-                case TURN_OFF_CASHBOX:
-                    return strFromFile.equals(screens.turnOffScreen);
-
-                case OPEN_SHIFT_MENU:
-                    return strFromFile.equals(screens.openShiftMenuScreen);
-
-                case SHIFT_MENU_OPEN_SHIFT:
-                    return strFromFile.equals(screens.shiftMenuOpenShiftScreen);
-
-                case LESS_MONEY_IN_CASHBOX:
-                    return strFromFile.equals(screens.lessMoneyInCashboxtScreen);
-
-                case FREE_SALE_MODE:
-                    return strFromFile.equals(screens.freeSaleModeScreen);
-
-                case NOT_ENOUGH_MONEY:
-                    return strFromFile.equals(screens.notEnoughMoneyScreen);
-
-                case FREE_SALE_MODE_CHANGE_400:
-                    return strFromFile.equals(screens.freeSaleModeChange400Screen);
-
-                case GIVE_CARD_AND_RECEIPT:
-                    return strFromFile.equals(screens.giveCardAndReceiptScreen);
-
-                case CONSUMTION_RESULT_SCREEN_100:
-                    return strFromFile.equals(screens.consuptionReaultScreen_100Screen);
-                default:
-                    return false;
-            }
-        } catch (IOException e) {
-            System.out.println("Ошибка сравнения экранов");
-            e.printStackTrace();
-        }
-        return false;
     }
 }
