@@ -1,7 +1,7 @@
 import java.util.List;
 
 /**
- * Created by v.bochechko on 06.04.2018.
+ * Класс, в который парсится Json тасок с кассы
  */
 public class TasksResponse {
     private List<TaskResponse> tasks = null;
@@ -29,17 +29,4 @@ public class TasksResponse {
     public List<String> getConfigValue(int taskId, List<ConfigFieldsEnum> configFieldsEnum) {
         return tasks.get(taskId).getFieldsValue(configFieldsEnum);
     }
-
-    public void print() {
-     //   System.out.println();
-     //   System.out.println("tasks : ");
-     //   tasks.get(0).print();
-       // System.out.println();
-      //  tasks.get(1).print();
-      //  System.out.println();
-        /*tasks.get(2).print();
-        System.out.println();
-        tasks.get(3).print();*/
-    }
-
 }

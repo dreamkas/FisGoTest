@@ -1,5 +1,8 @@
 /**
- * Created by v.bochechko on 05.04.2018.
+ * Класс, для передачи в Json даннх о работе с клавиатурой
+ * - key1 - первая кнопка
+ * - key2 - вторая кнопка
+ * - action - выоплняемое действие (список возможных дейсвий с клавиатурой опписаны в KeypadActionEnum)
  */
 public class DataKeypad {
     private int key1;

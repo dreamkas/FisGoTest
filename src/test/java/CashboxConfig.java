@@ -3,7 +3,11 @@ import com.google.gson.annotations.SerializedName;
 import java.util.*;
 
 /**
- * Created by v.bochechko on 10.04.2018.
+ * Класс, в который будет распарсен Json с кассы на команду CFG_GET
+ * Функции:
+ * - getFieldsValue
+ *      - на вход нужно подать список полей, знаычения которых нужно получтиь (List<ConfigFieldsEnum>)
+ *      - на выходе имеем список значений для заданных полей (List<String>)
  */
 public class CashboxConfig {
     @SerializedName("CONFIG_VER")
@@ -208,9 +212,6 @@ public class CashboxConfig {
     @SerializedName("FS_CHANGE_KKT_MODE")
     private String fsChangeKktmode;
 
-
-    private Map<String,String> configMap = new HashMap<>();
-
     public CashboxConfig(String CONFIG_VER, String KKT_MODE, String TERMINAL_MODE, String FS_REPLACE_MODE,
                          String SHIFT_TIMER, String FISGO_VERSION, String KKT_REG_VERSION, String ARTICLE, String UUID,
                          String ETH_UP, String IP_ADDRESS, String MASK, String ROUTER, String WIFI_UP, String NET_WIFI_NAME,
@@ -339,19 +340,9 @@ public class CashboxConfig {
         this.fsChangeKktmode = FS_CHANGE_KKT_MODE;
     }
 
-
-
-
-
-
     // Функция для получения значения полей
     public List<String> getFieldsValue (List<ConfigFieldsEnum> configFieldsEnum){
-        System.out.println("CashboxConfig getFieldsValue");
-        for (ConfigFieldsEnum str: configFieldsEnum) {
-            System.out.println(String.valueOf(str));
-        }
-
-        List<String> valueConfigFields = new ArrayList<>();
+       List<String> valueConfigFields = new ArrayList<>();
 
         for (ConfigFieldsEnum configEnum: configFieldsEnum) {
             switch (String.valueOf(configEnum)) {
@@ -530,7 +521,7 @@ public class CashboxConfig {
                     valueConfigFields.add(scannerSpeed);
                     break;
                 case "SCANNER_PORT_NAME":
-                    valueConfigFields.add(scalePortName);
+                    valueConfigFields.add(scannerPortName);
                     break;
                 case "SCANNER_OPTIONS":
                     valueConfigFields.add(scannerOption);
@@ -660,8 +651,5 @@ public class CashboxConfig {
             }
         }
         return valueConfigFields;
-    }
-
-    public void print() {
     }
 }

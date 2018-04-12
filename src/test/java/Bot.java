@@ -69,8 +69,8 @@ public class Bot {
         //пока передаю в класс tcpSocket список полей так, подумаю как реализовать это лучше
         tcpSocket.setConfigFieldsEnum(getFields);
         taskId++;
-        Cfg_data cfg_data = new Cfg_data(getFields);
-        Tasks task = new Tasks(taskId, CommandEnum.CFG_GET, null, cfg_data);
+        CfgData cfgData = new CfgData(getFields);
+        Tasks task = new Tasks(taskId, CommandEnum.CFG_GET, null, cfgData);
         tasksList.add(task);
         tcpSocket.sendDataToSocket(getTaskId(), resultJson());
         return tcpSocket.getValueConfigFields();
@@ -220,7 +220,7 @@ public class Bot {
         getKeypadModeJson();
         tcpSocket.sendDataToSocket(getTaskId(), resultJson());
         //tcpSocket..serverGetKepadMode();
-        int keypad_mode = tcpSocket.getKeypadMode();
+        int keypad_mode = TCPSocket.getKeypadMode();
 
         Short keyNumPrew = 40, keyNum = 0, pressCount;
         boolean exit;

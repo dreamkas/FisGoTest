@@ -3,16 +3,16 @@ import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Vector;
 
-/*
- * Класс инициализации кнопок
+/**
+ * Класс инициализации кнопок, в функции initKey задается, какие символы на какой кнопке находятся, в каком режиме доступна кнопка
  */
 public class Keypad {
     public Short key_code;
     public char key_number;
-    public Vector<Integer> rus_code = new Vector<>() ;
+    public Vector <Integer> rus_code = new Vector<>() ;
     public Vector <Integer> eng_code = new Vector<>();
     public Vector <Integer> spec_sym_code = new Vector<>();
-    char key_mode_available;
+    private char key_mode_available;
 
     public static int keys_table_size = 40;
 

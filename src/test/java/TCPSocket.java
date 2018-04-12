@@ -36,20 +36,8 @@ public class TCPSocket {
     //список запрашиваемых полей
     @Setter
     private List<ConfigFieldsEnum> configFieldsEnum;
-
-    public void print() {
-        System.out.println("TCPSocket print:");
-        for (ConfigFieldsEnum str: configFieldsEnum)
-            System.out.println(String.valueOf(str));
-    }
-
     @Getter
     public List<String> valueConfigFields = new ArrayList<>();
-    public void print2() {
-        System.out.println("TCPSocket print valueConfigFields:");
-        for (String str: valueConfigFields)
-            System.out.println(str);
-    }
 
     //локальная переменная, в которой храним количество тасок, которые передаем на сервер
     @Setter
@@ -70,8 +58,6 @@ public class TCPSocket {
     public void socketClose(String sendCloseSession ) {
         try {
             // передаем команду закрытия соединения
-     //       bot.closeSessionJson();
-       //     String sendCloseSession = bot.resultJson();
             workSocket.getOutputStream().write(sendCloseSession.getBytes());
         } catch (Exception e) {
             e.printStackTrace();
@@ -102,7 +88,6 @@ public class TCPSocket {
     //Парсинг ответа от сервера
     private void parseJson(String json) {
         TasksResponse tasksResponse = new Gson().fromJson(json, TasksResponse.class);
-        tasksResponse.print();
         for (int i = 0; i < taskId; i++) {
             if (!tasksResponse.getTaskResult(i).equals("OK"))
                 System.out.println("Task complite with result not OK. task id = " + (i+1));
@@ -114,9 +99,7 @@ public class TCPSocket {
                     setKeypadMode(tasksResponse.getKeypadMode(i));
                 }
                 if (json.contains("cfg_data")) {
-                    print();
                     valueConfigFields = tasksResponse.getConfigValue(i, configFieldsEnum);
-                    print2();
                 }
             }
         }

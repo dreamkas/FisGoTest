@@ -1,5 +1,5 @@
 /**
- * Created by v.bochechko on 05.04.2018.
+ * список возможных дейсвий с клавиатурой опписаны
  */
 enum KeypadActionEnum {
     KEY_DOWN,

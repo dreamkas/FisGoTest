@@ -1,3 +1,6 @@
+/**
+ * Класс будет использоваться для работы со счетчиками
+ */
 public class ParseCount {
     public static final int ID = 0,
             CASH_ON_TOP = 1,

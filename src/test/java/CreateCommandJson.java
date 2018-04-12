@@ -1,7 +1,7 @@
 import java.util.List;
 
 /**
- * Created by v.bochechko on 05.04.2018.
+ * класс, из которого формируется Json для передачи в сокет который
  */
 public class CreateCommandJson {
     private String uuid = Config.UUID;

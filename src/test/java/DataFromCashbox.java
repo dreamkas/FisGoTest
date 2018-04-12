@@ -6,12 +6,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-/*
- * Created by v.bochechko on 07.12.2017.
+/**
+ * Класс используется, если нужно выполнить какие-то команды на кассе, например reaboot или date
  */
 
 public class DataFromCashbox {
-    private static final int SSH_PORT = 22;
     private static final int CONNECTION_TIMEOUT = 100000;
     private static final int BUFFER_SIZE = 1024;
 

@@ -3,7 +3,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-/*
+/**
  * Этот класс возвращает строку из bmp-файдов (экранов с кассы)
  */
 

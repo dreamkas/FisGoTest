@@ -1,5 +1,5 @@
-/*
- * Created by v.bochechko on 30.01.2018.
+/**
+ * класс содержит sql команды для выполнения на кассе ( возможно, скоро отомрет )
  */
 public class SQLCommands {
     private static final String attachCounters = "echo \"attach '/FisGo/countersDb.db' as counters; ";

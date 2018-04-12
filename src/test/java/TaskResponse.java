@@ -3,13 +3,11 @@ import lombok.Getter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by v.bochechko on 06.04.2018.
+ * Класс, в который парсятся отдельные таски из Json-а с кассы
  */
-
 
 public class TaskResponse {
     private int task_id;
@@ -18,7 +16,7 @@ public class TaskResponse {
     private int[] lcd_screen = null;
     @Getter
     private int keypad_mode;
-    private CashboxConfig cfg_data = null;//List<CashboxConfig> cfg_data = null;
+    private CashboxConfig cfg_data = null;
 
     public TaskResponse (int task_id, String result, int[] lcd_screen, int keypad_mode, CashboxConfig cfg_data) { // List<CashboxConfig>cfg_data) {
         this.task_id = task_id;
@@ -43,21 +41,9 @@ public class TaskResponse {
             }
         }
     }
-    //----------------------------------------------------------------------------
 
+    //возвращаем значения на заданный массив полей конфига
     public List<String> getFieldsValue (List<ConfigFieldsEnum> configFieldsEnum){
         return cfg_data.getFieldsValue(configFieldsEnum);
-    }
-
-    public void print() {
-       // System.out.println("task_id = " + task_id);
-       // System.out.println("result = " + result);
-       // System.out.println("keypad_mode = " + keypad_mode);
-    //    cfg_data.print();
-      //  cfg_data.print();
-        //if (cfg_data != null){
-            //cfg_data.get(0).print();
-        //    cfgData.get(1).print();
-       // }
     }
 }

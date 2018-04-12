@@ -1,5 +1,5 @@
-/*
- * Created by v.bochechko on 04.12.2017.
+/**
+ * Класс для инициализации клавиатуры
  */
 public class KeyEnum {
     public int keyCancel = 0,

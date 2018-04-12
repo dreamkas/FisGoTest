@@ -1,18 +1,19 @@
-import org.junit.Test;
+import com.google.gson.annotations.SerializedName;
 
 /**
- * Created by v.bochechko on 05.04.2018.
+ * Класс, в котором формируются таски для отправки на кассу
  */
 public class Tasks {
     private int task_id;
     private CommandEnum command;
     private DataKeypad data;
-    private Cfg_data cfg_data;
+    @SerializedName("cfg_data")
+    private CfgData cfgData;
 
-    public Tasks (int task_id, CommandEnum command, DataKeypad dataKeypad, Cfg_data cfg_data){
+    public Tasks (int task_id, CommandEnum command, DataKeypad dataKeypad, CfgData cfgData) {
         this.task_id = task_id;
         this.command = command;
         this.data = dataKeypad;
-        this.cfg_data = cfg_data;
+        this.cfgData = cfgData;
     }
 }

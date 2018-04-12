@@ -1,12 +1,12 @@
 import java.util.List;
 
 /**
- * Created by v.bochechko on 09.04.2018.
+ * Класс для добавления в Json списка полей конфига, которые будут запрошены с кассы
  */
 public class CfgData {
-    private List<String> fields;
+    private List<ConfigFieldsEnum> fields;
 
-    public CfgData(List<String>listCfgField){//<ConfigFieldsEnum> listCfgField) {
+    public CfgData(List<ConfigFieldsEnum> listCfgField) {
         this.fields = listCfgField;
     }
 }
