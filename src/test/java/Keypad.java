@@ -1,12 +1,10 @@
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import java.util.List;
 import java.util.Vector;
 
 /**
  * Класс инициализации кнопок, в функции initKey задается, какие символы на какой кнопке находятся, в каком режиме доступна кнопка
  */
 public class Keypad {
+    private CashBox cashBox;
     public Short key_code;
     public char key_number;
     public Vector <Integer> rus_code = new Vector<>() ;
@@ -18,21 +16,25 @@ public class Keypad {
 
     private KeypadMode keypadMode = new KeypadMode();
 
+    public Keypad(CashBox cashBox) {
+        this.cashBox = cashBox;
+    }
+
     //инициализация клавиатуры и режимов, в которых используются кнопки
     public void initKey(Keypad keys[]) {
         // Keypad[] keys = new Keypad[keypad.keys_table_size];
         //=======================================================================================================
         // KEY №0 - цифра 0 на клавиатуре
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+        if (cashBox.CASHBOX_TYPE.equals(CashBoxType.DREAMKASF))
             keys[0].key_code = 35;
-        else                     // Дримкас РФ
+        else                     // Дримкас РФc
             keys[0].key_code = 0x18;
         // Доступ в режимах
         keys[0].key_mode_available = (char) (keypadMode.FREE_MODE + keypadMode.NUMBERS + keypadMode.SPEC_SYMBOLS);
         // Цифра
         keys[0].key_number = 0x30;
         // Специальные символы
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))         // НЕ(Антон, прочти это!) Дримкас Ф!
+        if (cashBox.CASHBOX_TYPE.equals(CashBoxType.DREAMKASF))         // НЕ(Антон, прочти это!) Дримкас Ф!
             keys[0].spec_sym_code.add( 0x20 );
         keys[0].spec_sym_code.add(0x40);
         keys[0].spec_sym_code.add(0x23);
@@ -43,7 +45,7 @@ public class Keypad {
         //=======================================================================================================
         //=======================================================================================================
         // KEY №1 - цифра 1 на клавиатуре
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+        if (cashBox.CASHBOX_TYPE.equals(CashBoxType.DREAMKASF))
             keys[1].key_code = 27;
         else                     // Дримкас РФ
             keys[1].key_code = 0x12;
@@ -75,7 +77,7 @@ public class Keypad {
         //=======================================================================================================
         //=======================================================================================================
         // KEY №2
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+        if (cashBox.CASHBOX_TYPE.equals(CashBoxType.DREAMKASF))
             keys[2].key_code = 28;
         else                     // Дримкас РФ
             keys[2].key_code = 0x13;
@@ -106,7 +108,7 @@ public class Keypad {
         //=======================================================================================================
         //=======================================================================================================
         // KEY №3
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+        if (cashBox.CASHBOX_TYPE.equals(CashBoxType.DREAMKASF))
             keys[3].key_code = 29;
         else                     // Дримкас РФ
             keys[3].key_code = 0x14;
@@ -139,7 +141,7 @@ public class Keypad {
         //=======================================================================================================
         //=======================================================================================================
         // KEY №4
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+        if (cashBox.CASHBOX_TYPE.equals(CashBoxType.DREAMKASF))
             keys[4].key_code = 19;
         else                     // Дримкас РФ
             keys[4].key_code = 0x0C;
@@ -170,7 +172,7 @@ public class Keypad {
         //=======================================================================================================
         //=======================================================================================================
         // KEY №5
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+        if (cashBox.CASHBOX_TYPE.equals(CashBoxType.DREAMKASF))
             keys[5].key_code = 20;
         else                     // Дримкас РФ
             keys[5].key_code = 0x0D;
@@ -201,7 +203,7 @@ public class Keypad {
         //=======================================================================================================
         //=======================================================================================================
         // KEY №6
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+        if (cashBox.CASHBOX_TYPE.equals(CashBoxType.DREAMKASF))
             keys[6].key_code = 21;
         else                     // Дримкас РФ
             keys[6].key_code = 0x0E;
@@ -232,7 +234,7 @@ public class Keypad {
         //=======================================================================================================
         //=======================================================================================================
         // KEY №7
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+        if (cashBox.CASHBOX_TYPE.equals(CashBoxType.DREAMKASF))
             keys[7].key_code = 11;
         else                     // Дримкас РФ
             keys[7].key_code = 0x06;
@@ -256,7 +258,7 @@ public class Keypad {
         //=======================================================================================================
         //=======================================================================================================
         // KEY №8
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+        if (cashBox.CASHBOX_TYPE.equals(CashBoxType.DREAMKASF))
             keys[8].key_code = 12;
         else                     // Дримкас РФ
             keys[8].key_code = 0x07;
@@ -287,7 +289,7 @@ public class Keypad {
         //=======================================================================================================
         //=======================================================================================================
         // KEY №9
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+        if (cashBox.CASHBOX_TYPE.equals(CashBoxType.DREAMKASF))
             keys[9].key_code = 13;
         else                     // Дримкас РФ
             keys[9].key_code = 0x08;
@@ -353,13 +355,13 @@ public class Keypad {
         //=======================================================================================================
         //=======================================================================================================
         // KEY №6
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+        if (cashBox.CASHBOX_TYPE.equals(CashBoxType.DREAMKASF))
             keys[16].key_code = 6;
         else
             keys[16].key_code = 0x0a;
         // Доступ в режимах
         keys[16].key_mode_available = (char) keypadMode.ACTION_MODE;
-        if (Config.CASHBOX_TYPE.equals("DreamkasF")) {
+        if (cashBox.CASHBOX_TYPE.equals(CashBoxType.DREAMKASF)) {
             //=======================================================================================================
             // KEY №7
             keys[17].key_code = 7;
@@ -383,7 +385,7 @@ public class Keypad {
         keys[20].key_mode_available = (char) keypadMode.ACTION_MODE;
         //=======================================================================================================
         // KEY BACKSPACE
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+        if (cashBox.CASHBOX_TYPE.equals(CashBoxType.DREAMKASF))
             keys[21].key_code = 14;
         else                     // Дримкас РФ
             keys[21].key_code = 0x09;
@@ -405,7 +407,7 @@ public class Keypad {
         keys[24].key_code = 17;
         // Доступ в режимах
         keys[24].key_mode_available = (char) keypadMode.ACTION_MODE;
-        if (Config.CASHBOX_TYPE.equals("DreamkasF")) {
+        if (cashBox.CASHBOX_TYPE.equals(CashBoxType.DREAMKASF)) {
             //=======================================================================================================
             // KEY №18
             keys[25].key_code = 18;
@@ -426,7 +428,7 @@ public class Keypad {
         keys[27].key_code = 23;
         // Доступ в режимах
         keys[27].key_mode_available = (char) keypadMode.ACTION_MODE;
-        if (Config.CASHBOX_TYPE.equals("DreamkasF")) {
+        if (cashBox.CASHBOX_TYPE.equals(CashBoxType.DREAMKASF)) {
             //=======================================================================================================
             // KEY
             keys[28].key_code = 24;
@@ -440,7 +442,7 @@ public class Keypad {
         keys[29].key_mode_available = (char) keypadMode.ACTION_MODE;
         //=======================================================================================================
         // KEY №26
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+        if (cashBox.CASHBOX_TYPE.equals(CashBoxType.DREAMKASF))
             keys[30].key_code = 26;
         else                     // Дримкас РФ
             keys[30].key_code = 27;
@@ -448,7 +450,7 @@ public class Keypad {
         keys[30].key_mode_available = (char) keypadMode.ACTION_MODE;
         //=======================================================================================================
         // KEY №30
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+        if (cashBox.CASHBOX_TYPE.equals(CashBoxType.DREAMKASF))
             keys[31].key_code = 30;
         else                     // Дримкас РФ
             keys[31].key_code = 0x16;
@@ -481,7 +483,7 @@ public class Keypad {
         keys[36].key_mode_available = (char) keypadMode.ACTION_MODE;
         //=======================================================================================================
         // KEY Comma
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+        if (cashBox.CASHBOX_TYPE.equals(CashBoxType.DREAMKASF))
             keys[37].key_code = 37;
         else                     // Дримкас РФ
             keys[37].key_code = 0x1A;
@@ -505,7 +507,7 @@ public class Keypad {
         keys[38].key_mode_available = (char) keypadMode.ACTION_MODE;
         //=======================================================================================================
         // KEY №39
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+        if (cashBox.CASHBOX_TYPE.equals(CashBoxType.DREAMKASF))
             keys[39].key_code = 39;
         else
             keys[39].key_code = 0x1c;

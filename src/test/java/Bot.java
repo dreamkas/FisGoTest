@@ -14,15 +14,21 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-import java.util.TreeMap;
 
 /**
  * Класс для формирования команды отправки Json и отправки команд на сервер
  */
 public class Bot {
 
-    public Bot() {
-        keyEnum.initKeyEnum();
+    private CashBox cashBox;
+
+    private Keypad keypad;
+    private KeypadMode keypadMode;
+
+    public Bot(CashBox cashBox) {
+        this.cashBox = cashBox;
+        this.keypad = new Keypad(cashBox);
+        this.keypadMode = new KeypadMode();
     }
 
     //данные для формирование команды, которая будет передана на сервер
@@ -85,7 +91,7 @@ public class Bot {
 
     // составляем Json из сформированных тасок, используется только в классе  TCPSocket, в функцях sendDataToSocket() и closeSocket()
     public String resultJson() {
-        CreateCommandJson createCommandJson = new CreateCommandJson(tasksList);
+        CreateCommandJson createCommandJson = new CreateCommandJson(tasksList, cashBox.UUID);
 
         GsonBuilder builder  = new GsonBuilder();
         Gson gson = builder.create();
@@ -159,7 +165,7 @@ public class Bot {
             String getPassCommand = "echo \"attach '/FisGo/usersDb.db' as users; " +
                 "select PASS from users.USERS limit 1;\" | sqlite3 /FisGo/usersDb.db\n";
             DataFromCashbox dataFromCashbox = new DataFromCashbox();
-            dataFromCashbox.initSession(Config.CASHBOX_IP, Config.USERNAME, Config.PORT, Config.PASSWORD);
+            dataFromCashbox.initSession(cashBox.CASHBOX_IP, CashBox.USERNAME, CashBox.PORT, CashBox.PASSWORD);
             List<String> line = dataFromCashbox.executeListCommand(getPassCommand);
             dataFromCashbox.disconnectSession();
             //вводим пароль на кассе
@@ -186,7 +192,7 @@ public class Bot {
                 //добавить обработку даты открытия смены
                 String getPassCommand = "date '+%d%m%y%H%M'\n";
                 DataFromCashbox dataFromCashbox = new DataFromCashbox();
-                dataFromCashbox.initSession(Config.CASHBOX_IP, Config.USERNAME, Config.PORT, Config.PASSWORD);
+                dataFromCashbox.initSession(cashBox.CASHBOX_IP, CashBox.USERNAME, CashBox.PORT, CashBox.PASSWORD);
                 List<String> dateStr = dataFromCashbox.executeListCommand(getPassCommand);
                 dataFromCashbox.disconnectSession();
                 pressKeyBot(keyEnum.keyEnter, 0, 2);
@@ -212,8 +218,7 @@ public class Bot {
             return -1;
     }
 
-    private Keypad keypad = new Keypad();
-    private KeypadMode keypadMode = new KeypadMode();
+
 
     //Нажатие на кнопку (ввод данных) в зависимости от символа
     private void strToKeypadConvert(String str) {
@@ -227,7 +232,7 @@ public class Bot {
 
         Keypad[] keys = new Keypad[Keypad.keys_table_size];
         for (int i = 0; i < keys.length; i++) {
-            keys[i] = new Keypad();
+            keys[i] = new Keypad(cashBox);
         }
 
         keypad.initKey(keys);
@@ -430,6 +435,10 @@ public class Bot {
                 } */
             }
         }
+    }
+
+    public void sendTasks(String jsonCommand){
+        tcpSocket.sendDataToSocket(getTaskId(), jsonCommand);
     }
 
     //Поиск ключевого слова в заданной коллекции

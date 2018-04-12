@@ -1,5 +1,6 @@
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.*;
@@ -16,22 +17,21 @@ import static org.junit.Assert.fail;
 public class PasswordTest {
 
     private TCPSocket tcpSocket = new TCPSocket();
-    private Bot bot = new Bot();
-    private KeyEnum keyEnum = new KeyEnum();
     private Screens screens = new Screens();
+    private CashBox cashBox = new CashBox("12345678-1234-1234-1234-123456789012", CashBoxType.DREAMKASRF, "192.168.242.116");
+    private Bot bot = new Bot(cashBox);
 
     @Before
-    public void setupConn () {
+    public void setupConn() {
         //создаем сокет
-        tcpSocket.createSocket(Config.CASHBOX_IP, Config.CASHBOX_PORT);
-        //инициализируем керпкки
-        keyEnum.initKeyEnum();
+        tcpSocket.createSocket(cashBox.CASHBOX_IP, CashBox.CASHBOX_PORT);
     }
 
     @After
-    public void closeConn () {
-        bot.pressKeyBot(keyEnum.keyCancel, 0, 1);//pressButton(keyEnum.keyCancel, 0, KeypadActionEnum.KEY_DOWN);
+    public void closeConn() {
+        bot.pressKeyBot(cashBox.keyEnum.keyCancel, 0, 1);//pressButton(keyEnum.keyCancel, 0, KeypadActionEnum.KEY_DOWN);
         tcpSocket.sendDataToSocket(bot.getTaskId(), bot.resultJson());
+
         bot.closeSessionJson();
         tcpSocket.socketClose(bot.resultJson());
     }
@@ -66,7 +66,7 @@ public class PasswordTest {
                     fail("Неизвестное значение");
                     break;
             }
-        } else  {
+        } else {
             fail("Касса после тех. обнуления касса не в учебном режиме");
         }
     }
@@ -111,14 +111,34 @@ public class PasswordTest {
             } else {
                 fail("Касса после тех обнуления, но смена открыта");
             }
-        } else  {
+        } else {
             fail("Касса после тех. обнуления не в учебном режиме");
         }
     }
 
+    @Test
+    public void fooTest() {
+        //пароль
+        bot.pressKeyBot(cashBox.keyEnum.key1, 0, 1);
+        bot.pressKeyBot(cashBox.keyEnum.key2, 0, 1);
+        bot.pressKeyBot(cashBox.keyEnum.key3, 0, 1);
+        bot.pressKeyBot(cashBox.keyEnum.key4, 0, 1);
+
+        //включить 2г
+        bot.pressKeyBot(cashBox.keyEnum.keyMenu, 0, 1);
+        bot.pressKeyBot(cashBox.keyEnum.key5, 0, 1);
+        bot.pressKeyBot(cashBox.keyEnum.key2, 0, 1);
+        bot.pressKeyBot(cashBox.keyEnum.key3, 0, 1);
+        bot.pressKeyBot(cashBox.keyEnum.key1, 0, 1);
+        bot.pressKeyBot(cashBox.keyEnum.key1, 0, 1);
+        bot.pressKeyBot(cashBox.keyEnum.keyEnter, 0, 1);
+        bot.sendTasks(bot.resultJson()); //только для кнопок
+        bot.getScreenJson();
+    }
+
     //Ввод корректного пароля, на кассе открыта смена
     @Test
-    public void correct_password_open_shift()  throws IOException {
+    public void correct_password_open_shift() throws IOException {
         //проверяем, что stage = 0
         List<ConfigFieldsEnum> line = new ArrayList<>();
         line.add(ConfigFieldsEnum.STAGE);
@@ -158,7 +178,7 @@ public class PasswordTest {
                         break;
                 }
             }
-        } else  {
+        } else {
             fail("Касса после тех. обнуления не в учебном режиме");
         }
     }
@@ -170,7 +190,7 @@ public class PasswordTest {
         int openShiftResult = bot.openShift();
         if (openShiftResult != 0)
             fail("Ошибка при открытии смены");
-        //если смена открыта, то перезапускаем кассу, чтобы попасть на экран авторизации
+            //если смена открыта, то перезапускаем кассу, чтобы попасть на экран авторизации
         else {
             //перезапускаем фискат
             DataFromCashbox dataFromCashbox = new DataFromCashbox();
@@ -181,7 +201,7 @@ public class PasswordTest {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            tcpSocket.createSocket(Config.CASHBOX_IP, Config.CASHBOX_PORT);
+            tcpSocket.createSocket(cashBox.CASHBOX_IP, CashBox.CASHBOX_PORT);
         }
 
     }

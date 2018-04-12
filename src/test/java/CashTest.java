@@ -1,13 +1,5 @@
-import org.junit.*;
-
 import java.io.*;
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -26,9 +18,9 @@ public class CashTest {
     private List<String> dateStr = new ArrayList<>();
 
     //объекты для выполнения тестов
-    private Config config = new Config();
+   // private CashBox cashBox = new CashBox();
     private Screens screens = new Screens();
-    private Keypad keypad = new Keypad();
+   // private Keypad keypad = new Keypad();
     private KeypadMode keypadMode = new KeypadMode();
     private static int keypad_mode = 0; //= keypadMode.FREE_MODE;//SPEC_SYMBOLS;//ENGLISH;//CYRILLIC;
     private KeyEnum keyEnum = new KeyEnum();
@@ -43,16 +35,16 @@ public class CashTest {
     }
 
     //Инициализация клавиатуры в зависимости от типа кассы
-    public void initializationKeyboard() {
-        keyEnum.initKeyEnum();
-    }
+//    public void initializationKeyboard() {
+//        keyEnum.initKeyEnum();
+//    }
 
     //установка соединения
-    public void connectionSetup() {
-        //  tcpSocket.setFlagReceiveScreen(true);
-        tcpSocket.createSocket(Config.CASHBOX_IP, Config.CASHBOX_PORT);
-        dataFromCashbox.initSession(Config.CASHBOX_IP, Config.USERNAME, Config.PORT, Config.PASSWORD);
-    }
+//    public void connectionSetup() {
+//        //  tcpSocket.setFlagReceiveScreen(true);
+//        tcpSocket.createSocket(cashBox.CASHBOX_IP, CashBox.CASHBOX_PORT);
+//        dataFromCashbox.initSession(cashBox.CASHBOX_IP, CashBox.USERNAME, CashBox.PORT, CashBox.PASSWORD);
+//    }
 
 }
 
@@ -209,10 +201,10 @@ public class CashTest {
             int testResul = re_registrationLegalEntity(listScript);
 
             line.clear();
-            String getData = "echo \"attach '/FisGo/configDb.db' as config; " +
-                    "select ORGANIZATION_NAME from config.CONFIG;" +
-                    "select CALCULATION_ADDRESS from config.CONFIG;" +
-                    "select CALCULATION_PLACE from config.CONFIG;\"" +
+            String getData = "echo \"attach '/FisGo/configDb.db' as cashBox; " +
+                    "select ORGANIZATION_NAME from cashBox.CONFIG;" +
+                    "select CALCULATION_ADDRESS from cashBox.CONFIG;" +
+                    "select CALCULATION_PLACE from cashBox.CONFIG;\"" +
                     " | sqlite3 /FisGo/configDb.db\n";
             line = cashBoxConnect(getData);
 
@@ -686,8 +678,8 @@ public class CashTest {
 /*   @Test
     public void print_x_count() {
         //проверяем, что stage кассы = 0
-        String getStageCommand = "echo \"attach '/FisGo/configDb.db' as config; " +
-                "select STAGE from config.CONFIG;\"" +
+        String getStageCommand = "echo \"attach '/FisGo/configDb.db' as cashBox; " +
+                "select STAGE from cashBox.CONFIG;\"" +
                 " | sqlite3 /FisGo/configDb.db\n";
         List<String> line = cashBoxConnect(getStageCommand);
         if (line.get(0).equals("0")) {
@@ -705,8 +697,8 @@ public class CashTest {
 
             line.clear();
             //делаем выборку их конфига на кассе, проверем, открыта смена или нет
-            String getOpenShiftCommand = "echo \"attach '/FisGo/configDb.db' as config; " +
-                    "select OPEN_SHIFT_DATE from config.CONFIG;\" | sqlite3 /FisGo/configDb.db\n";
+            String getOpenShiftCommand = "echo \"attach '/FisGo/configDb.db' as cashBox; " +
+                    "select OPEN_SHIFT_DATE from cashBox.CONFIG;\" | sqlite3 /FisGo/configDb.db\n";
             line = cashBoxConnect(getOpenShiftCommand);
             if (line.isEmpty()) {
                 openShift();
@@ -855,7 +847,7 @@ public class CashTest {
                     pressKeyBot(keyEnum.keyEnter, 0, 1);
             }
             else {
-                //делаем выборку поля ИНН из БД config на кассе, получаем пароль одного из них
+                //делаем выборку поля ИНН из БД cashBox на кассе, получаем пароль одного из них
                 String regitrationDataFromCashbox = sqlCommands.getOrganiztionInnCommand();
                 List <String> line = cashBoxConnect(regitrationDataFromCashbox);
                 if (line.size() != 0) {
@@ -890,7 +882,7 @@ public class CashTest {
                     pressKeyBot(keyEnum.keyEnter, 0, 1);
             }
             else {
-                //делаем выборку поля Наименование организации из БД config на кассе, получаем пароль одного из них
+                //делаем выборку поля Наименование организации из БД cashBox на кассе, получаем пароль одного из них
                 String regitrationDataFromCashbox = sqlCommands.getOrganiztionNameCommand();
                 List<String> line = cashBoxConnect(regitrationDataFromCashbox);
                 if (line.size() != 0) {
@@ -926,7 +918,7 @@ public class CashTest {
             }
             else {
 
-                //делаем выборку поля Адрес рассчетов из БД config на кассе, получаем пароль одного из них
+                //делаем выборку поля Адрес рассчетов из БД cashBox на кассе, получаем пароль одного из них
                 String regitrationDataFromCashbox = sqlCommands.getClcAddressCommand();
                 List<String> line = cashBoxConnect(regitrationDataFromCashbox);
                 if (line.size() != 0) {
@@ -961,7 +953,7 @@ public class CashTest {
                     pressKeyBot(keyEnum.keyEnter, 0, 1);
             }
             else {
-                //делаем выборку поля Место рассчетов из БД config на кассе, получаем пароль одного из них
+                //делаем выборку поля Место рассчетов из БД cashBox на кассе, получаем пароль одного из них
                 String regitrationDataFromCashbox = sqlCommands.getClcPlaceCommand();
                 List<String> line = cashBoxConnect(regitrationDataFromCashbox);
                 if (line.size() != 0) {
@@ -996,7 +988,7 @@ public class CashTest {
                     pressKeyBot(keyEnum.keyEnter, 0, 1);
             }
             else {
-                //делаем выборку поля Рег. номер из БД config на кассе, получаем пароль одного из них
+                //делаем выборку поля Рег. номер из БД cashBox на кассе, получаем пароль одного из них
                 String regitrationDataFromCashbox = sqlCommands.getRegNumCommand();
                 List<String> line = cashBoxConnect(regitrationDataFromCashbox);
                 if (line.size() != 0) {
@@ -1492,9 +1484,9 @@ public class CashTest {
             } else {
 
                 //получаем версию ФФД и Режим работы ККТ
-                String command = "echo \"attach '/FisGo/configDb.db' as config; " +
-                        "select FFD_KKT_VER from config.CONFIG; " +
-                        "select KKT_MODE from config.CONFIG;\" " +
+                String command = "echo \"attach '/FisGo/configDb.db' as cashBox; " +
+                        "select FFD_KKT_VER from cashBox.CONFIG; " +
+                        "select KKT_MODE from cashBox.CONFIG;\" " +
                         "| sqlite3 /FisGo/configDb.db\n";
                 List<String> line = cashBoxConnect(command);
 
@@ -1503,13 +1495,13 @@ public class CashTest {
                 if (registrationVer.equals("2")) {
                     registrationVer = "1.05";
                     //убираем все ранее выбранные признаки
-                    command = "echo \"attach '/FisGo/configDb.db' as config; " +
-                            "select ENCRYPTION_SIGN from config.CONFIG; " +
-                            "select EXCISABLE_SIGN from config.CONFIG; " +
-                            "select CLC_SERVICE_SIGN from config.CONFIG; " +
-                            "select GAMBLING_SIGN from config.CONFIG; " +
-                            "select LOTTERY_SIGN from config.CONFIG; " +
-                            "select PAYING_AGENT_SIGN from config.CONFIG; \" " +
+                    command = "echo \"attach '/FisGo/configDb.db' as cashBox; " +
+                            "select ENCRYPTION_SIGN from cashBox.CONFIG; " +
+                            "select EXCISABLE_SIGN from cashBox.CONFIG; " +
+                            "select CLC_SERVICE_SIGN from cashBox.CONFIG; " +
+                            "select GAMBLING_SIGN from cashBox.CONFIG; " +
+                            "select LOTTERY_SIGN from cashBox.CONFIG; " +
+                            "select PAYING_AGENT_SIGN from cashBox.CONFIG; \" " +
                             "| sqlite3  /FisGo/configDb.db\n";
 
                     List<String> lineSigns = cashBoxConnect(command);
@@ -1581,10 +1573,10 @@ public class CashTest {
         boolean compare = compareScreen(ScreenPicture.RE_REGISTRATION_MENU);
         if (compare) {
             //делаем выборку их БД users на кассе, получаем пароль одного из них
-            String regDataFromCashbox = "echo \"attach '/FisGo/configDb.db' as config; " +
-                    "select ORGANIZATION_NAME from config.CONFIG;" +
-                    "select CALCULATION_ADDRESS from config.CONFIG;" +
-                    "select CALCULATION_PLACE from config.CONFIG;\"" +
+            String regDataFromCashbox = "echo \"attach '/FisGo/configDb.db' as cashBox; " +
+                    "select ORGANIZATION_NAME from cashBox.CONFIG;" +
+                    "select CALCULATION_ADDRESS from cashBox.CONFIG;" +
+                    "select CALCULATION_PLACE from cashBox.CONFIG;\"" +
                     " | sqlite3 /FisGo/configDb.db\n";
             List <String> line = cashBoxConnect(regDataFromCashbox);
 
@@ -3208,7 +3200,7 @@ public class CashTest {
         // Keypad[] keys = new Keypad[keypad.keys_table_size];
         //=======================================================================================================
         // KEY №0 - цифра 0 на клавиатуре
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+        if (CashBox.CASHBOX_TYPE.equals("DreamkasF"))
             keys[0].key_code = 35;
         else                     // Дримкас РФ
             keys[0].key_code = 0x18;
@@ -3217,7 +3209,7 @@ public class CashTest {
         // Цифра
         keys[0].key_number = 0x30;
         // Специальные символы
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))         // НЕ(Антон, прочти это!) Дримкас Ф!
+        if (CashBox.CASHBOX_TYPE.equals("DreamkasF"))         // НЕ(Антон, прочти это!) Дримкас Ф!
             keys[0].spec_sym_code.add( 0x20 );
         keys[0].spec_sym_code.add(0x40);
         keys[0].spec_sym_code.add(0x23);
@@ -3228,7 +3220,7 @@ public class CashTest {
         //=======================================================================================================
         //=======================================================================================================
         // KEY №1 - цифра 1 на клавиатуре
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+        if (CashBox.CASHBOX_TYPE.equals("DreamkasF"))
             keys[1].key_code = 27;
         else                     // Дримкас РФ
             keys[1].key_code = 0x12;
@@ -3260,7 +3252,7 @@ public class CashTest {
         //=======================================================================================================
         //=======================================================================================================
         // KEY №2
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+        if (CashBox.CASHBOX_TYPE.equals("DreamkasF"))
             keys[2].key_code = 28;
         else                     // Дримкас РФ
             keys[2].key_code = 0x13;
@@ -3291,7 +3283,7 @@ public class CashTest {
         //=======================================================================================================
         //=======================================================================================================
         // KEY №3
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+        if (CashBox.CASHBOX_TYPE.equals("DreamkasF"))
             keys[3].key_code = 29;
         else                     // Дримкас РФ
             keys[3].key_code = 0x14;
@@ -3324,7 +3316,7 @@ public class CashTest {
         //=======================================================================================================
         //=======================================================================================================
         // KEY №4
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+        if (CashBox.CASHBOX_TYPE.equals("DreamkasF"))
             keys[4].key_code = 19;
         else                     // Дримкас РФ
             keys[4].key_code = 0x0C;
@@ -3355,7 +3347,7 @@ public class CashTest {
         //=======================================================================================================
         //=======================================================================================================
         // KEY №5
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+        if (CashBox.CASHBOX_TYPE.equals("DreamkasF"))
             keys[5].key_code = 20;
         else                     // Дримкас РФ
             keys[5].key_code = 0x0D;
@@ -3386,7 +3378,7 @@ public class CashTest {
         //=======================================================================================================
         //=======================================================================================================
         // KEY №6
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+        if (CashBox.CASHBOX_TYPE.equals("DreamkasF"))
             keys[6].key_code = 21;
         else                     // Дримкас РФ
             keys[6].key_code = 0x0E;
@@ -3417,7 +3409,7 @@ public class CashTest {
         //=======================================================================================================
         //=======================================================================================================
         // KEY №7
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+        if (CashBox.CASHBOX_TYPE.equals("DreamkasF"))
             keys[7].key_code = 11;
         else                     // Дримкас РФ
             keys[7].key_code = 0x06;
@@ -3441,7 +3433,7 @@ public class CashTest {
         //=======================================================================================================
         //=======================================================================================================
         // KEY №8
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+        if (CashBox.CASHBOX_TYPE.equals("DreamkasF"))
             keys[8].key_code = 12;
         else                     // Дримкас РФ
             keys[8].key_code = 0x07;
@@ -3472,7 +3464,7 @@ public class CashTest {
         //=======================================================================================================
         //=======================================================================================================
         // KEY №9
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+        if (CashBox.CASHBOX_TYPE.equals("DreamkasF"))
             keys[9].key_code = 13;
         else                     // Дримкас РФ
             keys[9].key_code = 0x08;
@@ -3538,13 +3530,13 @@ public class CashTest {
         //=======================================================================================================
         //=======================================================================================================
         // KEY №6
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+        if (CashBox.CASHBOX_TYPE.equals("DreamkasF"))
             keys[16].key_code = 6;
         else
             keys[16].key_code = 0x0a;
         // Доступ в режимах
         keys[16].key_mode_available = (char) keypadMode.ACTION_MODE;
-        if (Config.CASHBOX_TYPE.equals("DreamkasF")) {
+        if (CashBox.CASHBOX_TYPE.equals("DreamkasF")) {
             //=======================================================================================================
             // KEY №7
             keys[17].key_code = 7;
@@ -3568,7 +3560,7 @@ public class CashTest {
         keys[20].key_mode_available = (char) keypadMode.ACTION_MODE;
         //=======================================================================================================
         // KEY BACKSPACE
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+        if (CashBox.CASHBOX_TYPE.equals("DreamkasF"))
             keys[21].key_code = 14;
         else                     // Дримкас РФ
             keys[21].key_code = 0x09;
@@ -3590,7 +3582,7 @@ public class CashTest {
         keys[24].key_code = 17;
         // Доступ в режимах
         keys[24].key_mode_available = (char) keypadMode.ACTION_MODE;
-        if (Config.CASHBOX_TYPE.equals("DreamkasF")) {
+        if (CashBox.CASHBOX_TYPE.equals("DreamkasF")) {
             //=======================================================================================================
             // KEY №18
             keys[25].key_code = 18;
@@ -3611,7 +3603,7 @@ public class CashTest {
         keys[27].key_code = 23;
         // Доступ в режимах
         keys[27].key_mode_available = (char) keypadMode.ACTION_MODE;
-        if (Config.CASHBOX_TYPE.equals("DreamkasF")) {
+        if (CashBox.CASHBOX_TYPE.equals("DreamkasF")) {
             //=======================================================================================================
             // KEY
             keys[28].key_code = 24;
@@ -3625,7 +3617,7 @@ public class CashTest {
         keys[29].key_mode_available = (char) keypadMode.ACTION_MODE;
         //=======================================================================================================
         // KEY №26
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+        if (CashBox.CASHBOX_TYPE.equals("DreamkasF"))
             keys[30].key_code = 26;
         else                     // Дримкас РФ
             keys[30].key_code = 27;
@@ -3633,7 +3625,7 @@ public class CashTest {
         keys[30].key_mode_available = (char) keypadMode.ACTION_MODE;
         //=======================================================================================================
         // KEY №30
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+        if (CashBox.CASHBOX_TYPE.equals("DreamkasF"))
             keys[31].key_code = 30;
         else                     // Дримкас РФ
             keys[31].key_code = 0x16;
@@ -3666,7 +3658,7 @@ public class CashTest {
         keys[36].key_mode_available = (char) keypadMode.ACTION_MODE;
         //=======================================================================================================
         // KEY Comma
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+        if (CashBox.CASHBOX_TYPE.equals("DreamkasF"))
             keys[37].key_code = 37;
         else                     // Дримкас РФ
             keys[37].key_code = 0x1A;
@@ -3690,7 +3682,7 @@ public class CashTest {
         keys[38].key_mode_available = (char) keypadMode.ACTION_MODE;
         //=======================================================================================================
         // KEY №39
-        if (Config.CASHBOX_TYPE.equals("DreamkasF"))
+        if (CashBox.CASHBOX_TYPE.equals("DreamkasF"))
             keys[39].key_code = 39;
         else
             keys[39].key_code = 0x1c;
