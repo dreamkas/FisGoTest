@@ -33,7 +33,8 @@ public class Screens {
             notEnoughMoneyScreen,
             freeSaleModeChange400Screen,
             giveCardAndReceiptScreen,
-            consuptionReaultScreen_100Screen;
+            consuptionReaultScreen_100Screen,
+            mainMenuRegistredModeScreen;
 
     private String readScreenFile(String fileName) {
         try {
@@ -67,6 +68,7 @@ public class Screens {
         freeSaleModeChange400Screen = readScreenFile("./screens/freeSaleModeChange400.bmp");
         giveCardAndReceiptScreen = readScreenFile("./screens/giveCardAndReceipt.bmp");
         consuptionReaultScreen_100Screen = readScreenFile("./screens/consuptionReaultScreen_100.bmp");
+        mainMenuRegistredModeScreen = readScreenFile("./screens/mainMenuRegistredMode.bmp");
     }
 
     //Сравниваем экран на кассе с экраном из "базы"
@@ -136,6 +138,10 @@ public class Screens {
 
                 case CONSUMTION_RESULT_SCREEN_100:
                     return strFromFile.equals(consuptionReaultScreen_100Screen);
+
+                case MAIN_MENU_REGISTRED_MODE_SCREEN:
+                    return strFromFile.equals(mainMenuRegistredModeScreen);
+
                 default:
                     return false;
             }

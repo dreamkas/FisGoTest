@@ -7,7 +7,7 @@ public class Config {
 
     //параметры для открытия сокета с кассой
     public static final String CASHBOX_TYPE = "DreamkasRF"; //DreamkasRF
-    public static final String CASHBOX_IP = "192.168.242.101";
+    public static final String CASHBOX_IP = "192.168.242.80";
     public static final int CASHBOX_PORT = 3425;
 
     //параметры подключения по ssh
