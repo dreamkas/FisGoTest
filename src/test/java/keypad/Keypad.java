@@ -2,6 +2,7 @@ package keypad;
 
 import java.util.Vector;
 
+import cashbox.Config;
 /**
  * Класс инициализации кнопок, в функции initKey задается, какие символы на какой кнопке находятся, в каком режиме доступна кнопка
  */

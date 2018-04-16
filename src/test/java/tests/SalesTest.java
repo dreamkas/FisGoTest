@@ -13,6 +13,12 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import cashbox.Bot;
+import keypad.KeyEnum;
+import cashbox.Config;
+import cashbox.CashboxStagesEnum;
+import cashbox.ConfigFieldsEnum;
+
 /**
  * Тесты на продажу
  */
