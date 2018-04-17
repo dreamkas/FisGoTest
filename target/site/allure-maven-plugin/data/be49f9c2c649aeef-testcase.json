@@ -1,0 +1,47 @@
+{
+  "uid" : "be49f9c2c649aeef",
+  "name" : "correct_re_registration_legal_entity",
+  "title" : "Correct re registration legal entity",
+  "time" : {
+    "start" : 1517307419336,
+    "stop" : 1517307758722,
+    "duration" : 339386
+  },
+  "summary" : {
+    "attachments" : 0,
+    "steps" : 0
+  },
+  "failure" : null,
+  "description" : null,
+  "severity" : "NORMAL",
+  "status" : "PASSED",
+  "testId" : null,
+  "suite" : {
+    "uid" : "f89885fea2b45874",
+    "name" : "CashTest",
+    "title" : "Cash test"
+  },
+  "steps" : [ ],
+  "attachments" : [ ],
+  "issues" : [ ],
+  "labels" : [ {
+    "name" : "host",
+    "value" : "CS-WS173597"
+  }, {
+    "name" : "thread",
+    "value" : "12396@CS-WS173597.main(1)"
+  }, {
+    "name" : "suite-name",
+    "value" : "CashTest"
+  }, {
+    "name" : "suite-title",
+    "value" : null
+  }, {
+    "name" : "framework",
+    "value" : "JUnit"
+  }, {
+    "name" : "language",
+    "value" : "JAVA"
+  } ],
+  "parameters" : [ ]
+}

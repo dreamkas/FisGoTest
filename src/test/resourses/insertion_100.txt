@@ -1,1 +1,1 @@
-sum_insertion: 100
+sum_insertion: 50

@@ -1,0 +1,93 @@
+{
+  "time" : {
+    "start" : 1517306372640,
+    "stop" : 1517307758722,
+    "duration" : 1386082
+  },
+  "testSuites" : [ {
+    "uid" : "f89885fea2b45874",
+    "name" : "CashTest",
+    "title" : "Cash test",
+    "time" : {
+      "start" : 1517306372640,
+      "stop" : 1517307758722,
+      "duration" : 1386082
+    },
+    "statistic" : {
+      "total" : 6,
+      "passed" : 6,
+      "pending" : 0,
+      "canceled" : 0,
+      "failed" : 0,
+      "broken" : 0
+    },
+    "description" : null,
+    "testCases" : [ {
+      "uid" : "a0add43ff0d52d28",
+      "name" : "sale_advent_learning_mode",
+      "title" : "Sale advent learning mode",
+      "time" : {
+        "start" : 1517306372640,
+        "stop" : 1517306621882,
+        "duration" : 249242
+      },
+      "severity" : "NORMAL",
+      "status" : "PASSED"
+    }, {
+      "uid" : "a941476e57da2b24",
+      "name" : "correct_registration_not_autonomic",
+      "title" : "Correct registration not autonomic",
+      "time" : {
+        "start" : 1517306622089,
+        "stop" : 1517306936723,
+        "duration" : 314634
+      },
+      "severity" : "NORMAL",
+      "status" : "PASSED"
+    }, {
+      "uid" : "a5debfea935b83ad",
+      "name" : "correct_password",
+      "title" : "Correct password",
+      "time" : {
+        "start" : 1517306936741,
+        "stop" : 1517307034989,
+        "duration" : 98248
+      },
+      "severity" : "NORMAL",
+      "status" : "PASSED"
+    }, {
+      "uid" : "36e601cf10225cd5",
+      "name" : "correct_registration_autonomic",
+      "title" : "Correct registration autonomic",
+      "time" : {
+        "start" : 1517307034994,
+        "stop" : 1517307321408,
+        "duration" : 286414
+      },
+      "severity" : "NORMAL",
+      "status" : "PASSED"
+    }, {
+      "uid" : "edd39acacc6680e5",
+      "name" : "incorrect_password",
+      "title" : "Incorrect password",
+      "time" : {
+        "start" : 1517307321420,
+        "stop" : 1517307419326,
+        "duration" : 97906
+      },
+      "severity" : "NORMAL",
+      "status" : "PASSED"
+    }, {
+      "uid" : "be49f9c2c649aeef",
+      "name" : "correct_re_registration_legal_entity",
+      "title" : "Correct re registration legal entity",
+      "time" : {
+        "start" : 1517307419336,
+        "stop" : 1517307758722,
+        "duration" : 339386
+      },
+      "severity" : "NORMAL",
+      "status" : "PASSED"
+    } ]
+  } ]
+}
