@@ -218,7 +218,9 @@ public class Bot {
             return -1;
     }
 
-
+    public void enterData(String str){
+        strToKeypadConvert(str);
+    }
 
     //Нажатие на кнопку (ввод данных) в зависимости от символа
     private void strToKeypadConvert(String str) {

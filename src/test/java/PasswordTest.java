@@ -116,26 +116,6 @@ public class PasswordTest {
         }
     }
 
-    @Test
-    public void fooTest() {
-        //пароль
-        bot.pressKeyBot(cashBox.keyEnum.key1, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.key2, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.key3, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.key4, 0, 1);
-
-        //включить 2г
-        bot.pressKeyBot(cashBox.keyEnum.keyMenu, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.key5, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.key2, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.key3, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.key1, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.key1, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.keyEnter, 0, 1);
-        bot.sendTasks(bot.resultJson()); //только для кнопок
-        bot.getScreenJson();
-    }
-
     //Ввод корректного пароля, на кассе открыта смена
     @Test
     public void correct_password_open_shift() throws IOException {
