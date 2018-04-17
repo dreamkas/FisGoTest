@@ -32,9 +32,9 @@ public class KeyEnum {
             keyEnter = 0,
             keyPrintDocument = 50;
 
-    public void initKeyEnum() {
+    public void initKeyEnum(CashBoxType cashBoxType) {
         //если дримкас Ф
-        if (Config.CASHBOX_TYPE.equals("DreamkasF")) {
+        if (cashBoxType.equals(CashBoxType.DREAMKASF)) {
             keyCancel = 0x00;
             keyCheckInSms = 0x03;
             keyGoods = 0x06;
@@ -63,7 +63,7 @@ public class KeyEnum {
         }
 
         //если дримкас РФ
-        if (Config.CASHBOX_TYPE.equals("DreamkasRF")) {
+        if (cashBoxType.equals(CashBoxType.DREAMKASRF)) {
             key1 = 0x12;
             key2 = 0x13;
             key3 = 0x14;
