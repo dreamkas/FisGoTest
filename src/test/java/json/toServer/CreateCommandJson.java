@@ -2,7 +2,6 @@ package json.toServer;
 
 import java.util.List;
 
-import cashbox.Config;
 /**
  * класс, из которого формируется Json для передачи в сокет который
  */

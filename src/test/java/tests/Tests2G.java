@@ -1,5 +1,8 @@
+package tests;
+
 import static org.junit.Assert.assertEquals;
 
+import cashbox.Bot;
 import cashbox.CashBox;
 import cashbox.CashBoxType;
 import io.restassured.http.ContentType;
@@ -9,6 +12,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import remoteAccess.DataFromCashbox;
+import remoteAccess.TCPSocket;
 
 import static java.lang.Thread.sleep;
 
@@ -87,9 +92,9 @@ public class Tests2G {
         bot.pressKeyBot(cashBox.keyEnum.key5, 0, 1);
         bot.pressKeyBot(cashBox.keyEnum.key8, 0, 1);
         bot.pressKeyBot(cashBox.keyEnum.key1, 0, 1);
-        bot.sendTasks(bot.resultJson());
+        bot.sendData();
         bot.enterData(getCodeFromKabinet());
-        bot.sendTasks(bot.resultJson());
+        bot.sendData();
     }
 
     private RequestSpecification authByUserToken(String token) {
@@ -116,7 +121,7 @@ public class Tests2G {
         bot.pressKeyBot(cashBox.keyEnum.keyEnter, 0, 1);
         bot.pressKeyBot(cashBox.keyEnum.keyPayByCard, 0, 1);
         bot.pressKeyBot(cashBox.keyEnum.keyEnter, 0, 1);
-        bot.sendTasks(bot.resultJson());
+        bot.sendData();
     }
 
     private void enableTerminal() {
@@ -164,7 +169,7 @@ public class Tests2G {
         bot.pressKeyBot(cashBox.keyEnum.key2, 0, 1);
         bot.pressKeyBot(cashBox.keyEnum.keyEnter, 0, 1);
         bot.pressKeyBot(cashBox.keyEnum.keyCancel, 0, 4);
-        bot.sendTasks(bot.resultJson());
+        bot.sendData();
     }
 
     private int getCountGoodsInKabinet() {

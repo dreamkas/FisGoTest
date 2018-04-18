@@ -1,3 +1,8 @@
+package keypad;
+
+import cashbox.CashBox;
+import cashbox.CashBoxType;
+
 import java.util.Vector;
 
 /**

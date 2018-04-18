@@ -36,9 +36,17 @@ import java.util.Vector;
 
 public class Bot {
 
-    public Bot() {
-        keyEnum.initKeyEnum();
+    private CashBox cashBox;
+
+    private Keypad keypad;
+    private KeypadMode keypadMode;
+
+    public Bot(CashBox cashBox) {
+        this.cashBox = cashBox;
+        this.keypad = new Keypad(cashBox);
+        this.keypadMode = new KeypadMode();
     }
+
 
     //данные для формирование команды, которая будет передана на сервер
     @Getter
@@ -102,7 +110,7 @@ public class Bot {
 
     // составляем Json из сформированных тасок, используется только в классе  remoteAccess.TCPSocket, в функцях sendDataToSocket() и closeSocket()
     public String resultJson() {
-        CreateCommandJson createCommandJson = new CreateCommandJson(tasksList);
+        CreateCommandJson createCommandJson = new CreateCommandJson(tasksList, cashBox.UUID);
 
         GsonBuilder builder = new GsonBuilder();
         Gson gson = builder.create();
@@ -166,6 +174,10 @@ public class Bot {
         }
     }
 
+    public void enterData(String str) {
+        strToKeypadConvert(str);
+    }
+
     // в функции проверяется экран на дисплее кассы,
     // если экран совпадает, то выполняется выборка из БД пользователей и вводдится пароль
     public void enterPasswordIfScreenOpen() {
@@ -178,7 +190,7 @@ public class Bot {
             String getPassCommand = "echo \"attach '/FisGo/usersDb.db' as users; " +
                     "select PASS from users.USERS limit 1;\" | sqlite3 /FisGo/usersDb.db\n";
             DataFromCashbox dataFromCashbox = new DataFromCashbox();
-            dataFromCashbox.initSession(Config.CASHBOX_IP, Config.USERNAME, Config.PORT, Config.PASSWORD);
+            dataFromCashbox.initSession(cashBox.CASHBOX_IP, CashBox.USERNAME, CashBox.PORT, CashBox.PASSWORD);
             List<String> line = dataFromCashbox.executeListCommand(getPassCommand);
             dataFromCashbox.disconnectSession();
             //вводим пароль на кассе
@@ -220,13 +232,13 @@ public class Bot {
                 //FIXME добавить обработку даты открытия смены
                 String getPassCommand = "date '+%d%m%y%H%M'\n";
                 DataFromCashbox dataFromCashbox = new DataFromCashbox();
-                dataFromCashbox.initSession(Config.CASHBOX_IP, Config.USERNAME, Config.PORT, Config.PASSWORD);
+                dataFromCashbox.initSession(cashBox.CASHBOX_IP, CashBox.USERNAME, CashBox.PORT, CashBox.PASSWORD);
                 List<String> dateStr = dataFromCashbox.executeListCommand(getPassCommand);
                 dataFromCashbox.disconnectSession();
                 pressKeyBot(keyEnum.keyEnter, 0, 2);
                 sendData();
                 System.out.println("gggggggg");
-               // trySleep(20000);
+                // trySleep(20000);
                 try {
                     System.out.println("1111");
                     Thread.sleep(15000);
@@ -251,7 +263,7 @@ public class Bot {
     }
 
     //Продажа, приход
-    public int checkPrintSaleComming(List <String> keyWordArray, ScreenPicture screen) {
+    public int checkPrintSaleComming(List<String> keyWordArray, ScreenPicture screen) {
         pressKeyBot(keyEnum.keyMenu, 0, 1);
         pressKeyBot(keyEnum.keyCancel, 0, 1);
         sendData();
@@ -298,9 +310,9 @@ public class Bot {
     }
 
     //Формирование и печать чека
-    private int checkPrint(List <String> keyWordArray, ScreenPicture screen) {
+    private int checkPrint(List<String> keyWordArray, ScreenPicture screen) {
         int countGoods = 0;
-        for (String tmpStr: keyWordArray) {
+        for (String tmpStr : keyWordArray) {
             if (tmpStr.contains("Good "))
                 countGoods++;
         }
@@ -312,8 +324,7 @@ public class Bot {
             if (tmpGoodsStr.equals("CANNOT FIND KEYWORD")) {
                 writeLogFile("Не указан способ добавления товара " + (j + 1) + "в чек");
                 return -2;
-            }
-            else {
+            } else {
                 if (tmpGoodsStr.equals("good_from_base")) {
                     pressKeyBot(keyEnum.keyGoods, 0, 1);
                     tmpGoodsStr = searchForKeyword("good_code_" + (j + 1) + ": ", keyWordArray);
@@ -375,7 +386,7 @@ public class Bot {
                     }
                     if (tmpGoodsStr.equals("А"))
                         pressKeyBot(keyEnum.key3, 0, 1);
-                    if (tmpGoodsStr.equals("П")){
+                    if (tmpGoodsStr.equals("П")) {
                         pressKeyBot(keyEnum.key4, 0, 1);
                         tmpGoodsStr = searchForKeyword("special_form_offset_of_prepayment_sum_" + (j + 1) + ": ", keyWordArray);
                         strToKeypadConvert(tmpGoodsStr);
@@ -425,7 +436,7 @@ public class Bot {
         if (!compare) {
             //получить дату из кассы
             DataFromCashbox dataFromCashbox = new DataFromCashbox();
-            dataFromCashbox.initSession(Config.CASHBOX_IP, Config.USERNAME, Config.PORT, Config.PASSWORD);
+            dataFromCashbox.initSession(cashBox.CASHBOX_IP, CashBox.USERNAME, CashBox.PORT, CashBox.PASSWORD);
             String getDateCommand = " date '+%d%m%y%H%M'\n";
             dateStr = dataFromCashbox.executeListCommand(getDateCommand);
             trySleep(2000);
@@ -437,7 +448,7 @@ public class Bot {
     }
 
     //Внесение
-    public int insertion(List <String> keyWordArray) {
+    public int insertion(List<String> keyWordArray) {
         pressKeyBot(keyEnum.keyMenu, 0, 1);
         pressKeyBot(keyEnum.key1, 0, 1);
         sendData();
@@ -454,18 +465,17 @@ public class Bot {
             pressKeyBot(keyEnum.keyEnter, 0, 2);
             sendData();
             return 0;
-        }
-        else {
+        } else {
             writeLogFile("Смена закрыта. Пункт меню внесения не доступен");
             return -1;
         }
     }
 
-    public int reserve(List <String> keyWordArray) throws IOException {
-        pressKeyBot(keyEnum.keyMenu, 0,1);
-        pressKeyBot(keyEnum.key1, 0,1);
+    public int reserve(List<String> keyWordArray) throws IOException {
+        pressKeyBot(keyEnum.keyMenu, 0, 1);
+        pressKeyBot(keyEnum.key1, 0, 1);
         //добавить проверку, что смена открыта
-        pressKeyBot(keyEnum.key4, 0,1);
+        pressKeyBot(keyEnum.key4, 0, 1);
         //sendData();
         String sumReserve = searchForKeyword("sum_reserve: ", keyWordArray);
         if (sumReserve.equals("CANNOT FIND KEYWORD")) {
@@ -473,11 +483,10 @@ public class Bot {
             return -1;
         }
         strToKeypadConvert(sumReserve);
-        pressKeyBot(keyEnum.keyEnter, 0,2);
+        pressKeyBot(keyEnum.keyEnter, 0, 2);
         sendData();
         return 0;
     }
-
 
 
     public void xCount() {
@@ -781,7 +790,7 @@ public class Bot {
 
         //TODO check on workilng version!!!
         for (String tmpStr : taxSystemsTable) {
-            switch(tmpStr){
+            switch (tmpStr) {
                 case "ОСН":
                     pressKeyBot(keyEnum.key1, 0, 1);
                     break;
@@ -799,7 +808,7 @@ public class Bot {
                     break;
                 case "Патент":
                     pressKeyBot(keyEnum.key6, 0, 1);
-                break;
+                    break;
                 default:
                     break;
             }
@@ -827,7 +836,7 @@ public class Bot {
     }
 
     //Выбор признаков регистрации для опрелеленной версии, с определенным режимом
-    private void changeSignsMode (Vector<String> signsTable, String modeKkt, String version, List<String> keyWordList) {
+    private void changeSignsMode(Vector<String> signsTable, String modeKkt, String version, List<String> keyWordList) {
         boolean agentChange = false;
         boolean autoModeChange = false;
 
@@ -924,7 +933,7 @@ public class Bot {
             }
 
             Vector<String> agentTypeTable = multiplieChoice(agentType);
-            for (String agentTypeStr: agentTypeTable) {
+            for (String agentTypeStr : agentTypeTable) {
                 switch (agentTypeStr) {
                     case "Банковский платежный агент":
                         pressKeyBot(keyEnum.key1, 0, 1);
@@ -961,13 +970,13 @@ public class Bot {
     }
 
     //Выбор признаков регистрации
-    private  void changeSignsKkt(String keyWord, boolean registrationFlag, List <String> keyWordList) {
+    private void changeSignsKkt(String keyWord, boolean registrationFlag, List<String> keyWordList) {
         String kktSigns = searchForKeyword(keyWord, keyWordList);
         if (kktSigns.equals("CANNOT FIND KEYWORD"))
             writeLogFile("Признаки ККТ не выбраны.\n");
         else {
             Vector<String> signsTable = multiplieChoice(kktSigns);
-            String registrationVer= null;
+            String registrationVer = null;
             String registrationMode = null;
             //Если выставлен флаг регистрации, то экраны смотрим в соответствии с файлом сценария
             if (registrationFlag) {
@@ -1051,10 +1060,10 @@ public class Bot {
     }
 
     //множественный выбор
-    private Vector <String> multiplieChoice (String str) {
-        Vector <String> line = new Vector<>();
+    private Vector<String> multiplieChoice(String str) {
+        Vector<String> line = new Vector<>();
         String[] parts = (str + " ").split(";");
-        for (String tmpStr: parts)
+        for (String tmpStr : parts)
             line.add(tmpStr);
 
         return line;
@@ -1063,19 +1072,19 @@ public class Bot {
     //отчистка диспея
     private void clearDisplay(int length) {
         for (int i = 0; i < length; i++)
-            pressKeyBot(keyEnum.keyReversal, 0,1 );
+            pressKeyBot(keyEnum.keyReversal, 0, 1);
     }
 
     //смена режима кассы
-    private void changeKktMode(String keyWord, List <String> keyWordList) {
+    private void changeKktMode(String keyWord, List<String> keyWordList) {
         //автономный режим
         String kktMode = searchForKeyword(keyWord, keyWordList);
-        if ( kktMode.equals("Автономный"))
+        if (kktMode.equals("Автономный"))
             pressKeyBot(keyEnum.key1, 0, 1);
         else {
             pressKeyBot(keyEnum.key2, 0, 1);
             pressKeyBot(keyEnum.keyEnter, 0, 1);
-            String OFDName = searchForKeyword( "ofd_name: ", keyWordList);
+            String OFDName = searchForKeyword("ofd_name: ", keyWordList);
             if (OFDName.equals("CANNOT FIND KEYWORD"))
                 writeLogFile("The input file does not contain the name of the OFD!\n");
 
@@ -1085,7 +1094,7 @@ public class Bot {
     }
 
     //смена ОФД
-    private void changeOFDName (String OFDName, List <String> keyWordList) {
+    private void changeOFDName(String OFDName, List<String> keyWordList) {
         pressKeyBot(keyEnum.keyEnter, 0, 1);
         sendData();
         switch (OFDName) {
@@ -1188,16 +1197,18 @@ public class Bot {
                 break;
         }
     }
+
     //автоввод данных
     private void autoEnterDataOFD() {
         pressKeyBot(keyEnum.keyEnter, 0, 7);
         sendData();
     }
+
     //ручной ввод данных ОФД
-    private void manualEnterDataOFD(List <String> keyWordList) {
+    private void manualEnterDataOFD(List<String> keyWordList) {
         //------------------------------------------------ИНН ОФД-------------------------------------------------------
-        String innOFD = searchForKeyword( "ofd_inn: ", keyWordList);
-        if ( innOFD.equals("CANNOT FIND KEYWORD")) {
+        String innOFD = searchForKeyword("ofd_inn: ", keyWordList);
+        if (innOFD.equals("CANNOT FIND KEYWORD")) {
             writeLogFile("The input file does not contain INN of the fiscal data operator for the selected item.\n");
             return;
         }
@@ -1206,38 +1217,36 @@ public class Bot {
         sendData();
         //------------------------------------------------Адрес сервера ОФД-------------------------------------------------------
         String addressOFD = searchForKeyword("ofd_server_address: ", keyWordList);
-        if ( addressOFD.equals("CANNOT FIND KEYWORD")) {
+        if (addressOFD.equals("CANNOT FIND KEYWORD")) {
             writeLogFile("The input file does not contain server address of the fiscal data operator for the selected item.\n");
             return;
         }
-        strToKeypadConvert( addressOFD );
+        strToKeypadConvert(addressOFD);
         pressKeyBot(keyEnum.keyEnter, 0, 1);
         //добавить проверку экрана: если "адрес ОФД не найден, то добавить дополнительное нажатие на кнопку ввода
 
         pressKeyBot(keyEnum.keyEnter, 0, 2);
         sendData();
         //------------------------------------------------Порт ОФД-------------------------------------------------------
-        String portOFD = searchForKeyword( "ofd_server_port: ",keyWordList );
-        if ( portOFD.equals("CANNOT FIND KEYWORD")) {
+        String portOFD = searchForKeyword("ofd_server_port: ", keyWordList);
+        if (portOFD.equals("CANNOT FIND KEYWORD")) {
             writeLogFile("The input file does not contain port of the fiscal data operator for the selected item.\n");
             return;
         }
-        strToKeypadConvert( portOFD  );
+        strToKeypadConvert(portOFD);
         pressKeyBot(keyEnum.keyEnter, 0, 2);
         sendData();
         //---------------------------------------------Адрес проверки чека------------------------------------------------
-        String checkReceiptOFD = searchForKeyword( "ofd_check_reciept_address: ", keyWordList);
-        if ( checkReceiptOFD.equals("CANNOT FIND KEYWORD")) {
+        String checkReceiptOFD = searchForKeyword("ofd_check_reciept_address: ", keyWordList);
+        if (checkReceiptOFD.equals("CANNOT FIND KEYWORD")) {
             writeLogFile("The input file does not contain port of the fiscal data operator for the selected item.\n");
             return;
         }
-        strToKeypadConvert(checkReceiptOFD );
+        strToKeypadConvert(checkReceiptOFD);
         pressKeyBot(keyEnum.keyEnter, 0, 2);
         sendData();
     }
 
-    private Keypad keypad = new Keypad();
-    private KeypadMode keypadMode = new KeypadMode();
 
     //Нажатие на кнопку (ввод данных) в зависимости от символа
     private void strToKeypadConvert(String str) {
@@ -1250,7 +1259,7 @@ public class Bot {
 
         Keypad[] keys = new Keypad[Keypad.keys_table_size];
         for (int i = 0; i < keys.length; i++) {
-            keys[i] = new Keypad();
+            keys[i] = new Keypad(cashBox);
         }
 
         keypad.initKey(keys);
@@ -1466,10 +1475,10 @@ public class Bot {
     }
 
     //Поиск ключевого слова в заданной коллекции
-    public String searchForKeyword(String keyWord, List <String> keyWordArray) {
+    public String searchForKeyword(String keyWord, List<String> keyWordArray) {
         String tmpStr;
 
-        for (String keyWordStr: keyWordArray) {
+        for (String keyWordStr : keyWordArray) {
             tmpStr = keyWordStr;
             int tmpFind = tmpStr.indexOf(keyWord);
 
@@ -1483,15 +1492,15 @@ public class Bot {
         return "CANNOT FIND KEYWORD";
     }
 
-    public void pressKeyBot(int keyNum, int keyNum2,  int pressCount) {
+    public void pressKeyBot(int keyNum, int keyNum2, int pressCount) {
         for (int i = 0; i < pressCount; i++) {
             pressButton(keyNum, keyNum2, KeypadActionEnum.KEY_DOWN);
         }
-       // tcpSocket.sendDataToSocket(getTaskId(),resultJson());
+        // tcpSocket.sendDataToSocket(getTaskId(),resultJson());
     }
 
     //удержание кнопки
-    private void holdKey(int keyNum, int keyNum2,  int pressCount) {
+    private void holdKey(int keyNum, int keyNum2, int pressCount) {
         for (int i = 0; i < pressCount; i++) {
             pressButton(keyNum, keyNum2, KeypadActionEnum.KEY_HOLD);
         }

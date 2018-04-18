@@ -1,6 +1,7 @@
 package keypad;
 
-import cashbox.Config;
+import cashbox.CashBoxType;
+
 /**
  * Класс для инициализации клавиатуры
  */

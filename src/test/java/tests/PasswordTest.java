@@ -1,5 +1,6 @@
 package tests;
 
+import cashbox.*;
 import remoteAccess.DataFromCashbox;
 import remoteAccess.TCPSocket;
 import screens.Screens;
@@ -14,11 +15,7 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import cashbox.Bot;
 import keypad.KeyEnum;
-import cashbox.Config;
-import cashbox.CashboxStagesEnum;
-import cashbox.ConfigFieldsEnum;
 
 /**
  * Тесты на ввод пароля
@@ -27,19 +24,14 @@ import cashbox.ConfigFieldsEnum;
 public class PasswordTest {
 
     private TCPSocket tcpSocket = new TCPSocket();
-    private Bot bot = new Bot();
-    private KeyEnum keyEnum = new KeyEnum();
     private Screens screens = new Screens();
+    private CashBox cashBox = new CashBox("12345678-1234-1234-1234-123456789012", CashBoxType.DREAMKASRF, "192.168.242.116");
+    private Bot bot = new Bot(cashBox);
 
     @Before
     public void setupConn() {
-        // для того, чтобы провести тесты на ввод пароля необходимо,
-        // чтобы касса была после включения, поэтому выполняем reboot кассы
-        //fiscatReboot();
         //создаем сокет
-        tcpSocket.createSocket(Config.CASHBOX_IP, Config.CASHBOX_PORT);
-        //инициализируем керпкки
-        keyEnum.initKeyEnum();
+        tcpSocket.createSocket(cashBox.CASHBOX_IP, CashBox.CASHBOX_PORT);
     }
 
     @After
@@ -278,12 +270,12 @@ public class PasswordTest {
             System.out.println("openShiftResult = " + openShiftResult);
             if (openShiftResult != 0)
                 fail("Ошибка при открытии смены");
-            //если смена открыта, то перезапускаем кассу, чтобы попасть на экран авторизации
+                //если смена открыта, то перезапускаем кассу, чтобы попасть на экран авторизации
             else {
                 //перезапускаем фискат
                 fiscatReboot();
                 //открываем сокет заново
-                tcpSocket.createSocket(Config.CASHBOX_IP, Config.CASHBOX_PORT);
+                tcpSocket.createSocket(cashBox.CASHBOX_IP, CashBox.CASHBOX_PORT);
             }
         }
     }
@@ -295,12 +287,12 @@ public class PasswordTest {
         int registrationResult = bot.registration(listScript);
         if (registrationResult != 0)
             fail("Ошибка при регистрации кассы");
-        //если регистрация выполнена успешно, то перезапускаем кассу, чтобы попасть на экран авторизации
+            //если регистрация выполнена успешно, то перезапускаем кассу, чтобы попасть на экран авторизации
         else {
             //перезапускаем фискат
             fiscatReboot();
             //открываем сокет заново
-            tcpSocket.createSocket(Config.CASHBOX_IP, Config.CASHBOX_PORT);
+            tcpSocket.createSocket(cashBox.CASHBOX_IP, CashBox.CASHBOX_PORT);
         }
     }
 
@@ -312,14 +304,14 @@ public class PasswordTest {
         }
 
         DataFromCashbox dataFromCashbox = new DataFromCashbox();
-        dataFromCashbox.initSession(Config.CASHBOX_IP, Config.USERNAME, Config.PORT, Config.PASSWORD);
+        dataFromCashbox.initSession(cashBox.CASHBOX_IP, CashBox.USERNAME, CashBox.PORT, CashBox.PASSWORD);
         dataFromCashbox.executeListCommand("/sbin/reboot");
         dataFromCashbox.disconnectSession();
 
         try {
             Thread.sleep(70000);
         } catch (InterruptedException e) {
-        e.printStackTrace();
+            e.printStackTrace();
         }
     }
 }

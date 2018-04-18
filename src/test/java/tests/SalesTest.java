@@ -1,5 +1,6 @@
 package tests;
 
+import cashbox.*;
 import org.junit.*;
 import remoteAccess.DataFromCashbox;
 import remoteAccess.SQLCommands;
@@ -13,33 +14,28 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import cashbox.Bot;
 import keypad.KeyEnum;
-import cashbox.Config;
-import cashbox.CashboxStagesEnum;
-import cashbox.ConfigFieldsEnum;
 
 /**
  * Тесты на продажу
  */
 public class SalesTest {
-    private static TCPSocket tcpSocket = new TCPSocket();
-    private Bot bot = new Bot();
-    private static KeyEnum keyEnum = new KeyEnum();
+    private TCPSocket tcpSocket = new TCPSocket();
     private Screens screens = new Screens();
+    private CashBox cashBox = new CashBox("12345678-1234-1234-1234-123456789012", CashBoxType.DREAMKASRF, "192.168.242.116");
+    private Bot bot = new Bot(cashBox);
     private SQLCommands sqlCommands = new SQLCommands();
     private DataFromCashbox dataFromCashbox = new DataFromCashbox();
-    @BeforeClass
-    public static void befoclass() {
+
+    @Before
+    public void setupConn() {
         //создаем сокет
-        //    tcpSocket.createSocket(cashbox.Config.CASHBOX_IP, cashbox.Config.CASHBOX_PORT);
-        //инициализируем керпкки
-        keyEnum.initKeyEnum();
+        tcpSocket.createSocket(cashBox.CASHBOX_IP, CashBox.CASHBOX_PORT);
     }
 
     @Before
     public void beforeTests() {
-        tcpSocket.createSocket(Config.CASHBOX_IP, Config.CASHBOX_PORT);
+        tcpSocket.createSocket(cashBox.CASHBOX_IP, CashBox.CASHBOX_PORT);
         //проверяем, что stage кассы = 2
         if (!getStage().get(0).equals(String.valueOf(CashboxStagesEnum.REGISTRED))) {
             registration();
@@ -65,7 +61,7 @@ public class SalesTest {
             System.out.println("tut");
             bot.enterPasswordIfScreenOpen();
             //делаем выборку из базы чеков
-            dataFromCashbox.initSession(Config.CASHBOX_IP, Config.USERNAME, Config.PORT, Config.PASSWORD);
+            dataFromCashbox.initSession(cashBox.CASHBOX_IP, CashBox.USERNAME, CashBox.PORT, CashBox.PASSWORD);
             List<String> getCheckCount = dataFromCashbox.executeListCommand(sqlCommands.getRecieptCountCommand());
 
             System.out.println("sqlCommands.getRecieptCountCommand() = " + sqlCommands.getRecieptCountCommand());
@@ -157,7 +153,7 @@ public class SalesTest {
 
     @After
     public void closeConn() {
-        bot.pressKeyBot(keyEnum.keyCancel,0, 2);
+        bot.pressKeyBot(cashBox.keyEnum.keyCancel,0, 2);
         bot.sendData();
         bot.closeSessionJson();
         tcpSocket.socketClose(bot.resultJson());

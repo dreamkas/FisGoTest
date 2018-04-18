@@ -1,5 +1,6 @@
 package tests;
 
+import cashbox.*;
 import remoteAccess.DataFromCashbox;
 import remoteAccess.SQLCommands;
 import remoteAccess.TCPSocket;
@@ -14,11 +15,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 
-import cashbox.Bot;
 import keypad.KeyEnum;
-import cashbox.Config;
-import cashbox.CashboxStagesEnum;
-import cashbox.ConfigFieldsEnum;
+
 /**
  * Тестирование сменных операций
  * - Открытие смены
@@ -30,23 +28,24 @@ import cashbox.ConfigFieldsEnum;
 
 public class ShiftOperationsTest {
 
-    private static TCPSocket tcpSocket = new TCPSocket();
-    private Bot bot = new Bot();
-    private static KeyEnum keyEnum = new KeyEnum();
+    private TCPSocket tcpSocket = new TCPSocket();
     private Screens screens = new Screens();
+    private CashBox cashBox = new CashBox("12345678-1234-1234-1234-123456789012", CashBoxType.DREAMKASRF, "192.168.242.116");
+    private Bot bot = new Bot(cashBox);
     private SQLCommands sqlCommands = new SQLCommands();
     private DataFromCashbox dataFromCashbox = new DataFromCashbox();
+
     @BeforeClass
     public static void befoclass() {
         //создаем сокет
-        //    tcpSocket.createSocket(cashbox.Config.CASHBOX_IP, cashbox.Config.CASHBOX_PORT);
+        //    tcpSocket.createSocket(cashbox.CashBox.CASHBOX_IP, cashbox.CashBox.CASHBOX_PORT);
         //инициализируем керпкки
-        keyEnum.initKeyEnum();
+
     }
 
     @Before
     public void beforeTests() {
-        tcpSocket.createSocket(Config.CASHBOX_IP, Config.CASHBOX_PORT);
+        tcpSocket.createSocket(cashBox.CASHBOX_IP, CashBox.CASHBOX_PORT);
         //проверяем, что stage кассы = 2
         if (!getStage().get(0).equals(String.valueOf(CashboxStagesEnum.REGISTRED))) {
             registration();
@@ -101,7 +100,7 @@ public class ShiftOperationsTest {
 
     @After
     public void closeConn() {
-        bot.pressKeyBot(keyEnum.keyCancel,0, 2);
+        bot.pressKeyBot(cashBox.keyEnum.keyCancel,0, 2);
         bot.sendData();
         bot.closeSessionJson();
         tcpSocket.socketClose(bot.resultJson());
@@ -235,7 +234,7 @@ public class ShiftOperationsTest {
                 //перезапускаем фискат
                 // fiscatReboot();
                 //открываем сокет заново
-                //  tcpSocket.createSocket(cashbox.Config.CASHBOX_IP, cashbox.Config.CASHBOX_PORT);
+                //  tcpSocket.createSocket(cashbox.CashBox.CASHBOX_IP, cashbox.CashBox.CASHBOX_PORT);
             }
         }
     }
@@ -252,7 +251,7 @@ public class ShiftOperationsTest {
             //перезапускаем фискат
             fiscatReboot();
             //открываем сокет заново
-            tcpSocket.createSocket(Config.CASHBOX_IP, Config.CASHBOX_PORT);
+            tcpSocket.createSocket(cashBox.CASHBOX_IP, CashBox.CASHBOX_PORT);
         }
     }
 
@@ -264,7 +263,7 @@ public class ShiftOperationsTest {
         }
 
         DataFromCashbox dataFromCashbox = new DataFromCashbox();
-        dataFromCashbox.initSession(Config.CASHBOX_IP, Config.USERNAME, Config.PORT, Config.PASSWORD);
+        dataFromCashbox.initSession(cashBox.CASHBOX_IP, CashBox.USERNAME, CashBox.PORT, CashBox.PASSWORD);
         dataFromCashbox.executeListCommand("/sbin/reboot");
         dataFromCashbox.disconnectSession();
 

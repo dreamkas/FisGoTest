@@ -1,10 +1,11 @@
-import lombok.AllArgsConstructor;
+package cashbox;
+
+import keypad.KeyEnum;
 
 /**
  * данные для прогона тестов
  * UUID кассы, IP, порт, тип
  */
-
 public class CashBox {
     public String UUID;// = "12345678-1234-1234-1234-123456789012"; //пока не парсится ни на сервере, ни на клиенте
 
@@ -28,5 +29,4 @@ public class CashBox {
         keyEnum.initKeyEnum(this.CASHBOX_TYPE);
 
     }
-
 }
