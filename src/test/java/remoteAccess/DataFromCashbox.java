@@ -25,7 +25,7 @@ public class DataFromCashbox {
             Channel channel = initChannel(cmd, sshSessionCahbox);//commandInput, sshSessionCahbox);
             InputStream in = channel.getInputStream();
             channel.connect();
-            String dataFromChannel = new String (getDataFromChannel(channel, in));
+            String dataFromChannel = getDataFromChannel(channel, in);
             lines.addAll(Arrays.asList(dataFromChannel.split("\n")));
             channel.disconnect();
         } catch (Exception e) {

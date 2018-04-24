@@ -36,6 +36,9 @@ public class Screens {
             freeSaleModeChange400Screen,
             giveCardAndReceiptScreen,
             consuptionReaultScreen_100Screen,
+            incorrectCabinetCode,
+            cabinetError,
+            cabinetSuccesDisable,
             mainMenuRegistredModeScreen;
 
     private String readScreenFile(String fileName) {
@@ -71,6 +74,9 @@ public class Screens {
         giveCardAndReceiptScreen = readScreenFile("./screens/giveCardAndReceipt.bmp");
         consuptionReaultScreen_100Screen = readScreenFile("./screens/consuptionReaultScreen_100.bmp");
         mainMenuRegistredModeScreen = readScreenFile("./screens/mainMenuRegistredMode.bmp");
+        incorrectCabinetCode = readScreenFile("./screens/mainMenuRegistredMode.bmp");
+        cabinetError = readScreenFile("./screens/cabinetError.bmp");
+        cabinetSuccesDisable = readScreenFile("./screens/cabinetSuccesDisable.bmp");
     }
 
     //Сравниваем экран на кассе с экраном из "базы"
@@ -143,6 +149,15 @@ public class Screens {
 
                 case MAIN_MENU_REGISTRED_MODE_SCREEN:
                     return strFromFile.equals(mainMenuRegistredModeScreen);
+
+                case INCORRECT_CABINET_CODE:
+                    return strFromFile.equals(incorrectCabinetCode);
+
+                case CABINET_ERROR:
+                    return strFromFile.equals(cabinetError);
+
+                case CABINET_SUCCES_DISABLE:
+                    return strFromFile.equals(cabinetSuccesDisable);
 
                 default:
                     return false;

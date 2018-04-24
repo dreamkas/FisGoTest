@@ -26,6 +26,7 @@ import keypad.KeyEnum;
  * - Закрытие смены
  */
 
+@Ignore
 public class ShiftOperationsTest {
 
     private TCPSocket tcpSocket = new TCPSocket();

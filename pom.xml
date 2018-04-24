@@ -8,62 +8,12 @@
     <artifactId>TestsOnCashCI</artifactId>
     <version>1.0-SNAPSHOT</version>
 
-    <repositories>
-        <repository>
-            <id>jsch</id>
-            <url>https://mvnrepository.com/artifact/com.jcraft/jsch</url>
-        </repository>
-    </repositories>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.14</version>
-                <configuration>
-                    <argLine>
-                        -javaagent:${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar
-                    </argLine>
-                    <properties>
-                        <property>
-                            <name>listener</name>
-                            <value>ru.yandex.qatools.allure.junit.AllureRunListener</value>
-                        </property>
-                    </properties>
-                </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.aspectj</groupId>
-                        <artifactId>aspectjweaver</artifactId>
-                        <version>${aspectj.version}</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
-            <!--  jetty-plugin для того чтобы можно было посмотреть отчёт на локальной машине. -->
-            <plugin>
-                <groupId>org.mortbay.jetty</groupId>
-                <artifactId>jetty-maven-plugin</artifactId>
-                <configuration>
-                    <webAppSourceDirectory>${project.build.directory}/site/allure-maven-plugin</webAppSourceDirectory>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
-
-
     <!-- Allure -->
     <properties>
         <allure.version>1.4.14</allure.version>
-        <aspectj.version>1.7.4</aspectj.version>
+        <aspectj.version>1.8.10</aspectj.version>
+
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <dependencies>
@@ -104,19 +54,18 @@
             <version>3.0.3</version>
         </dependency>
 
+        <dependency>
+            <groupId>ru.yandex.qatools.allure</groupId>
+            <artifactId>allure-junit-adaptor</artifactId>
+            <version>${allure.version}</version>
+        </dependency>
 
-        <!-- Allure -->
-        <!--   <dependency>
-               <groupId>ru.yandex.qatools.allure</groupId>
-               <artifactId>allure-junit-adaptor</artifactId>
-               <version>${allure.version}</version>
-           </dependency>
-           -  <dependency>
-                 <groupId>io.qameta.allure</groupId>
-                 <artifactId>allure-junit4-aspect</artifactId>
-                 <version>2.0-BETA15</version>
-             </dependency>
-             - Lombok -->
+        <dependency>
+            <groupId>io.qameta.allure</groupId>
+            <artifactId>allure-junit4</artifactId>
+            <version>2.6.0</version>
+        </dependency>
+
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -131,10 +80,74 @@
             <version>2.8.2</version>
         </dependency>
 
-
+        <!-- Assert-j -->
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>3.8.0</version>
+        </dependency>
     </dependencies>
 
+    <repositories>
+        <repository>
+            <id>jsch</id>
+            <url>https://mvnrepository.com/artifact/com.jcraft/jsch</url>
+        </repository>
+    </repositories>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.20</version>
+                <configuration>
+                    <testFailureIgnore>false</testFailureIgnore>
+                    <argLine>
+                        -javaagent:${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar
+                    </argLine>
+                    <properties>
+                        <property>
+                            <name>listener</name>
+                            <value>ru.yandex.qatools.allure.junit.AllureRunListener</value>
+                        </property>
+                    </properties>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.aspectj</groupId>
+                        <artifactId>aspectjweaver</artifactId>
+                        <version>${aspectj.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
 
+            <plugin>
+                <groupId>io.qameta.allure</groupId>
+                <artifactId>allure-maven</artifactId>
+                <version>2.9</version>
+            </plugin>
+
+            <!--<plugin>-->
+                <!--<groupId>org.eclipse.jetty</groupId>-->
+                <!--<artifactId>jetty-maven-plugin</artifactId>-->
+                <!--<version>9.2.10.v20150310</version>-->
+                <!--<configuration>-->
+                    <!--<webAppSourceDirectory>${project.build.directory}/site/allure-maven-plugin</webAppSourceDirectory>-->
+                    <!--<stopKey>stop</stopKey>-->
+                    <!--<stopPort>1234</stopPort>-->
+                <!--</configuration>-->
+            <!--</plugin>-->
+        </plugins>
+    </build>
 
 </project>

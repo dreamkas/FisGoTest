@@ -40,23 +40,33 @@ public class Bot {
 
     private Keypad keypad;
     private KeypadMode keypadMode;
+    private TCPSocket tcpSocket;
 
     public Bot(CashBox cashBox) {
         this.cashBox = cashBox;
         this.keypad = new Keypad(cashBox);
         this.keypadMode = new KeypadMode();
+        this.tcpSocket = new TCPSocket();
     }
 
-
-    //данные для формирование команды, которая будет передана на сервер
+     //данные для формирование команды, которая будет передана на сервер
     @Getter
     private int taskId;
     //объект для сравнения полученного экрана с ожидаемым
     private Screens screens = new Screens();
     //формирование данных
     private List<Tasks> tasksList = new ArrayList<>();
-    private TCPSocket tcpSocket = new TCPSocket();
+
     private KeyEnum keyEnum = new KeyEnum();
+
+    public void start(){
+        tcpSocket.createSocket(cashBox.CASHBOX_IP, CashBox.CASHBOX_PORT);
+    }
+
+    public void stop(){
+        closeSessionJson();
+        tcpSocket.socketClose(resultJson());
+    }
 
     // добавляем таск на нажатие кнопки
     //  параметры:
@@ -1496,7 +1506,6 @@ public class Bot {
         for (int i = 0; i < pressCount; i++) {
             pressButton(keyNum, keyNum2, KeypadActionEnum.KEY_DOWN);
         }
-        // tcpSocket.sendDataToSocket(getTaskId(),resultJson());
     }
 
     //удержание кнопки

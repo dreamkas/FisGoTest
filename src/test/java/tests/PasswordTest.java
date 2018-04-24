@@ -1,6 +1,7 @@
 package tests;
 
 import cashbox.*;
+import org.junit.Ignore;
 import remoteAccess.DataFromCashbox;
 import remoteAccess.TCPSocket;
 import screens.Screens;
@@ -20,7 +21,7 @@ import keypad.KeyEnum;
 /**
  * Тесты на ввод пароля
  */
-
+@Ignore
 public class PasswordTest {
 
     private TCPSocket tcpSocket = new TCPSocket();

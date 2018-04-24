@@ -5,78 +5,107 @@ import static org.junit.Assert.assertEquals;
 import cashbox.Bot;
 import cashbox.CashBox;
 import cashbox.CashBoxType;
+import cashbox.ConfigFieldsEnum;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Step;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+
+import org.assertj.core.api.SoftAssertions;
+import org.junit.*;
 import remoteAccess.DataFromCashbox;
 import remoteAccess.TCPSocket;
+import io.qameta.allure.junit4.DisplayName;
+
+import screens.ScreenPicture;
+import screens.Screens;
 
 import static java.lang.Thread.sleep;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import static io.restassured.RestAssured.given;
 
-public class Tests2G {
+@Feature("2G тесты")
+public class Tests2G  {
 
     private static TCPSocket tcpSocket;
     private static CashBox cashBox;
     private static Bot bot;
+    private static Screens screens;
+
+    private SoftAssertions softly;
+
     private static final String TOKEN = "29a76931-f19a-4c74-a8d1-0df938f1cf1b";
 
     @BeforeClass
     public static void init() {
-        tcpSocket = new TCPSocket();
-        cashBox = new CashBox("12345678-1234-1234-1234-123456789012", CashBoxType.DREAMKASRF, "192.168.242.116");
+        cashBox = new CashBox("12345678-1234-1234-1234-123456789012", CashBoxType.DREAMKASRF, "192.168.243.4");
         bot = new Bot(cashBox);
-        tcpSocket.createSocket(cashBox.CASHBOX_IP, CashBox.CASHBOX_PORT);
+        screens = new Screens();
     }
+
 
     @Before
     public void beforeTest() {
-        disableEthernet();
-        disableWiFi();
+        bot.start();
+        //disableEthernet();
+        //disableWiFi();
         enable2G();
+
+        softly = new SoftAssertions();
     }
 
     @After
     public void closeConn() {
-        bot.pressKeyBot(cashBox.keyEnum.keyCancel, 0, 1);
-        tcpSocket.sendDataToSocket(bot.getTaskId(), bot.resultJson());
-
-        bot.closeSessionJson();
-        tcpSocket.socketClose(bot.resultJson());
+        bot.stop();
     }
 
+    @Ignore
     @Test
     public void test2gWithBankTerminal() {
         enableTerminal();
         paymentByCreditCard();
-        //TODO
+        assertEquals(true, isSuccessfulPayment());
     }
 
+    @DisplayName("Подключение кассы к кабинету через 2G")
     @Test
-    public void test2gWithKabinet() throws Exception {
+    public void testIncludeToCabinetWith2G(){
+        disableConnectToCabinet();
         connectCashboxToKabinet();
-        boolean result = isGoodsUpload();
-        assertEquals(true, result);
+        softly.assertThat(checkCabinetIsEnable()).as("Упал так как не смог подключиться к кабинету").isTrue();
+       // assertEquals(true, checkCabinetIsEnable());
+        bot.pressKeyBot(cashBox.keyEnum.keyCancel, 0, 4);
+        bot.sendData();
+        disableConnectToCabinet();
+        softly.assertAll();
     }
+
+
+    @Ignore
+    @DisplayName("Проверка загрузки товаров на кассу из Кабинета")
+    @Test
+    public void testLoadGoodsFromCabinetWith2G(){
+        cleanGoodsDb();
+        connectCashboxToKabinet();
+
+    }
+
 
     private boolean isGoodsUpload() throws InterruptedException {
-        int expectedCountGoods = 0;
+        int expectedCountGoods = getCountGoodsInKabinet();
         int currentCountGoodsInCashbox = 0;
-        int pastCountGoodsInCashbox = 0;
+        int pastCountGoodsInCashbox;
         int flag = 0;
         while (true) {
-            expectedCountGoods = getCountGoodsInKabinet();
             pastCountGoodsInCashbox = currentCountGoodsInCashbox;
             currentCountGoodsInCashbox = getCountGoodsInCashBox();
             if (currentCountGoodsInCashbox < expectedCountGoods) {
-                sleep(10000);
+                sleep(100000);
                 if (currentCountGoodsInCashbox == pastCountGoodsInCashbox) {
                     flag++;
                 }
@@ -87,6 +116,7 @@ public class Tests2G {
         }
     }
 
+    @Step("Подключить кассу к кабинету")
     private void connectCashboxToKabinet() {
         bot.pressKeyBot(cashBox.keyEnum.keyMenu, 0, 1);
         bot.pressKeyBot(cashBox.keyEnum.key5, 0, 1);
@@ -97,9 +127,24 @@ public class Tests2G {
         bot.sendData();
     }
 
+   @Step("Отключить кассу от кабинета")
+    private void disableConnectToCabinet() {
+        if (isCabinetEnable()){
+            bot.pressKeyBot(cashBox.keyEnum.keyMenu, 0, 1);
+            bot.pressKeyBot(cashBox.keyEnum.key5, 0, 1);
+            bot.pressKeyBot(cashBox.keyEnum.key8, 0, 1);
+            bot.pressKeyBot(cashBox.keyEnum.key2, 0, 1);
+            bot.pressKeyBot(cashBox.keyEnum.keyEnter, 0, 1);
+            bot.sendData();
+
+            softly.assertThat(checkCabinetIsDisable()).as("Упал так как не смог отключиться от кабинета").isTrue();
+        }
+    }
+
     private RequestSpecification authByUserToken(String token) {
         return given().header("Authorization", "Bearer " + token);
     }
+
 
     private String getCodeFromKabinet() {
         Response response = authByUserToken(TOKEN).when().get("https://kabinet-beta.dreamkas.ru/api/users/0/pin").then().
@@ -134,14 +179,24 @@ public class Tests2G {
     }
 
     private void enable2G() {
-        bot.pressKeyBot(cashBox.keyEnum.keyMenu, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.key5, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.key2, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.key3, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.key1, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.key1, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.keyEnter, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.keyCancel, 0, 4);
+        bot.pressKeyBot(cashBox.keyEnum.keyMenu, 0, 1);                        //МЕНЮ
+        bot.pressKeyBot(cashBox.keyEnum.key5, 0, 1);                           //НАСТРОЙКИ
+        bot.pressKeyBot(cashBox.keyEnum.key2, 0, 1);                           //СЕТЬ
+        bot.pressKeyBot(cashBox.keyEnum.key3, 0, 1);                           //2G
+        bot.pressKeyBot(cashBox.keyEnum.key1, 0, 1);                           //СОСТОЯНИЕ
+        bot.pressKeyBot(cashBox.keyEnum.key1, 0, 1);                           //ВКЛ
+        bot.pressKeyBot(cashBox.keyEnum.keyEnter, 0, 1);                       //ENTER
+        bot.pressKeyBot(cashBox.keyEnum.key2, 0, 1);                           //НАСТРОЙКА
+        bot.pressKeyBot(cashBox.keyEnum.key2, 0, 1);                           //МТС
+        bot.pressKeyBot(cashBox.keyEnum.keyEnter, 0, 1);                       //ЕНТЕР
+        bot.sendData();
+        try {
+            sleep(10000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        bot.pressKeyBot(cashBox.keyEnum.keyCancel, 0, 4);                      //назад
+        bot.sendData();
     }
 
     private void disableWiFi() {
@@ -152,12 +207,8 @@ public class Tests2G {
         bot.pressKeyBot(cashBox.keyEnum.key1, 0, 1);
         bot.pressKeyBot(cashBox.keyEnum.key2, 0, 1);
         bot.pressKeyBot(cashBox.keyEnum.keyEnter, 0, 1);
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
         bot.pressKeyBot(cashBox.keyEnum.keyCancel, 0, 4);
+        bot.sendData();
     }
 
     private void disableEthernet() {
@@ -177,7 +228,6 @@ public class Tests2G {
                 contentType(ContentType.JSON).
                 extract().response();
         return response.path("count");
-
     }
 
     private int getCountGoodsInCashBox() {
@@ -186,4 +236,71 @@ public class Tests2G {
         String count = ssh.executeListCommand("echo \"attach '/FisGo/goodsDb.db' as goods; select count (*) from goods.GOODS;\" | sqlite3 /FisGo/goodsDb.db").get(0);
         return Integer.parseInt(count);
     }
+
+    private void cleanGoodsDb() {
+        DataFromCashbox ssh = new DataFromCashbox();
+        ssh.initSession(cashBox.CASHBOX_IP, CashBox.USERNAME, CashBox.PORT, CashBox.PASSWORD);
+        ssh.executeListCommand("echo \"attach '/FisGo/goodsDb.db' as goods; delete from goods.GOODS;\" | sqlite3 /FisGo/goodsDb.db");
+    }
+
+
+    private boolean isSuccessfulPayment() {
+        //TODO
+        DataFromCashbox ssh = new DataFromCashbox();
+        ssh.initSession(cashBox.CASHBOX_IP, CashBox.USERNAME, CashBox.PORT, CashBox.PASSWORD);
+        ssh.executeListCommand("echo \"attach '/FisGo/goodsDb.db' as goods; delete (*) from goods.GOODS;\" | sqlite3 /FisGo/goodsDb.db");
+        return true;
+    }
+
+    //******************************************************************************************************************
+
+    private boolean checkCabinetIsEnable() {
+        while (!isCabinetEnable()) {
+            if (isIncorrectCabinetCode() || isCabinetError()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isCabinetEnable() {
+        List<ConfigFieldsEnum> configFields = new ArrayList<>();
+        configFields.add(ConfigFieldsEnum.IS_CABINET_ENABLE);
+        List<String> response = bot.cfgGetJson(configFields);
+        return Integer.parseInt(response.get(0)) != 0;
+    }
+
+    private boolean isIncorrectCabinetCode() {
+        bot.getScreenJson();
+        return screens.compareScreen(ScreenPicture.INCORRECT_CABINET_CODE);
+    }
+
+    private boolean isCabinetError() {
+        bot.getScreenJson();
+        return screens.compareScreen(ScreenPicture.CABINET_ERROR);
+    }
+
+    private boolean checkCabinetIsDisable() {
+        while (isCabinetEnable()) {
+            if (isCabinetError()){
+                System.out.println("экран error");
+                return false;}
+        }
+        if (isCabinetDisableScreen()){
+            System.out.println("экран кабинет отключен ");
+            bot.pressKeyBot(cashBox.keyEnum.keyEnter, 0, 1);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isCabinetDisableScreen(){
+        bot.getScreenJson();
+        return screens.compareScreen(ScreenPicture.CABINET_SUCCES_DISABLE);
+    }
+
+
+
+    //******************************************************************************************************************
+
 }

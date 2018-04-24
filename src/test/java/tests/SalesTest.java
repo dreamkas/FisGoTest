@@ -19,6 +19,7 @@ import keypad.KeyEnum;
 /**
  * Тесты на продажу
  */
+@Ignore
 public class SalesTest {
     private TCPSocket tcpSocket = new TCPSocket();
     private Screens screens = new Screens();

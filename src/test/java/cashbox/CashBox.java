@@ -7,13 +7,13 @@ import keypad.KeyEnum;
  * UUID кассы, IP, порт, тип
  */
 public class CashBox {
+
     public String UUID;// = "12345678-1234-1234-1234-123456789012"; //пока не парсится ни на сервере, ни на клиенте
 
     //параметры для открытия сокета с кассой
-    public CashBoxType CASHBOX_TYPE;// = "DreamkasF"; //DreamkasRF
-    public String CASHBOX_IP; //= "192.168.242.101";
+    public CashBoxType CASHBOX_TYPE;
+    public String CASHBOX_IP;
     public static final int CASHBOX_PORT = 3425;
-
 
     //параметры подключения по ssh
     public static final String USERNAME = "root";
@@ -27,6 +27,5 @@ public class CashBox {
         this.CASHBOX_TYPE = CASHBOX_TYPE;
         this.CASHBOX_IP = CASHBOX_IP;
         keyEnum.initKeyEnum(this.CASHBOX_TYPE);
-
     }
 }

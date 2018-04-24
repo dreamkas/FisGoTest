@@ -71,7 +71,7 @@ public class TCPSocket {
             OutputStream sout = workSocket.getOutputStream();
             // передаем данные, читаем ответ
             sout.write(jsonCommand.getBytes());
-            byte bufClose[] = new byte[65535];//1024 * 1024];
+            byte bufClose[] = new byte[65535];                                                           //1024 * 1024];
             int rClose = 0;
             while (rClose == 0)
                 rClose = sin.read(bufClose);
