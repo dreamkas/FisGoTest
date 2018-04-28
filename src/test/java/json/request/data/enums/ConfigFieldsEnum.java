@@ -1,4 +1,4 @@
-package cashbox;
+package json.request.data.enums;
 
 /**
  * Список полей, которые содержатся в конфиге.

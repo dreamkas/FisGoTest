@@ -1,6 +1,7 @@
 package remoteAccess;
 
-import com.google.gson.Gson;
+import json.request.data.enums.ConfigFieldsEnum;
+import json.request.data.enums.CountersFieldsEnum;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -11,9 +12,6 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-
-import cashbox.ConfigFieldsEnum;
-import json.fromSever.TasksResponse;
 
 /**
  * Класс работы с сокетом
@@ -34,8 +32,12 @@ public class TCPSocket {
     //список запрашиваемых полей
     @Setter
     private List<ConfigFieldsEnum> configFieldsEnum;
+    @Setter
+    private List<CountersFieldsEnum> countersFieldsEnum;
     @Getter
     public List<String> valueConfigFields = new ArrayList<>();
+    @Getter
+    public List<String> valueCountersFields = new ArrayList<>();
 
     //локальная переменная, в которой храним количество тасок, которые передаем на сервер
     @Setter
@@ -63,7 +65,8 @@ public class TCPSocket {
     }
     //----------------------------------------------------------------------------
     // передаем Json в сокет
-    public void sendDataToSocket(int taskCount, String jsonCommand) {
+    public String sendDataToSocket(int taskCount, String jsonCommand) {
+        String data = "";
         try {
             taskId = taskCount;
             // Берем входной и выходной потоки сокета
@@ -75,32 +78,35 @@ public class TCPSocket {
             int rClose = 0;
             while (rClose == 0)
                 rClose = sin.read(bufClose);
-            String data = new String(bufClose, 0, rClose);
+            data = new String(bufClose, 0, rClose);
             System.out.println("data = " + data);
-            parseJson(data);
+            //parseJson(data);
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return data;
     }
-    //----------------------------------------------------------------------------
-    //Парсинг ответа от сервера
-    private void parseJson(String json) {
-        TasksResponse tasksResponse = new Gson().fromJson(json, TasksResponse.class);
-        for (int i = 0; i < taskId; i++) {
-            if (!tasksResponse.getTaskResult(i).equals("OK"))
-                System.out.println("Task complite with result not OK. task id = " + (i+1));
-            else {
-                if (json.contains("lcd_screen")) {
-                    tasksResponse.savePicture(i);
-                }
-                if (json.contains("keypad_mode")) {
-                    setKeypadMode(tasksResponse.getKeypadMode(i));
-                }
-                if (json.contains("cfg_data")) {
-                    valueConfigFields = tasksResponse.getConfigValue(i, configFieldsEnum);
-                }
-            }
-        }
-    }
-    //----------------------------------------------------------------------------
+
+//    //----------------------------------------------------------------------------
+//    //Парсинг ответа от сервера
+//    private void parseJson(String json) {
+//        Response tasksResponse = new Gson().fromJson(json, Response.class);
+//        for (int i = 0; i < taskId; i++) {
+//            if (!tasksResponse.getTaskResult(i).equals("OK"))
+//                System.out.println("Task complite with result not OK. task id = " + (i+1));
+//            else {
+//                if (json.contains("lcd_screen")) {
+//                    tasksResponse.savePicture(i);
+//                }
+//                if (json.contains("keypad_mode")) {
+//                    setKeypadMode(tasksResponse.getKeypadMode(i));
+//                }
+//                if (json.contains("cfg_data")) {
+//                    valueConfigFields = tasksResponse.getConfigValue(i, configFieldsEnum);
+//                }
+//
+//            }
+//        }
+//    }
+//    //----------------------------------------------------------------------------
 }

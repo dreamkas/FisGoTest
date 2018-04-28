@@ -1,4 +1,4 @@
-package cashbox;
+package json.request.data.enums;
 
 /**
  * Список возможных команд, которые обрабатываются сервером на кассе
@@ -8,5 +8,6 @@ public enum CommandEnum {
     LCD_SCREEN,
     KEYPAD_MODE,
     CLOSE_SESSION,
-    CFG_GET
+    CFG_GET,
+    COUNTERS_GET
 }

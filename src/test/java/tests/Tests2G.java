@@ -3,21 +3,18 @@ package tests;
 import cashbox.Bot;
 import cashbox.CashBox;
 import cashbox.CashBoxType;
-
-import io.qameta.allure.Description;
 import io.qameta.allure.Feature;
-
+import io.qameta.allure.Step;
+import io.qameta.allure.junit4.DisplayName;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.*;
-import remoteAccess.DataFromCashbox;
-import remoteAccess.TCPSocket;
-import io.qameta.allure.junit4.DisplayName;
-
 import steps.Steps2G;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Feature("2G тесты")
 @DisplayName("Тестирование 2G")
-public class Tests2G  {
+public class Tests2G {
 
     private static CashBox cashBox;
     private static Bot bot;
@@ -33,6 +30,7 @@ public class Tests2G  {
         step = new Steps2G(bot, cashBox);
     }
 
+    @Step("Начальные установки")
     @Before
     public void beforeTest() {
         bot.start();
@@ -42,36 +40,50 @@ public class Tests2G  {
     }
 
     @After
-    public void closeConn() {
+    public void afterTest() {
+
         bot.stop();
     }
 
+
     @DisplayName("Проверка подключения 2G в системе. (команда route)")
     @Test
-    public void testEnable2g(){
-        softly.assertThat(step.checkEnable2G()).as("2G не запустился").isTrue();
+    public void testEnable2g() {
+        assertThat(step.checkEnable2G()).as("2G не запустился").isTrue();
     }
+
 
     @DisplayName("Подключение кассы к кабинету через 2G")
     @Test
-    public void testIncludeToCabinetWith2G(){
+    public void testIncludeToCabinetWith2G() {
         step.disableConnectToCabinet();
         step.connectCashboxToKabinet();
         softly.assertThat(step.checkCabinetIsEnable()).as("Упал так как не смог подключиться к кабинету").isTrue();
-       // assertEquals(true, checkCabinetIsEnable());
         bot.pressKeyBot(cashBox.keyEnum.keyCancel, 0, 4);
         bot.sendData();
         step.disableConnectToCabinet();
         softly.assertAll();
     }
 
+
     @DisplayName("Проверка загрузки товаров на кассу из Кабинета")
     @Test
     public void testLoadGoodsFromCabinetWith2G() throws InterruptedException {
+        step.disableConnectToCabinet();
         step.cleanGoodsDb();
         step.connectCashboxToKabinet();
+        softly.assertThat(step.checkCabinetIsEnable()).as("Упал так как не смог подключиться к кабинету").isTrue();
         boolean actual = step.isGoodsUpload();
-        softly.assertThat(actual).as("Упал так как товары не заргузились").isTrue();
+        softly.assertThat(actual).as("Упал так как товары не загрузились").isTrue();
+        softly.assertAll();
+    }
+
+    @Ignore
+    @Test
+    public void testPaymentCardWith2G() {
+        step.enableBankTerminal();
+        softly.assertThat(step.isEnableBankTerminal()).as("Упал так как не смог подключить терминал").isTrue();
+        step.paymentByCreditCard();
     }
 
 
