@@ -44,5 +44,16 @@ public interface IBot {
      */
     Map<ConfigFieldsEnum, String> getConfig(ConfigFieldsEnum ... configFieldsEnums);
 
+    /**
+     * Команда для получения счетчиков
+     * @param countersFieldsEnums - массив с необходимыми полями
+     * @return объект CountersResponse
+     */
     CountersResponse getCounters(CountersFieldsEnum ... countersFieldsEnums);
+
+    /**
+     * Команда для получения статуса лоудера
+     * @return true - если на экране лоудер
+     */
+     boolean isLoaderScreen();
 }

@@ -9,5 +9,6 @@ public enum CommandEnum {
     KEYPAD_MODE,
     CLOSE_SESSION,
     CFG_GET,
-    COUNTERS_GET
+    COUNTERS_GET,
+    LOADER_STATUS
 }

@@ -128,6 +128,15 @@ public class Bot implements IBot {
         return tasksResponse.getTaskResponseList().get(0).getCountersData();
     }
 
+    @Override
+    public boolean isLoaderScreen() {
+        taskId++;
+        TasksRequest tasks = new TasksRequest(taskId, CommandEnum.LOADER_STATUS);
+        tasksRequestList.add(tasks);
+        String response = tcpSocket.sendDataToSocket(getTaskId(), resultJson());
+        Response tasksResponse = new Gson().fromJson(response, Response.class);
+        return tasksResponse.getTaskResponseList().get(0).getLoaderStatus().equals("ON");
+    }
 
     //TODO разобраться почему -1
 //    public CashboxConfig getConfig(){
