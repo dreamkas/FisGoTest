@@ -1,10 +1,9 @@
 package json.request;
 
 import com.google.gson.annotations.SerializedName;
-
-import json.request.data.enums.CommandEnum;
 import json.request.data.CfgData;
 import json.request.data.KeypadData;
+import json.request.data.enums.CommandEnum;
 import json.request.data.enums.CountersFieldsEnum;
 
 import java.util.List;
@@ -27,7 +26,7 @@ public class TasksRequest {
     private CfgData cfgData;
 
     @SerializedName("counters")
-    private List<CountersFieldsEnum>  countersData;
+    private List<CountersFieldsEnum> countersData;
 
     /**
      * Конструктор на создание таски для нажатия кнопки

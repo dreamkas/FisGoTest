@@ -2,8 +2,7 @@ package json.response;
 
 import com.google.gson.annotations.SerializedName;
 import json.request.data.enums.ConfigFieldsEnum;
-import json.response.data.CountersData;
-import lombok.AllArgsConstructor;
+import json.response.data.CountersResponse;
 import lombok.Getter;
 
 import java.util.Map;
@@ -13,7 +12,7 @@ import java.util.Map;
  */
 
 @Getter
-@AllArgsConstructor
+//@AllArgsConstructor
 public class TaskResponse {
 
     @SerializedName("task_id")
@@ -30,8 +29,8 @@ public class TaskResponse {
     @SerializedName("cfg_data")
     private Map<ConfigFieldsEnum, String> configData;
 
-    @SerializedName("countersData")
-    private CountersData countersData;
+    @SerializedName("counters_data")
+    private CountersResponse countersData;
 
     @SerializedName("loader_status")
     private String loaderStatus;

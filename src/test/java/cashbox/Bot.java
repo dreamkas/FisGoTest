@@ -10,6 +10,7 @@ import json.request.data.enums.CommandEnum;
 import json.request.data.enums.ConfigFieldsEnum;
 import json.request.data.enums.CountersFieldsEnum;
 import json.response.Response;
+import json.response.data.CountersResponse;
 import keypad.KeyEnum;
 import keypad.Keypad;
 import keypad.KeypadActionEnum;
@@ -105,23 +106,31 @@ public class Bot implements IBot {
     // добавляем таск на получение данных из конфига или биоса
     // параметры:
     // список полей, значение которх необходимо получить. Список полей можно получить в json.request.data.enums.ConfigFieldsEnum
-    public Map<ConfigFieldsEnum, String> cfgGetJson(ConfigFieldsEnum ... configFieldsEnums) {
-        //пока передаю в класс tcpSocket список полей так, подумаю как реализовать это лучше
-       // tcpSocket.setConfigFieldsEnum(getFields);
+    public Map<ConfigFieldsEnum, String> getConfig(ConfigFieldsEnum ... configFieldsEnums) {
         List<ConfigFieldsEnum> fieldsList = new ArrayList<>(Arrays.asList(configFieldsEnums));
         taskId++;
         CfgData cfgData = new CfgData(fieldsList);
         TasksRequest task = new TasksRequest(taskId, CommandEnum.CFG_GET, cfgData);
         tasksRequestList.add(task);
-
         String response = tcpSocket.sendDataToSocket(getTaskId(), resultJson());
         Response tasksResponse = new Gson().fromJson(response, Response.class);
         return tasksResponse.getTaskResponseList().get(0).getConfigData();
-
     }
 
+    @Override
+    public CountersResponse getCounters(CountersFieldsEnum... countersFieldsEnums) {
+        List<CountersFieldsEnum> fieldsList = new ArrayList<>(Arrays.asList(countersFieldsEnums));
+        taskId++;
+        TasksRequest tasks = new TasksRequest(taskId, CommandEnum.COUNTERS_GET, fieldsList);
+        tasksRequestList.add(tasks);
+        String response = tcpSocket.sendDataToSocket(getTaskId(), resultJson());
+        Response tasksResponse = new Gson().fromJson(response, Response.class);
+        return tasksResponse.getTaskResponseList().get(0).getCountersData();
+    }
+
+
     //TODO разобраться почему -1
-//    public CashboxConfig cfgGetJson(){
+//    public CashboxConfig getConfig(){
 //        taskId++;
 //        TasksRequest tasksRequest = new TasksRequest(taskId, CommandEnum.CFG_GET);
 //        tasksRequestList.add(tasksRequest);
@@ -130,17 +139,7 @@ public class Bot implements IBot {
 //        return tasksResponse.getTaskResponseList().get(0).getConfigData();
 //    }
 
-    //TODO
-    public void getCounters(List<CountersFieldsEnum> fields){
-        taskId++;
-//        String counters = "{\"uuid\": \"3e38e671-4fbf-4a57-ae1d-aa0496008888\",\"tasks\": [{\"task_id\": 1,\"command\": \"COUNTERS_GET\",\"counters\": [\"SALE_SUMS\"]}]}";
-//        tcpSocket.sendDataToSocket(taskId, counters);
-        tcpSocket.setCountersFieldsEnum(fields);
-        TasksRequest task = new TasksRequest(taskId, CommandEnum.COUNTERS_GET, fields);
-        tasksRequestList.add(task);
-        String response = tcpSocket.sendDataToSocket(getTaskId(), resultJson());
 
-    }
 
     // добавляем таск на закрытие сессии (используется только в классе remoteAccess.TCPSocket, в функции closeSocket()
     public void closeSessionJson() {
@@ -157,7 +156,7 @@ public class Bot implements IBot {
         Gson gson = builder.create();
 
         String jsonStr = gson.toJson(request);
-        // System.out.println("jsonStr = " + jsonStr);
+        System.out.println("jsonStr = " + jsonStr);
 
         taskId = 0;
         tasksRequestList.clear();
@@ -294,7 +293,7 @@ public class Bot implements IBot {
 //        if (stage == CashboxStagesEnum.REGISTRED)
 //            line.add(ConfigFieldsEnum.IS_SHIFT_OPEN);
 //
-//        List<String> valueConfigList = cfgGetJson(line);
+//        List<String> valueConfigList = getConfig(line);
 //
 //        if (valueConfigList.get(0).equals("0")) {
 //            pressKeyBot(keyEnum.keyMenu, 0, 1);
@@ -626,7 +625,7 @@ public class Bot implements IBot {
 //                //получаем значения поя ИНН
 //                List<ConfigFieldsEnum> list = new ArrayList<>();
 //                list.add(ConfigFieldsEnum.ORGANIZATION_INN);
-//                List<String> valueFieldsList = cfgGetJson(list);
+//                List<String> valueFieldsList = getConfig(list);
 //
 //                if (valueFieldsList.size() != 0) {
 //                    if (registrationData.equals(valueFieldsList.get(0)))
@@ -663,7 +662,7 @@ public class Bot implements IBot {
 //                //получаем значения поля Наименование организации
 //                List<ConfigFieldsEnum> list = new ArrayList<>();
 //                list.add(ConfigFieldsEnum.ORGANIZATION_NAME);
-//                List<String> valueFieldsList = cfgGetJson(list);
+//                List<String> valueFieldsList = getConfig(list);
 //                if (valueFieldsList.size() != 0) {
 //                    if (registrationData.equals(valueFieldsList.get(0)))
 //                        pressKeyBot(keyEnum.keyEnter, 0, 1);
@@ -698,7 +697,7 @@ public class Bot implements IBot {
 //                //получаем значения поля Адрес рассчетов
 //                List<ConfigFieldsEnum> list = new ArrayList<>();
 //                list.add(ConfigFieldsEnum.CALCULATION_ADDRESS);
-//                List<String> valueFieldsList = cfgGetJson(list);
+//                List<String> valueFieldsList = getConfig(list);
 //                if (valueFieldsList.size() != 0) {
 //                    if (registrationData.equals(valueFieldsList.get(0)))
 //                        pressKeyBot(keyEnum.keyEnter, 0, 1);
@@ -735,7 +734,7 @@ public class Bot implements IBot {
 //                //получаем значения поля Место рассчетов
 //                List<ConfigFieldsEnum> list = new ArrayList<>();
 //                list.add(ConfigFieldsEnum.CALCULATION_PLACE);
-//                List<String> valueFieldsList = cfgGetJson(list);
+//                List<String> valueFieldsList = getConfig(list);
 //                if (valueFieldsList.size() != 0) {
 //                    if (registrationData.equals(valueFieldsList.get(0)))
 //                        pressKeyBot(keyEnum.keyEnter, 0, 1);
@@ -772,7 +771,7 @@ public class Bot implements IBot {
 //                //получаем значения поля Рег. номер
 //                List<ConfigFieldsEnum> list = new ArrayList<>();
 //                list.add(ConfigFieldsEnum.KKT_REG_NUM);
-//                List<String> valueFieldsList = cfgGetJson(list);
+//                List<String> valueFieldsList = getConfig(list);
 //                if (valueFieldsList.size() != 0) {
 //                    if (registrationData.equals(valueFieldsList.get(0)))
 //                        pressKeyBot(keyEnum.keyEnter, 0, 1);
@@ -840,7 +839,7 @@ public class Bot implements IBot {
 //        //Получаем выбранные на кассе СНО
 //        List<ConfigFieldsEnum> list = new ArrayList<>();
 //        list.add(ConfigFieldsEnum.TAX_SYSTEMS);
-//        List<String> valueFieldsList = cfgGetJson(list);
+//        List<String> valueFieldsList = getConfig(list);
 //
 //        if (valueFieldsList.size() != 0) {
 //            char[] changeTaxMask = getMaskFromConfigDbCashbox(taxMaskLength, valueFieldsList.get(0));
@@ -1063,7 +1062,7 @@ public class Bot implements IBot {
 //                List<ConfigFieldsEnum> list = new ArrayList<>();
 //                list.add(ConfigFieldsEnum.FFD_KKT_VER);
 //                list.add(ConfigFieldsEnum.KKT_MODE);
-//                List<String> valueFieldsList = cfgGetJson(list);
+//                List<String> valueFieldsList = getConfig(list);
 //                if (valueFieldsList.size() != 0) {
 //                    registrationVer = valueFieldsList.get(0);
 //                    registrationMode = valueFieldsList.get(1);
@@ -1084,7 +1083,7 @@ public class Bot implements IBot {
 //                        list.add(ConfigFieldsEnum.LOTTERY_SIGN);
 //                        list.add(ConfigFieldsEnum.PAYING_AGENT_SIGN);
 //
-//                        valueFieldsList = cfgGetJson(list);
+//                        valueFieldsList = getConfig(list);
 //
 //                        //TODO: Проверка граничных значений
 //                        ENCRYPTION_SIGN = Integer.parseInt(valueFieldsList.get(0));

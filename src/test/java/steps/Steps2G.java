@@ -218,7 +218,7 @@ public class Steps2G {
     public boolean isCabinetEnable() {
         List<ConfigFieldsEnum> configFields = new ArrayList<>();
         configFields.add(ConfigFieldsEnum.IS_CABINET_ENABLE);
-        Map<ConfigFieldsEnum, String> response = bot.cfgGetJson(ConfigFieldsEnum.IS_CABINET_ENABLE);
+        Map<ConfigFieldsEnum, String> response = bot.getConfig(ConfigFieldsEnum.IS_CABINET_ENABLE);
         String result = response.get(ConfigFieldsEnum.IS_CABINET_ENABLE);
         return Integer.parseInt(result) != 0;
     }
@@ -322,7 +322,7 @@ public class Steps2G {
     public boolean isEnableBankTerminal(){
         List<ConfigFieldsEnum> configFields = new ArrayList<>();
         configFields.add(ConfigFieldsEnum.TERMINAL_MODE);
-        Map<ConfigFieldsEnum, String> response = bot.cfgGetJson(ConfigFieldsEnum.TERMINAL_MODE);
+        Map<ConfigFieldsEnum, String> response = bot.getConfig(ConfigFieldsEnum.TERMINAL_MODE);
         String result = response.get(ConfigFieldsEnum.TERMINAL_MODE);
         return Integer.parseInt(result) == 2;
     }
