@@ -155,7 +155,6 @@ public class Steps2G {
     public boolean checkEnable2G(){
         DataFromCashbox ssh = new DataFromCashbox();
         ssh.initSession(cashBox.CASHBOX_IP, CashBox.USERNAME, CashBox.PORT, CashBox.PASSWORD);
-        List list = ssh.executeListCommand("/sbin/route");
         String[] route = ssh.executeListCommand("/sbin/route")
                 .get(2)
                 .replaceAll("[\\s]{2,}", " ")
@@ -187,7 +186,7 @@ public class Steps2G {
      * Получение колличества товаров в кабинете
      * @return - колличество товаров.
      */
-    private int getCountGoodsInKabinet() {
+    public int getCountGoodsInKabinet() {
         Response response = authByUserToken(TOKEN).when().get("https://kabinet-beta.dreamkas.ru/api/products/count").then().
                 contentType(ContentType.JSON).
                 extract().response();
@@ -288,7 +287,7 @@ public class Steps2G {
      * на кассе с ожидаемым количеством товаров в кабинете.
      * @return true - если на касссе заргуженны все товары из кабинета.
      */
-    public boolean isGoodsUpload() throws InterruptedException {
+    public int isGoodsUpload() throws InterruptedException {
         int expectedCountGoods = getCountGoodsInKabinet();
         int currentCountGoodsInCashbox = 0;
         int pastCountGoodsInCashbox;
@@ -305,9 +304,9 @@ public class Steps2G {
                     System.out.println("*текущее* = *предыдущему* ФЛАГ = " + flag);
                 } else {flag = 0;}
                 if (flag == 4) {
-                    return false;
+                    return currentCountGoodsInCashbox;
                 }
-            } else return true;
+            } else return currentCountGoodsInCashbox;
         }
     }
 

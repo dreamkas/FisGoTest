@@ -28,13 +28,18 @@ public class Tests2G {
         cashBox = new CashBox("12345678-1234-1234-1234-123456789012", CashBoxType.DREAMKASRF, "192.168.243.4");
         bot = new Bot(cashBox);
         step = new Steps2G(bot, cashBox);
+
+//        bot.start();
+//        step.enable2G();
+//        bot.stop();
     }
 
     @Step("Начальные установки")
     @Before
     public void beforeTest() {
         bot.start();
-        step.enable2G();
+        //step.enable2G();
+
 
         softly = new SoftAssertions();
     }
@@ -56,9 +61,10 @@ public class Tests2G {
     @DisplayName("Подключение кассы к кабинету через 2G")
     @Test
     public void testIncludeToCabinetWith2G() {
+        assertThat(step.checkEnable2G()).as("2G не запустился").isTrue();
         step.disableConnectToCabinet();
         step.connectCashboxToKabinet();
-        softly.assertThat(step.checkCabinetIsEnable()).as("Упал так как не смог подключиться к кабинету").isTrue();
+        assertThat(step.checkCabinetIsEnable()).as("Упал так как не смог подключиться к кабинету").isTrue();
         bot.pressKeyBot(cashBox.keyEnum.keyCancel, 0, 4);
         bot.sendData();
         step.disableConnectToCabinet();
@@ -69,12 +75,13 @@ public class Tests2G {
     @DisplayName("Проверка загрузки товаров на кассу из Кабинета")
     @Test
     public void testLoadGoodsFromCabinetWith2G() throws InterruptedException {
+       // assertThat(step.checkEnable2G()).as("2G не запустился").isTrue();
         step.disableConnectToCabinet();
         step.cleanGoodsDb();
         step.connectCashboxToKabinet();
-        softly.assertThat(step.checkCabinetIsEnable()).as("Упал так как не смог подключиться к кабинету").isTrue();
-        boolean actual = step.isGoodsUpload();
-        softly.assertThat(actual).as("Упал так как товары не загрузились").isTrue();
+        assertThat(step.checkCabinetIsEnable()).as("Упал так как не смог подключиться к кабинету").isTrue();
+        int actual = step.isGoodsUpload();
+        softly.assertThat(actual).as("Упал так как товары не загрузились").isEqualTo(step.getCountGoodsInKabinet());
         softly.assertAll();
     }
 
