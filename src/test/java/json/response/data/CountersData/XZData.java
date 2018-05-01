@@ -1,7 +1,9 @@
 package json.response.data.CountersData;
 
 import com.google.gson.annotations.SerializedName;
+import lombok.Getter;
 
+@Getter
 public class XZData {
 
     @SerializedName("OPERATION_CNT")

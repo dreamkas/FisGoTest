@@ -4,6 +4,7 @@ import json.request.data.enums.ConfigFieldsEnum;
 import json.request.data.enums.CountersFieldsEnum;
 import json.response.data.CountersResponse;
 
+import java.util.List;
 import java.util.Map;
 
 public interface IBot {
@@ -35,7 +36,7 @@ public interface IBot {
      * @param keyNum2 - вторая кнопка
      * @param pressCount - количество нажатий
      */
-    void pressKeyBot(int keyNum, int keyNum2, int pressCount);
+    void pressKey(int keyNum, int keyNum2, int pressCount);
 
     /**
      * Метод для получения необходимых полей из конфига.
@@ -56,4 +57,11 @@ public interface IBot {
      * @return true - если на экране лоудер
      */
      boolean isLoaderScreen();
+
+    /**
+     * Отправка команды по SSH
+     * @param command - команда.
+     * @return List<String> - с возращаемыми полями
+     */
+     List<String> sendCommandSsh(String command);
 }

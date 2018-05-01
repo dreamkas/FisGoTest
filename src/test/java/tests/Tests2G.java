@@ -46,7 +46,6 @@ public class Tests2G {
 
     @After
     public void afterTest() {
-
         bot.stop();
     }
 
@@ -65,7 +64,7 @@ public class Tests2G {
         step.disableConnectToCabinet();
         step.connectCashboxToKabinet();
         assertThat(step.checkCabinetIsEnable()).as("Упал так как не смог подключиться к кабинету").isTrue();
-        bot.pressKeyBot(cashBox.keyEnum.keyCancel, 0, 4);
+        bot.pressKey(cashBox.keyEnum.keyCancel, 0, 4);
         bot.sendData();
         step.disableConnectToCabinet();
         softly.assertAll();
@@ -85,13 +84,7 @@ public class Tests2G {
         softly.assertAll();
     }
 
-    @Ignore
-    @Test
-    public void testPaymentCardWith2G() {
-        step.enableBankTerminal();
-        softly.assertThat(step.isEnableBankTerminal()).as("Упал так как не смог подключить терминал").isTrue();
-        step.paymentByCreditCard();
-    }
+
 
 
 

@@ -12,7 +12,6 @@ import java.util.Map;
  */
 
 @Getter
-//@AllArgsConstructor
 public class TaskResponse {
 
     @SerializedName("task_id")
@@ -36,15 +35,5 @@ public class TaskResponse {
     private String loaderStatus;
 
     private String message;
-
-
-
-
-
-//    //возвращаем значения на заданный массив полей конфига
-//    public List<String> getFieldsValue (List<ConfigFieldsEnum> configFieldsEnum){
-//        return configData.getFieldsValue(configFieldsEnum);
-//    }
-
 
 }

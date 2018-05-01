@@ -60,8 +60,6 @@ public class Bot implements IBot {
 
     public void start(){
         tcpSocket.createSocket(cashBox.CASHBOX_IP, CashBox.CASHBOX_PORT);
-//        String w = "{\"uuid\":\"12345678-1234-1234-1234-123456789012\",\"tasks\":[{\"task_id\":1,\"command\":\"COUNTERS_GET\",\"counters\":{\"fields\":[\"SHIFT_NUM\"]}}]}";
-//        tcpSocket.sendDataToSocket(1, w);
     }
 
     public void stop(){
@@ -69,19 +67,6 @@ public class Bot implements IBot {
         tcpSocket.socketClose(resultJson());
     }
 
-    // добавляем таск на нажатие кнопки
-    //  параметры:
-    // key1 - первая кнопка, которая будет нажата;
-    // key2 - вторая кнопка, которая будет нажата (сейчас не испоьзуется);
-    // action - действие, которое будет выполнять сервер (возможные действия описаны в классе keypad.KeypadActionEnum)
-    private void pressButton(int key1, int key2, KeypadActionEnum action) {
-        taskId++;
-        KeypadData keypadData = new KeypadData(key1, key2, action);
-        TasksRequest task = new TasksRequest(taskId, CommandEnum.KEYPAD_ACTION, keypadData);
-        tasksRequestList.add(task);
-    }
-
-    // добавляем таск на получение экрана (используется без параметров)
     public void getScreenJson() {
         taskId++;
         TasksRequest task = new TasksRequest(taskId, CommandEnum.LCD_SCREEN);
@@ -91,9 +76,6 @@ public class Bot implements IBot {
         savePicture(tasksResponse.getTaskResponseList().get(0).getLcdScreen());
     }
 
-
-
-    // добавляем таск на получение режима работы клавиатуры (используется без параметров)
     public int getKeypadMode() {
         taskId++;
         TasksRequest task = new TasksRequest(taskId, CommandEnum.KEYPAD_MODE);
@@ -103,9 +85,6 @@ public class Bot implements IBot {
         return tasksResponse.getTaskResponseList().get(0).getKeypadMode();
     }
 
-    // добавляем таск на получение данных из конфига или биоса
-    // параметры:
-    // список полей, значение которх необходимо получить. Список полей можно получить в json.request.data.enums.ConfigFieldsEnum
     public Map<ConfigFieldsEnum, String> getConfig(ConfigFieldsEnum ... configFieldsEnums) {
         List<ConfigFieldsEnum> fieldsList = new ArrayList<>(Arrays.asList(configFieldsEnums));
         taskId++;
@@ -117,7 +96,6 @@ public class Bot implements IBot {
         return tasksResponse.getTaskResponseList().get(0).getConfigData();
     }
 
-    @Override
     public CountersResponse getCounters(CountersFieldsEnum... countersFieldsEnums) {
         List<CountersFieldsEnum> fieldsList = new ArrayList<>(Arrays.asList(countersFieldsEnums));
         taskId++;
@@ -128,7 +106,6 @@ public class Bot implements IBot {
         return tasksResponse.getTaskResponseList().get(0).getCountersData();
     }
 
-    @Override
     public boolean isLoaderScreen() {
         taskId++;
         TasksRequest tasks = new TasksRequest(taskId, CommandEnum.LOADER_STATUS);
@@ -149,16 +126,21 @@ public class Bot implements IBot {
 //    }
 
 
+    public List<String> sendCommandSsh(String command) {
+        DataFromCashbox ssh = new DataFromCashbox();
+        ssh.initSession(cashBox.CASHBOX_IP, CashBox.USERNAME, CashBox.PORT, CashBox.PASSWORD);
+        return ssh.executeListCommand(command);
+    }
 
     // добавляем таск на закрытие сессии (используется только в классе remoteAccess.TCPSocket, в функции closeSocket()
-    public void closeSessionJson() {
+    private void closeSessionJson() {
         taskId++;
         TasksRequest task = new TasksRequest(taskId, CommandEnum.CLOSE_SESSION);
         tasksRequestList.add(task);
     }
 
     // составляем Json из сформированных тасок, используется только в классе  remoteAccess.TCPSocket, в функцях sendDataToSocket() и closeSocket()
-    public String resultJson() {
+    private String resultJson() {
         Request request = new Request(cashBox.UUID, tasksRequestList);
 
         GsonBuilder builder = new GsonBuilder();
@@ -176,7 +158,6 @@ public class Bot implements IBot {
         tcpSocket.sendDataToSocket(getTaskId(), resultJson());
     }
 
-    //Чтение параметров сценария из файла
     public List<String> readDataScript(String fileName) {
         List<String> list = new ArrayList<>();
         try {
@@ -192,8 +173,6 @@ public class Bot implements IBot {
         return list;
     }
 
-
-    //Ввод пароля
     public int enterPassword(List<String> keyWordArray) {
         writeLogFile("Выполняется функция ввода пароля.");
         getScreenJson();
@@ -232,27 +211,36 @@ public class Bot implements IBot {
             System.out.println(numberKey[i]);
 
         }
-        System.out.println(123);
         for (int i = 0; i < numberKey.length ; i++) {
-            if(numberKey[i] == 1){pressKeyBot( 0x12, 0, 1);
+            if(numberKey[i] == 1){
+                pressKey( 0x12, 0, 1);
             continue;}
-            if(numberKey[i] == 2){pressKeyBot( 0x13, 0, 1);
+            if(numberKey[i] == 2){
+                pressKey( 0x13, 0, 1);
                 continue;}
-            if(numberKey[i] == 3){pressKeyBot( 0x14, 0, 1);
+            if(numberKey[i] == 3){
+                pressKey( 0x14, 0, 1);
                 continue;}
-            if(numberKey[i] == 4){pressKeyBot( 0x0C, 0, 1);
+            if(numberKey[i] == 4){
+                pressKey( 0x0C, 0, 1);
                 continue;}
-            if(numberKey[i] == 5){pressKeyBot( 0x0D, 0, 1);
+            if(numberKey[i] == 5){
+                pressKey( 0x0D, 0, 1);
                 continue;}
-            if(numberKey[i] == 6){pressKeyBot( 0x0E, 0, 1);
+            if(numberKey[i] == 6){
+                pressKey( 0x0E, 0, 1);
                 continue;}
-            if(numberKey[i] == 7){pressKeyBot( 0x06, 0, 1);
+            if(numberKey[i] == 7){
+                pressKey( 0x06, 0, 1);
                 continue;}
-            if(numberKey[i] == 8){pressKeyBot( 0x07, 0, 1);
+            if(numberKey[i] == 8){
+                pressKey( 0x07, 0, 1);
                 continue;}
-            if(numberKey[i] == 9){pressKeyBot( 0x08, 0, 1);
+            if(numberKey[i] == 9){
+                pressKey( 0x08, 0, 1);
                 continue;}
-            if(numberKey[i] == 0){pressKeyBot( 0x18, 0, 1);
+            if(numberKey[i] == 0){
+                pressKey( 0x18, 0, 1);
                 continue;}
 
         }
@@ -305,8 +293,8 @@ public class Bot implements IBot {
 //        List<String> valueConfigList = getConfig(line);
 //
 //        if (valueConfigList.get(0).equals("0")) {
-//            pressKeyBot(keyEnum.keyMenu, 0, 1);
-//            pressKeyBot(keyEnum.key1, 0, 1);
+//            pressKey(keyEnum.keyMenu, 0, 1);
+//            pressKey(keyEnum.key1, 0, 1);
 //            sendData();
 //            trySleep(2000);
 //            getScreenJson();
@@ -318,7 +306,7 @@ public class Bot implements IBot {
 //                dataFromCashbox.initSession(cashBox.CASHBOX_IP, CashBox.USERNAME, CashBox.PORT, CashBox.PASSWORD);
 //                List<String> dateStr = dataFromCashbox.executeListCommand(getPassCommand);
 //                dataFromCashbox.disconnectSession();
-//                pressKeyBot(keyEnum.keyEnter, 0, 2);
+//                pressKey(keyEnum.keyEnter, 0, 2);
 //                sendData();
 //                System.out.println("gggggggg");
 //                // trySleep(20000);
@@ -347,8 +335,8 @@ public class Bot implements IBot {
 
     //Продажа, приход
     public int checkPrintSaleComming(List<String> keyWordArray, ScreenPicture screen) {
-        pressKeyBot(keyEnum.keyMenu, 0, 1);
-        pressKeyBot(keyEnum.keyCancel, 0, 1);
+        pressKey(keyEnum.keyMenu, 0, 1);
+        pressKey(keyEnum.keyCancel, 0, 1);
         sendData();
         trySleep(2000);
         getScreenJson();
@@ -409,16 +397,16 @@ public class Bot implements IBot {
                 return -2;
             } else {
                 if (tmpGoodsStr.equals("good_from_base")) {
-                    pressKeyBot(keyEnum.keyGoods, 0, 1);
+                    pressKey(keyEnum.keyGoods, 0, 1);
                     tmpGoodsStr = searchForKeyword("good_code_" + (j + 1) + ": ", keyWordArray);
                     strToKeypadConvert(tmpGoodsStr);
-                    pressKeyBot(keyEnum.keyEnter, 0, 1);
+                    pressKey(keyEnum.keyEnter, 0, 1);
                     sendData();
                     //товар из базы со свободной ценой
                     tmpGoodsStr = searchForKeyword("good_base_free_price_" + (j + 1) + ": ", keyWordArray);
                     if (!tmpGoodsStr.equals("CANNOT FIND KEYWORD")) {
                         strToKeypadConvert(tmpGoodsStr);
-                        pressKeyBot(keyEnum.keyEnter, 0, 1);
+                        pressKey(keyEnum.keyEnter, 0, 1);
                         sendData();
                     }
                     //весовой товар из базы
@@ -430,14 +418,14 @@ public class Bot implements IBot {
                             return -3;
                         }
                         strToKeypadConvert(tmpGoodsStr);
-                        pressKeyBot(keyEnum.keyEnter, 0, 1);
+                        pressKey(keyEnum.keyEnter, 0, 1);
                         sendData();
                     }
                 }
                 if (tmpGoodsStr.equals("good_free_price")) {
                     tmpGoodsStr = searchForKeyword("good_price_" + (j + 1) + ": ", keyWordArray);
                     strToKeypadConvert(tmpGoodsStr);
-                    pressKeyBot(keyEnum.keyEnter, 0, 1);
+                    pressKey(keyEnum.keyEnter, 0, 1);
                     sendData();
                 }
                 //если штучный товар, то смотрим еолимчество
@@ -449,9 +437,9 @@ public class Bot implements IBot {
                         return -4;
                     }
                     if (Integer.parseInt(tmpGoodsStr) > 1) {
-                        pressKeyBot(keyEnum.keyQuantity, 0, 1);
+                        pressKey(keyEnum.keyQuantity, 0, 1);
                         strToKeypadConvert(tmpGoodsStr);
-                        pressKeyBot(keyEnum.keyEnter, 0, 1);
+                        pressKey(keyEnum.keyEnter, 0, 1);
                     }
                     sendData();
                 }
@@ -460,34 +448,34 @@ public class Bot implements IBot {
                 if (!tmpGoodsStr.equals("CANNOT FIND KEYWORD")) {
                     holdKey(keyEnum.keyMenu, 0, 1);
                     if (tmpGoodsStr.equals("ПР"))
-                        pressKeyBot(keyEnum.key1, 0, 1);
+                        pressKey(keyEnum.key1, 0, 1);
                     if (tmpGoodsStr.equals("ЧП")) {
-                        pressKeyBot(keyEnum.key2, 0, 1);
+                        pressKey(keyEnum.key2, 0, 1);
                         tmpGoodsStr = searchForKeyword("special_form_prepayment_sum_" + (j + 1) + ": ", keyWordArray);
                         strToKeypadConvert(tmpGoodsStr);
-                        pressKeyBot(keyEnum.keyEnter, 0, 1);
+                        pressKey(keyEnum.keyEnter, 0, 1);
                     }
                     if (tmpGoodsStr.equals("А"))
-                        pressKeyBot(keyEnum.key3, 0, 1);
+                        pressKey(keyEnum.key3, 0, 1);
                     if (tmpGoodsStr.equals("П")) {
-                        pressKeyBot(keyEnum.key4, 0, 1);
+                        pressKey(keyEnum.key4, 0, 1);
                         tmpGoodsStr = searchForKeyword("special_form_offset_of_prepayment_sum_" + (j + 1) + ": ", keyWordArray);
                         strToKeypadConvert(tmpGoodsStr);
-                        pressKeyBot(keyEnum.keyEnter, 0, 1);
+                        pressKey(keyEnum.keyEnter, 0, 1);
                     }
                     if (tmpGoodsStr.equals("КР"))
-                        pressKeyBot(keyEnum.key5, 0, 1);
+                        pressKey(keyEnum.key5, 0, 1);
                     if (tmpGoodsStr.equals("ЧК")) {
-                        pressKeyBot(keyEnum.key6, 0, 1);
+                        pressKey(keyEnum.key6, 0, 1);
                         tmpGoodsStr = searchForKeyword("special_form_credit_sum_" + (j + 1) + ": ", keyWordArray);
                         strToKeypadConvert(tmpGoodsStr);
-                        pressKeyBot(keyEnum.keyEnter, 0, 1);
+                        pressKey(keyEnum.keyEnter, 0, 1);
                     }
                     if (tmpGoodsStr.equals("К")) {
-                        pressKeyBot(keyEnum.key7, 0, 1);
+                        pressKey(keyEnum.key7, 0, 1);
                         tmpGoodsStr = searchForKeyword("special_form_credit_pay_sum_" + (j + 1) + ": ", keyWordArray);
                         strToKeypadConvert(tmpGoodsStr);
-                        pressKeyBot(keyEnum.keyEnter, 0, 1);
+                        pressKey(keyEnum.keyEnter, 0, 1);
                     }
                     sendData();
                 }
@@ -502,15 +490,15 @@ public class Bot implements IBot {
             return -5;
         } else {
             if (tmpGoodsStr.equals("cash_pay")) {
-                pressKeyBot(keyEnum.keyPayByCash, 0, 1);
+                pressKey(keyEnum.keyPayByCash, 0, 1);
                 tmpGoodsStr = searchForKeyword("sum_pay: ", keyWordArray);
                 strToKeypadConvert(tmpGoodsStr);
             }
             if (tmpGoodsStr.equals("card_pay")) {
-                pressKeyBot(keyEnum.keyPayByCard, 0, 1);
+                pressKey(keyEnum.keyPayByCard, 0, 1);
             }
 
-            pressKeyBot(keyEnum.keyEnter, 0, 1);
+            pressKey(keyEnum.keyEnter, 0, 1);
             sendData();
         }
         trySleep(3500);
@@ -532,20 +520,20 @@ public class Bot implements IBot {
 
     //Внесение
     public int insertion(List<String> keyWordArray) {
-        pressKeyBot(keyEnum.keyMenu, 0, 1);
-        pressKeyBot(keyEnum.key1, 0, 1);
+        pressKey(keyEnum.keyMenu, 0, 1);
+        pressKey(keyEnum.key1, 0, 1);
         sendData();
         getScreenJson();
         boolean compare = screens.compareScreen(ScreenPicture.SHIFT_MENU_OPEN_SHIFT);
         if (compare) {
-            pressKeyBot(keyEnum.key5, 0, 1);
+            pressKey(keyEnum.key5, 0, 1);
             String sumInsertion = searchForKeyword("sum_insertion: ", keyWordArray);
             if (sumInsertion.equals("CANNOT FIND KEYWORD")) {
                 writeLogFile("В сценарии не задана сумма внесения.\nЗавершение выполнения внесения невозможно");
                 return -2;
             }
             strToKeypadConvert(sumInsertion);
-            pressKeyBot(keyEnum.keyEnter, 0, 2);
+            pressKey(keyEnum.keyEnter, 0, 2);
             sendData();
             return 0;
         } else {
@@ -555,10 +543,10 @@ public class Bot implements IBot {
     }
 
     public int reserve(List<String> keyWordArray) throws IOException {
-        pressKeyBot(keyEnum.keyMenu, 0, 1);
-        pressKeyBot(keyEnum.key1, 0, 1);
+        pressKey(keyEnum.keyMenu, 0, 1);
+        pressKey(keyEnum.key1, 0, 1);
         //добавить проверку, что смена открыта
-        pressKeyBot(keyEnum.key4, 0, 1);
+        pressKey(keyEnum.key4, 0, 1);
         //sendData();
         String sumReserve = searchForKeyword("sum_reserve: ", keyWordArray);
         if (sumReserve.equals("CANNOT FIND KEYWORD")) {
@@ -566,17 +554,17 @@ public class Bot implements IBot {
             return -1;
         }
         strToKeypadConvert(sumReserve);
-        pressKeyBot(keyEnum.keyEnter, 0, 2);
+        pressKey(keyEnum.keyEnter, 0, 2);
         sendData();
         return 0;
     }
 
 
     public void xCount() {
-        pressKeyBot(keyEnum.keyMenu, 0, 1);
-        pressKeyBot(keyEnum.key1, 0, 1);
+        pressKey(keyEnum.keyMenu, 0, 1);
+        pressKey(keyEnum.key1, 0, 1);
         //добавить проверку, что смена открыта
-        pressKeyBot(keyEnum.key3, 0, 1);
+        pressKey(keyEnum.key3, 0, 1);
         sendData();
     }
 
@@ -585,16 +573,16 @@ public class Bot implements IBot {
     //Регистрация
 //    public int registration(List<String> keyWordArray) {
 //        writeLogFile("Выполняется функция регистрации.");
-//        pressKeyBot(keyEnum.keyMenu, 0, 1);
-//        pressKeyBot(keyEnum.key5, 0, 1);
-//        pressKeyBot(keyEnum.key1, 0, 1);
+//        pressKey(keyEnum.keyMenu, 0, 1);
+//        pressKey(keyEnum.key5, 0, 1);
+//        pressKey(keyEnum.key1, 0, 1);
 //        sendData();
 //        //если открыто меню Регистрация ККТ и доступен пункт меню Регистрация
 //        getScreenJson();
 //        boolean compare = screens.compareScreen(ScreenPicture.MENU_REGISTRATION);
 //        if (compare) {
 //            writeLogFile("Пункт меню Регистрация доступен.");
-//            pressKeyBot(keyEnum.keyEnter, 0, 1);
+//            pressKey(keyEnum.keyEnter, 0, 1);
 //            sendData();
 //            //тип регистрации
 //            String registrationData = searchForKeyword("registration_type: ", keyWordArray);
@@ -606,19 +594,19 @@ public class Bot implements IBot {
 //            if (compare) {
 //                writeLogFile("Открыто окно загрузки рег. данных из кабинета");
 //                if (!registrationData.equals("Регистрация через Кабинет"))
-//                    pressKeyBot(keyEnum.keyCancel, 0, 1);
+//                    pressKey(keyEnum.keyCancel, 0, 1);
 //                else
-//                    pressKeyBot(keyEnum.keyEnter, 0, 1);
+//                    pressKey(keyEnum.keyEnter, 0, 1);
 //                sendData();
 //            }
 //
-//            pressKeyBot(keyEnum.keyEnter, 0, 1);
+//            pressKey(keyEnum.keyEnter, 0, 1);
 //            sendData();
 //            //Выбор режима работы ККТ
 //            changeKktMode("mode_kkt: ", keyWordArray);
 //
 //            //ИНН организации
-//            pressKeyBot(keyEnum.keyEnter, 0, 2);
+//            pressKey(keyEnum.keyEnter, 0, 2);
 //            sendData();
 //            registrationData = searchForKeyword("organization_inn: ", keyWordArray);
 //            if (registrationData.equals("CANNOT FIND KEYWORD")) {
@@ -629,7 +617,7 @@ public class Bot implements IBot {
 //                    writeLogFile("Экран ИНН пустой, завершение регистрации невозможно\n");
 //                    return -2;
 //                } else
-//                    pressKeyBot(keyEnum.keyEnter, 0, 1);
+//                    pressKey(keyEnum.keyEnter, 0, 1);
 //            } else {
 //                //получаем значения поя ИНН
 //                List<ConfigFieldsEnum> list = new ArrayList<>();
@@ -638,23 +626,23 @@ public class Bot implements IBot {
 //
 //                if (valueFieldsList.size() != 0) {
 //                    if (registrationData.equals(valueFieldsList.get(0)))
-//                        pressKeyBot(keyEnum.keyEnter, 0, 1);
+//                        pressKey(keyEnum.keyEnter, 0, 1);
 //                    else {
 //                        //очистка ранее введенных данных
 //                        clearDisplay(valueFieldsList.get(0).length());
 //                        //Ввод данных из сценария
 //                        strToKeypadConvert(registrationData);
-//                        pressKeyBot(keyEnum.keyEnter, 0, 1);
+//                        pressKey(keyEnum.keyEnter, 0, 1);
 //                    }
 //                } else {
 //                    //Ввод данных из сценария
 //                    strToKeypadConvert(registrationData);
-//                    pressKeyBot(keyEnum.keyEnter, 0, 1);
+//                    pressKey(keyEnum.keyEnter, 0, 1);
 //                }
 //            }
 //
 //            //Наименование организации
-//            pressKeyBot(keyEnum.keyEnter, 0, 1);
+//            pressKey(keyEnum.keyEnter, 0, 1);
 //            registrationData = searchForKeyword("organization_name: ", keyWordArray);
 //            sendData();
 //            if (registrationData.equals("CANNOT FIND KEYWORD")) {
@@ -665,7 +653,7 @@ public class Bot implements IBot {
 //                    writeLogFile("Экран наименования организации пустой, завершение регистрации невозможно\n");
 //                    return -3;
 //                } else
-//                    pressKeyBot(keyEnum.keyEnter, 0, 1);
+//                    pressKey(keyEnum.keyEnter, 0, 1);
 //                sendData();
 //            } else {
 //                //получаем значения поля Наименование организации
@@ -674,22 +662,22 @@ public class Bot implements IBot {
 //                List<String> valueFieldsList = getConfig(list);
 //                if (valueFieldsList.size() != 0) {
 //                    if (registrationData.equals(valueFieldsList.get(0)))
-//                        pressKeyBot(keyEnum.keyEnter, 0, 1);
+//                        pressKey(keyEnum.keyEnter, 0, 1);
 //                    else {
 //                        //очистка ранее введенных данных
 //                        clearDisplay(valueFieldsList.get(0).length());
 //                        //Ввод данных из сценария
 //                        strToKeypadConvert(registrationData);
-//                        pressKeyBot(keyEnum.keyEnter, 0, 1);
+//                        pressKey(keyEnum.keyEnter, 0, 1);
 //                    }
 //                } else {
 //                    //Ввод данных из сценария
 //                    strToKeypadConvert(registrationData);
-//                    pressKeyBot(keyEnum.keyEnter, 0, 1);
+//                    pressKey(keyEnum.keyEnter, 0, 1);
 //                }
 //            }
 //            //Адрес расчетов
-//            pressKeyBot(keyEnum.keyEnter, 0, 1);
+//            pressKey(keyEnum.keyEnter, 0, 1);
 //            registrationData = searchForKeyword("calculation_address: ", keyWordArray);
 //            sendData();
 //            if (registrationData.equals("CANNOT FIND KEYWORD")) {
@@ -700,7 +688,7 @@ public class Bot implements IBot {
 //                    writeLogFile("Экран адреса расчетов пустой, завершение регистрации невозможно\n");
 //                    return -4;
 //                } else
-//                    pressKeyBot(keyEnum.keyEnter, 0, 1);
+//                    pressKey(keyEnum.keyEnter, 0, 1);
 //                sendData();
 //            } else {
 //                //получаем значения поля Адрес рассчетов
@@ -709,24 +697,24 @@ public class Bot implements IBot {
 //                List<String> valueFieldsList = getConfig(list);
 //                if (valueFieldsList.size() != 0) {
 //                    if (registrationData.equals(valueFieldsList.get(0)))
-//                        pressKeyBot(keyEnum.keyEnter, 0, 1);
+//                        pressKey(keyEnum.keyEnter, 0, 1);
 //                    else {
 //                        //очистка ранее введенных данных
 //                        clearDisplay(valueFieldsList.get(0).length());
 //                        //Ввод данных из сценария
 //                        strToKeypadConvert(registrationData);
-//                        pressKeyBot(keyEnum.keyEnter, 0, 1);
+//                        pressKey(keyEnum.keyEnter, 0, 1);
 //                    }
 //                } else {
 //                    //Ввод данных из сценария
 //                    strToKeypadConvert(registrationData);
-//                    pressKeyBot(keyEnum.keyEnter, 0, 1);
+//                    pressKey(keyEnum.keyEnter, 0, 1);
 //                }
 //                sendData();
 //            }
 //
 //            //Место расчетов
-//            pressKeyBot(keyEnum.keyEnter, 0, 1);
+//            pressKey(keyEnum.keyEnter, 0, 1);
 //            registrationData = searchForKeyword("calculation_place: ", keyWordArray);
 //            sendData();
 //            if (registrationData.equals("CANNOT FIND KEYWORD")) {
@@ -737,7 +725,7 @@ public class Bot implements IBot {
 //                    writeLogFile("Экран места расчетов пустой, завершение регистрации невозможно\n");
 //                    return -5;
 //                } else
-//                    pressKeyBot(keyEnum.keyEnter, 0, 1);
+//                    pressKey(keyEnum.keyEnter, 0, 1);
 //                sendData();
 //            } else {
 //                //получаем значения поля Место рассчетов
@@ -746,24 +734,24 @@ public class Bot implements IBot {
 //                List<String> valueFieldsList = getConfig(list);
 //                if (valueFieldsList.size() != 0) {
 //                    if (registrationData.equals(valueFieldsList.get(0)))
-//                        pressKeyBot(keyEnum.keyEnter, 0, 1);
+//                        pressKey(keyEnum.keyEnter, 0, 1);
 //                    else {
 //                        //очистка ранее введенных данных
 //                        clearDisplay(valueFieldsList.get(0).length());
 //                        //Ввод данных из сценария
 //                        strToKeypadConvert(registrationData);
-//                        pressKeyBot(keyEnum.keyEnter, 0, 1);
+//                        pressKey(keyEnum.keyEnter, 0, 1);
 //                    }
 //                } else {
 //                    //Ввод данных из сценария
 //                    strToKeypadConvert(registrationData);
-//                    pressKeyBot(keyEnum.keyEnter, 0, 1);
+//                    pressKey(keyEnum.keyEnter, 0, 1);
 //                }
 //                sendData();
 //            }
 //
 //            //РН ККТ
-//            pressKeyBot(keyEnum.keyEnter, 0, 1);
+//            pressKey(keyEnum.keyEnter, 0, 1);
 //            sendData();
 //            registrationData = searchForKeyword("reg_num: ", keyWordArray);
 //            if (registrationData.equals("CANNOT FIND KEYWORD")) {
@@ -774,7 +762,7 @@ public class Bot implements IBot {
 //                    writeLogFile("Экран ввода РН ККТ пустой, завершение регистрации невозможно\n");
 //                    return -6;
 //                } else
-//                    pressKeyBot(keyEnum.keyEnter, 0, 1);
+//                    pressKey(keyEnum.keyEnter, 0, 1);
 //                sendData();
 //            } else {
 //                //получаем значения поля Рег. номер
@@ -783,7 +771,7 @@ public class Bot implements IBot {
 //                List<String> valueFieldsList = getConfig(list);
 //                if (valueFieldsList.size() != 0) {
 //                    if (registrationData.equals(valueFieldsList.get(0)))
-//                        pressKeyBot(keyEnum.keyEnter, 0, 1);
+//                        pressKey(keyEnum.keyEnter, 0, 1);
 //                    else {
 //                        //очистка ранее введенных данных
 //                        clearDisplay(valueFieldsList.get(0).length());
@@ -791,7 +779,7 @@ public class Bot implements IBot {
 //                }
 //                //Ввод данных из сценария
 //                strToKeypadConvert(registrationData);
-//                pressKeyBot(keyEnum.keyEnter, 0, 1);
+//                pressKey(keyEnum.keyEnter, 0, 1);
 //                sendData();
 //            }
 //            getScreenJson();
@@ -800,34 +788,34 @@ public class Bot implements IBot {
 //                return -7;
 //
 //            //Версия ФФД
-//            pressKeyBot(keyEnum.keyEnter, 0, 1);
+//            pressKey(keyEnum.keyEnter, 0, 1);
 //            sendData();
-///*            pressKeyBot(keyEnum.keyEnter, 0, 1);
+///*            pressKey(keyEnum.keyEnter, 0, 1);
 //            registrationData = searchForKeyword("ffd_ver: ", keyWordArray);
 //            if (registrationData.equals("CANNOT FIND KEYWORD")) {
 //                writeLogFile("В сценарии не указана версия ФФД, выставляем версию 1.05\n");
-//                pressKeyBot(keyEnum.key1, 0, 1);
+//                pressKey(keyEnum.key1, 0, 1);
 //            }
 //            else {
 //                if (registrationData.equals("1.05"))
-//                    pressKeyBot(keyEnum.key1, 0, 1);
+//                    pressKey(keyEnum.key1, 0, 1);
 //                if (registrationData.equals("1.1"))
-//                    pressKeyBot(keyEnum.key2, 0, 1);
+//                    pressKey(keyEnum.key2, 0, 1);
 //            }
-//            pressKeyBot(keyEnum.keyEnter, 0, 1);*/
+//            pressKey(keyEnum.keyEnter, 0, 1);*/
 //
 //            //СНО
-//            pressKeyBot(keyEnum.keyEnter, 0, 1);
+//            pressKey(keyEnum.keyEnter, 0, 1);
 //            sendData();
 //            changeTaxSystems("tax_systems: ", keyWordArray);
-//            pressKeyBot(keyEnum.keyEnter, 0, 1);
+//            pressKey(keyEnum.keyEnter, 0, 1);
 //
 //            //Признаки
-//            pressKeyBot(keyEnum.keyEnter, 0, 1);
+//            pressKey(keyEnum.keyEnter, 0, 1);
 //            sendData();
 //            changeSignsKkt("signs: ", true, keyWordArray);
-//            pressKeyBot(keyEnum.keyEnter, 0, 1);
-//            pressKeyBot(keyEnum.keyEnter, 0, 1);
+//            pressKey(keyEnum.keyEnter, 0, 1);
+//            pressKey(keyEnum.keyEnter, 0, 1);
 //            sendData();
 //            return 0;
 //        } else {
@@ -855,17 +843,17 @@ public class Bot implements IBot {
 //
 //            //оптимизировать ??
 //            if (changeTaxMask[taxMaskLength - 1] == '1')
-//                pressKeyBot(keyEnum.key1, 0, 1);
+//                pressKey(keyEnum.key1, 0, 1);
 //            if (changeTaxMask[taxMaskLength - 2] == '1')
-//                pressKeyBot(keyEnum.key2, 0, 1);
+//                pressKey(keyEnum.key2, 0, 1);
 //            if (changeTaxMask[taxMaskLength - 3] == '1')
-//                pressKeyBot(keyEnum.key3, 0, 1);
+//                pressKey(keyEnum.key3, 0, 1);
 //            if (changeTaxMask[taxMaskLength - 4] == '1')
-//                pressKeyBot(keyEnum.key4, 0, 1);
+//                pressKey(keyEnum.key4, 0, 1);
 //            if (changeTaxMask[taxMaskLength - 5] == '1')
-//                pressKeyBot(keyEnum.key5, 0, 1);
+//                pressKey(keyEnum.key5, 0, 1);
 //            if (changeTaxMask[taxMaskLength - 6] == '1')
-//                pressKeyBot(keyEnum.key6, 0, 1);
+//                pressKey(keyEnum.key6, 0, 1);
 //            sendData();
 //        }
 //
@@ -875,22 +863,22 @@ public class Bot implements IBot {
 //        for (String tmpStr : taxSystemsTable) {
 //            switch (tmpStr) {
 //                case "ОСН":
-//                    pressKeyBot(keyEnum.key1, 0, 1);
+//                    pressKey(keyEnum.key1, 0, 1);
 //                    break;
 //                case "УСН доход":
-//                    pressKeyBot(keyEnum.key2, 0, 1);
+//                    pressKey(keyEnum.key2, 0, 1);
 //                    break;
 //                case "УСН дох./расх.":
-//                    pressKeyBot(keyEnum.key3, 0, 1);
+//                    pressKey(keyEnum.key3, 0, 1);
 //                    break;
 //                case "ЕНВД":
-//                    pressKeyBot(keyEnum.key4, 0, 1);
+//                    pressKey(keyEnum.key4, 0, 1);
 //                    break;
 //                case "ЕСХН":
-//                    pressKeyBot(keyEnum.key5, 0, 1);
+//                    pressKey(keyEnum.key5, 0, 1);
 //                    break;
 //                case "Патент":
-//                    pressKeyBot(keyEnum.key6, 0, 1);
+//                    pressKey(keyEnum.key6, 0, 1);
 //                    break;
 //                default:
 //                    break;
@@ -929,50 +917,50 @@ public class Bot implements IBot {
                     if (modeKkt.equals("Автономный"))
                         writeLogFile("В автономном режиме признак шифрования скрыт.\n");
                     if (modeKkt.equals("Передачи данных"))
-                        pressKeyBot(keyEnum.key1, 0, 1);
+                        pressKey(keyEnum.key1, 0, 1);
                     break;
                 }
                 case "Подакциз.товар": {
                     if (modeKkt.equals("Автономный"))
-                        pressKeyBot(keyEnum.key1, 0, 1);
+                        pressKey(keyEnum.key1, 0, 1);
                     if (modeKkt.equals("Передачи данных"))
-                        pressKeyBot(keyEnum.key2, 0, 1);
+                        pressKey(keyEnum.key2, 0, 1);
                     break;
                 }
                 case "Расч. за услуги": {
                     if (modeKkt.equals("Автономный"))
-                        pressKeyBot(keyEnum.key2, 0, 1);
+                        pressKey(keyEnum.key2, 0, 1);
                     if (modeKkt.equals("Передачи данных"))
-                        pressKeyBot(keyEnum.key3, 0, 1);
+                        pressKey(keyEnum.key3, 0, 1);
                     break;
                 }
                 case "Азартн.игры": {
                     if (modeKkt.equals("Автономный"))
-                        pressKeyBot(keyEnum.key3, 0, 1);
+                        pressKey(keyEnum.key3, 0, 1);
                     if (modeKkt.equals("Передачи данных"))
-                        pressKeyBot(keyEnum.key4, 0, 1);
+                        pressKey(keyEnum.key4, 0, 1);
                     break;
                 }
                 case "Лотерея": {
                     if (modeKkt.equals("Автономный"))
-                        pressKeyBot(keyEnum.key4, 0, 1);
+                        pressKey(keyEnum.key4, 0, 1);
                     if (modeKkt.equals("Передачи данных"))
-                        pressKeyBot(keyEnum.key5, 0, 1);
+                        pressKey(keyEnum.key5, 0, 1);
                     break;
                 }
                 case "Пл. агент": {
                     agentChange = true;
                     if (modeKkt.equals("Автономный"))
-                        pressKeyBot(keyEnum.key5, 0, 1);
+                        pressKey(keyEnum.key5, 0, 1);
                     if (modeKkt.equals("Передачи данных"))
-                        pressKeyBot(keyEnum.key6, 0, 1);
+                        pressKey(keyEnum.key6, 0, 1);
                     break;
                 }
                 case "БСО": {
                     if (modeKkt.equals("Автономный"))
-                        pressKeyBot(keyEnum.key6, 0, 1);
+                        pressKey(keyEnum.key6, 0, 1);
                     if (modeKkt.equals("Передачи данных"))
-                        pressKeyBot(keyEnum.key7, 0, 1);
+                        pressKey(keyEnum.key7, 0, 1);
                     break;
                 }
             }
@@ -981,24 +969,24 @@ public class Bot implements IBot {
                     case "Автомат. режим": {
                         autoModeChange = true;
                         if (modeKkt.equals("Автономный"))
-                            pressKeyBot(keyEnum.key8, 0, 1);
+                            pressKey(keyEnum.key8, 0, 1);
                         if (modeKkt.equals("Передачи данных"))
-                            pressKeyBot(keyEnum.key9, 0, 1);
+                            pressKey(keyEnum.key9, 0, 1);
                         break;
                     }
 
                     case "Прод интернет": {
                         if (modeKkt.equals("Автономный"))
-                            pressKeyBot(keyEnum.key, 0, 1);
+                            pressKey(keyEnum.key, 0, 1);
                         if (modeKkt.equals("Передачи данных"))
-                            pressKeyBot(keyEnum.key9, 0, 1);
+                            pressKey(keyEnum.key9, 0, 1);
                         break;
                     }
                     case "Уст. принт. в автомате": {
                         if (modeKkt.equals("Автономный"))
-                            pressKeyBot(keyEnum.key9, 0, 1);
+                            pressKey(keyEnum.key9, 0, 1);
                         if (modeKkt.equals("Передачи данных"))
-                            pressKeyBot(keyEnum.key0, 0, 1);
+                            pressKey(keyEnum.key0, 0, 1);
                         break;
                     }
                 }*/
@@ -1006,45 +994,45 @@ public class Bot implements IBot {
         sendData();
 
         if (agentChange) {
-            pressKeyBot(keyEnum.keyEnter, 0, 1);
+            pressKey(keyEnum.keyEnter, 0, 1);
             //Типы агентов
             String agentType;
             agentType = searchForKeyword("agent_type: ", keyWordList);
             if (agentType.equals("CANNOT FIND KEYWORD")) {
                 writeLogFile("Выбран признак агента, но не выбраны типы агентов, нажимаем продолжить без указания типов...\n");
-                pressKeyBot(keyEnum.keyEnter, 0, 2);
+                pressKey(keyEnum.keyEnter, 0, 2);
             }
 
             Vector<String> agentTypeTable = multiplieChoice(agentType);
             for (String agentTypeStr : agentTypeTable) {
                 switch (agentTypeStr) {
                     case "Банковский платежный агент":
-                        pressKeyBot(keyEnum.key1, 0, 1);
+                        pressKey(keyEnum.key1, 0, 1);
                         break;
                     case "Банковский платежный субагент":
-                        pressKeyBot(keyEnum.key2, 0, 1);
+                        pressKey(keyEnum.key2, 0, 1);
                         break;
                     case "Платежный агент":
-                        pressKeyBot(keyEnum.key3, 0, 1);
+                        pressKey(keyEnum.key3, 0, 1);
                         break;
                     case "Платежный субагент":
-                        pressKeyBot(keyEnum.key4, 0, 1);
+                        pressKey(keyEnum.key4, 0, 1);
                         break;
                     case "Поверенный":
-                        pressKeyBot(keyEnum.key5, 0, 1);
+                        pressKey(keyEnum.key5, 0, 1);
                         break;
                     case "Комиссионер":
-                        pressKeyBot(keyEnum.key6, 0, 1);
+                        pressKey(keyEnum.key6, 0, 1);
                         break;
                     case "Агент":
-                        pressKeyBot(keyEnum.key7, 0, 1);
+                        pressKey(keyEnum.key7, 0, 1);
                         break;
                 }
             }
             sendData();
             if (version.equals("1.1")) {
                 if (autoModeChange) {
-                    pressKeyBot(keyEnum.keyEnter, 0, 2);
+                    pressKey(keyEnum.keyEnter, 0, 2);
                     strToKeypadConvert(searchForKeyword("automat_number: ", keyWordList));
                     sendData();
                 }
@@ -1112,29 +1100,29 @@ public class Bot implements IBot {
 //
 //                    if (registrationMode.equals("Передачи данных")) {
 //                        if (ENCRYPTION_SIGN == 1)
-//                            pressKeyBot(keyEnum.key1, 0, 1);
+//                            pressKey(keyEnum.key1, 0, 1);
 //                        if (EXCISABLE_SIGN == 1)
-//                            pressKeyBot(keyEnum.key2, 0, 1);
+//                            pressKey(keyEnum.key2, 0, 1);
 //                        if (CLC_SERVICE_SIGN == 1)
-//                            pressKeyBot(keyEnum.key3, 0, 1);
+//                            pressKey(keyEnum.key3, 0, 1);
 //                        if (GAMBLING_SIGN == 1)
-//                            pressKeyBot(keyEnum.key4, 0, 1);
+//                            pressKey(keyEnum.key4, 0, 1);
 //                        if (LOTTERY_SIGN == 1)
-//                            pressKeyBot(keyEnum.key5, 0, 1);
+//                            pressKey(keyEnum.key5, 0, 1);
 //                        if (PAYING_AGENT_SIGN == 1)
-//                            pressKeyBot(keyEnum.key6, 0, 1);
+//                            pressKey(keyEnum.key6, 0, 1);
 //                    }
 //                    if (registrationMode.equals("Автономный")) {
 //                        if (EXCISABLE_SIGN == 1)
-//                            pressKeyBot(keyEnum.key1, 0, 1);
+//                            pressKey(keyEnum.key1, 0, 1);
 //                        if (CLC_SERVICE_SIGN == 1)
-//                            pressKeyBot(keyEnum.key2, 0, 1);
+//                            pressKey(keyEnum.key2, 0, 1);
 //                        if (GAMBLING_SIGN == 1)
-//                            pressKeyBot(keyEnum.key3, 0, 1);
+//                            pressKey(keyEnum.key3, 0, 1);
 //                        if (LOTTERY_SIGN == 1)
-//                            pressKeyBot(keyEnum.key4, 0, 1);
+//                            pressKey(keyEnum.key4, 0, 1);
 //                        if (PAYING_AGENT_SIGN == 1)
-//                            pressKeyBot(keyEnum.key5, 0, 1);
+//                            pressKey(keyEnum.key5, 0, 1);
 //                    }
 //                }
 //            }
@@ -1155,7 +1143,7 @@ public class Bot implements IBot {
     //отчистка диспея
     private void clearDisplay(int length) {
         for (int i = 0; i < length; i++)
-            pressKeyBot(keyEnum.keyReversal, 0, 1);
+            pressKey(keyEnum.keyReversal, 0, 1);
     }
 
     //смена режима кассы
@@ -1163,10 +1151,10 @@ public class Bot implements IBot {
         //автономный режим
         String kktMode = searchForKeyword(keyWord, keyWordList);
         if (kktMode.equals("Автономный"))
-            pressKeyBot(keyEnum.key1, 0, 1);
+            pressKey(keyEnum.key1, 0, 1);
         else {
-            pressKeyBot(keyEnum.key2, 0, 1);
-            pressKeyBot(keyEnum.keyEnter, 0, 1);
+            pressKey(keyEnum.key2, 0, 1);
+            pressKey(keyEnum.keyEnter, 0, 1);
             String OFDName = searchForKeyword("ofd_name: ", keyWordList);
             if (OFDName.equals("CANNOT FIND KEYWORD"))
                 writeLogFile("The input file does not contain the name of the OFD!\n");
@@ -1178,99 +1166,99 @@ public class Bot implements IBot {
 
     //смена ОФД
     private void changeOFDName(String OFDName, List<String> keyWordList) {
-        pressKeyBot(keyEnum.keyEnter, 0, 1);
+        pressKey(keyEnum.keyEnter, 0, 1);
         sendData();
         switch (OFDName) {
             case "Яндекс.ОФД": {
-                pressKeyBot(keyEnum.keyEnter, 0, 1);
+                pressKey(keyEnum.keyEnter, 0, 1);
                 sendData();
                 autoEnterDataOFD();
-                pressKeyBot(keyEnum.keyEnter, 0, 2);
-                pressKeyBot(keyEnum.key2, 0, 1);
-                pressKeyBot(keyEnum.keyEnter, 0, 1);
+                pressKey(keyEnum.keyEnter, 0, 2);
+                pressKey(keyEnum.key2, 0, 1);
+                pressKey(keyEnum.keyEnter, 0, 1);
                 sendData();
                 break;
             }
             case "Первый ОФД": {
-                pressKeyBot(keyEnum.keyDown, 0, 1);
-                pressKeyBot(keyEnum.keyEnter, 0, 1);
+                pressKey(keyEnum.keyDown, 0, 1);
+                pressKey(keyEnum.keyEnter, 0, 1);
                 sendData();
                 autoEnterDataOFD();
                 break;
             }
             case "ОФД-Я": {
-                pressKeyBot(keyEnum.keyDown, 0, 2);
-                pressKeyBot(keyEnum.keyEnter, 0, 1);
+                pressKey(keyEnum.keyDown, 0, 2);
+                pressKey(keyEnum.keyEnter, 0, 1);
                 sendData();
                 autoEnterDataOFD();
                 break;
             }
             case "Такском": {
-                pressKeyBot(keyEnum.keyDown, 0, 3);
-                pressKeyBot(keyEnum.keyEnter, 0, 1);
+                pressKey(keyEnum.keyDown, 0, 3);
+                pressKey(keyEnum.keyEnter, 0, 1);
                 sendData();
                 autoEnterDataOFD();
                 break;
             }
             case "СБИС ОФД": {
-                pressKeyBot(keyEnum.keyDown, 0, 4);
-                pressKeyBot(keyEnum.keyEnter, 0, 1);
+                pressKey(keyEnum.keyDown, 0, 4);
+                pressKey(keyEnum.keyEnter, 0, 1);
                 sendData();
                 autoEnterDataOFD();
                 break;
             }
             case "КАЛУГА АСТРАЛ": {
-                pressKeyBot(keyEnum.keyDown, 0, 5);
-                pressKeyBot(keyEnum.keyEnter, 0, 1);
+                pressKey(keyEnum.keyDown, 0, 5);
+                pressKey(keyEnum.keyEnter, 0, 1);
                 sendData();
                 autoEnterDataOFD();
                 break;
             }
             case "Корус ОФД": {
-                pressKeyBot(keyEnum.keyDown, 0, 6);
-                pressKeyBot(keyEnum.keyEnter, 0, 1);
+                pressKey(keyEnum.keyDown, 0, 6);
+                pressKey(keyEnum.keyEnter, 0, 1);
                 sendData();
                 autoEnterDataOFD();
                 break;
             }
             case "Эвотор": {
-                pressKeyBot(keyEnum.keyDown, 0, 7);
-                pressKeyBot(keyEnum.keyEnter, 0, 1);
+                pressKey(keyEnum.keyDown, 0, 7);
+                pressKey(keyEnum.keyEnter, 0, 1);
                 sendData();
                 autoEnterDataOFD();
                 break;
             }
             case "Электронный экспресс": {
-                pressKeyBot(keyEnum.keyDown, 0, 8);
-                pressKeyBot(keyEnum.keyEnter, 0, 1);
+                pressKey(keyEnum.keyDown, 0, 8);
+                pressKey(keyEnum.keyEnter, 0, 1);
                 sendData();
                 autoEnterDataOFD();
                 break;
             }
             case "OFD.RU": {
-                pressKeyBot(keyEnum.keyDown, 0, 9);
-                pressKeyBot(keyEnum.keyEnter, 0, 1);
+                pressKey(keyEnum.keyDown, 0, 9);
+                pressKey(keyEnum.keyEnter, 0, 1);
                 sendData();
                 autoEnterDataOFD();
                 break;
             }
             case "СКБ Контур": {
-                pressKeyBot(keyEnum.keyDown, 0, 10);
-                pressKeyBot(keyEnum.keyEnter, 0, 1);
+                pressKey(keyEnum.keyDown, 0, 10);
+                pressKey(keyEnum.keyEnter, 0, 1);
                 sendData();
                 autoEnterDataOFD();
                 break;
             }
             case "Другой": {
-                pressKeyBot(keyEnum.keyUp, 0, 1);
-                pressKeyBot(keyEnum.keyEnter, 0, 1);
+                pressKey(keyEnum.keyUp, 0, 1);
+                pressKey(keyEnum.keyEnter, 0, 1);
                 sendData();
                 String regOFDNameOther = searchForKeyword("reg_OFD_name_other: ", keyWordList);
                 if (regOFDNameOther.equals("CANNOT FIND KEYWORD")) {
                     writeLogFile("The input file does not contain the name of the fiscal data operator for the selected item \"other\"!\n");
                 }
                 strToKeypadConvert(searchForKeyword("ofd_other_name: ", keyWordList));
-                pressKeyBot(keyEnum.keyEnter, 0, 2);
+                pressKey(keyEnum.keyEnter, 0, 2);
                 sendData();
                 //ввод данных, если выбран "Другой" ОФД
                 manualEnterDataOFD(keyWordList);
@@ -1283,7 +1271,7 @@ public class Bot implements IBot {
 
     //автоввод данных
     private void autoEnterDataOFD() {
-        pressKeyBot(keyEnum.keyEnter, 0, 7);
+        pressKey(keyEnum.keyEnter, 0, 7);
         sendData();
     }
 
@@ -1296,7 +1284,7 @@ public class Bot implements IBot {
             return;
         }
         strToKeypadConvert(innOFD);
-        pressKeyBot(keyEnum.keyEnter, 0, 2);
+        pressKey(keyEnum.keyEnter, 0, 2);
         sendData();
         //------------------------------------------------Адрес сервера ОФД-------------------------------------------------------
         String addressOFD = searchForKeyword("ofd_server_address: ", keyWordList);
@@ -1305,10 +1293,10 @@ public class Bot implements IBot {
             return;
         }
         strToKeypadConvert(addressOFD);
-        pressKeyBot(keyEnum.keyEnter, 0, 1);
+        pressKey(keyEnum.keyEnter, 0, 1);
         //добавить проверку экрана: если "адрес ОФД не найден, то добавить дополнительное нажатие на кнопку ввода
 
-        pressKeyBot(keyEnum.keyEnter, 0, 2);
+        pressKey(keyEnum.keyEnter, 0, 2);
         sendData();
         //------------------------------------------------Порт ОФД-------------------------------------------------------
         String portOFD = searchForKeyword("ofd_server_port: ", keyWordList);
@@ -1317,7 +1305,7 @@ public class Bot implements IBot {
             return;
         }
         strToKeypadConvert(portOFD);
-        pressKeyBot(keyEnum.keyEnter, 0, 2);
+        pressKey(keyEnum.keyEnter, 0, 2);
         sendData();
         //---------------------------------------------Адрес проверки чека------------------------------------------------
         String checkReceiptOFD = searchForKeyword("ofd_check_reciept_address: ", keyWordList);
@@ -1326,7 +1314,7 @@ public class Bot implements IBot {
             return;
         }
         strToKeypadConvert(checkReceiptOFD);
-        pressKeyBot(keyEnum.keyEnter, 0, 2);
+        pressKey(keyEnum.keyEnter, 0, 2);
         sendData();
     }
 
@@ -1371,7 +1359,7 @@ public class Bot implements IBot {
                         pressCount++;
                         if (charsetNumber == keys[j].rus_code.get(k)) {
                             keyNum = keys[j].key_code;
-                            pressKeyBot(keyNum, 0, pressCount);
+                            pressKey(keyNum, 0, pressCount);
                             //если 2 буквы в строке находятся на одной кнопке отправляем нажатие на кассу, тем самым делаем паузу
                             if (keyNumPrew.equals(keyNum)) {
                                 sendData();
@@ -1389,7 +1377,7 @@ public class Bot implements IBot {
                         pressCount++;
                         if (charsetNumber == keys[j].eng_code.get(k)) {
                             keyNum = keys[j].key_code;
-                            pressKeyBot(keyNum, 0, pressCount);
+                            pressKey(keyNum, 0, pressCount);
                             //если 2 буквы в строке находятся на одной кнопке отправляем нажатие на кассу, тем самым делаем паузу
                             if (keyNumPrew.equals(keyNum)) {
                                 sendData();
@@ -1411,7 +1399,7 @@ public class Bot implements IBot {
                             if (keyNumPrew.equals(keyNum)) {
                                 sendData();
                             }
-                            pressKeyBot(keyNum, 0, pressCount);
+                            pressKey(keyNum, 0, pressCount);
                             exit = true;
                         }
                     }
@@ -1422,7 +1410,7 @@ public class Bot implements IBot {
                     if (charsetNumber == keys[j].key_number) {
                         keyNum = keys[j].key_code;
                         pressCount = 1;
-                        pressKeyBot(keyNum, 0, pressCount);
+                        pressKey(keyNum, 0, pressCount);
                         exit = true;
                     }
 
@@ -1434,25 +1422,25 @@ public class Bot implements IBot {
                         //.
                         if (charsetNumber == 46) {
                             keyNum = 37;// keys[j].key_code;
-                            pressKeyBot(keyNum, 0, pressCount);
+                            pressKey(keyNum, 0, pressCount);
                             exit = true;
                         }
                         //+
                         if (charsetNumber == 43) {
                             keyNum = 22;
-                            pressKeyBot(keyNum, 0, pressCount);
+                            pressKey(keyNum, 0, pressCount);
                             exit = true;
                         }
                         //-
                         if (charsetNumber == 45) {
                             keyNum = 30;
-                            pressKeyBot(keyNum, 0, pressCount);
+                            pressKey(keyNum, 0, pressCount);
                             exit = true;
                         }
                         ///
                         if (charsetNumber == 42) {
                             keyNum = 38;
-                            pressKeyBot(keyNum, 0, pressCount);
+                            pressKey(keyNum, 0, pressCount);
                             exit = true;
                         }
                     }
@@ -1471,7 +1459,7 @@ public class Bot implements IBot {
                             if (keyNumPrew.equals(keyNum)) {
                                 sendData();
                             }
-                            pressKeyBot(keyNum, 0, pressCount);
+                            pressKey(keyNum, 0, pressCount);
                             exit = true;
                         }
                     }
@@ -1479,7 +1467,7 @@ public class Bot implements IBot {
                     if (charsetNumber == keys[j].key_number) {
                         keyNum = keys[j].key_code;
                         pressCount++;
-                        pressKeyBot(keyNum, 0, pressCount);
+                        pressKey(keyNum, 0, pressCount);
                         //если 2 буквы в строке находятся на одной кнопке отправляем нажатие на кассу, тем самым делаем паузу
                         if (keyNumPrew.equals(keyNum)) {
                             sendData();
@@ -1497,7 +1485,7 @@ public class Bot implements IBot {
                         pressCount++;
                         if (charsetNumber == keys[j].spec_sym_code.get(k)) {
                             keyNum = keys[j].key_code;
-                            pressKeyBot(keyNum, 0, pressCount);
+                            pressKey(keyNum, 0, pressCount);
                             //если 2 буквы в строке находятся на одной кнопке отправляем нажатие на кассу, тем самым делаем паузу
                             if (keyNumPrew.equals(keyNum)) {
                                 sendData();
@@ -1518,7 +1506,7 @@ public class Bot implements IBot {
                             if (keyNumPrew.equals(keyNum)) {
                                 sendData();
                             }
-                            pressKeyBot(keyNum, 0, pressCount);
+                            pressKey(keyNum, 0, pressCount);
                             exit = true;
                         }
                     }
@@ -1528,7 +1516,7 @@ public class Bot implements IBot {
                         pressCount++;
                         if (charsetNumber == keys[j].eng_code.get(k)) {
                             keyNum = keys[j].key_code;
-                            pressKeyBot(keyNum, 0, pressCount);
+                            pressKey(keyNum, 0, pressCount);
                             //если 2 буквы в строке находятся на одной кнопке отправляем нажатие на кассу, тем самым делаем паузу
                             if (keyNumPrew.equals(keyNum)) {
                                 sendData();
@@ -1539,7 +1527,7 @@ public class Bot implements IBot {
                     if (charsetNumber == keys[j].key_number) {
                         keyNum = keys[j].key_code;
                         pressCount++;
-                        pressKeyBot(keyNum, 0, pressCount);
+                        pressKey(keyNum, 0, pressCount);
                         //если 2 буквы в строке находятся на одной кнопке отправляем нажатие на кассу, тем самым делаем паузу
                         if (keyNumPrew.equals(keyNum)) {
                             sendData();
@@ -1575,11 +1563,19 @@ public class Bot implements IBot {
         return "CANNOT FIND KEYWORD";
     }
 
-    public void pressKeyBot(int keyNum, int keyNum2, int pressCount) {
+    public void pressKey(int keyNum, int keyNum2, int pressCount) {
         for (int i = 0; i < pressCount; i++) {
             pressButton(keyNum, keyNum2, KeypadActionEnum.KEY_DOWN);
         }
     }
+
+    private void pressButton(int key1, int key2, KeypadActionEnum action) {
+        taskId++;
+        KeypadData keypadData = new KeypadData(key1, key2, action);
+        TasksRequest task = new TasksRequest(taskId, CommandEnum.KEYPAD_ACTION, keypadData);
+        tasksRequestList.add(task);
+    }
+
 
     //удержание кнопки
     private void holdKey(int keyNum, int keyNum2, int pressCount) {

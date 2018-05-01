@@ -34,58 +34,58 @@ public class Steps2G {
 
     @Step("Включить 2G")
     public void enable2G() {
-        bot.pressKeyBot(cashBox.keyEnum.keyMenu, 0, 1);                        //МЕНЮ
-        bot.pressKeyBot(cashBox.keyEnum.key5, 0, 1);                           //НАСТРОЙКИ
-        bot.pressKeyBot(cashBox.keyEnum.key2, 0, 1);                           //СЕТЬ
-        bot.pressKeyBot(cashBox.keyEnum.key3, 0, 1);                           //2G
-        bot.pressKeyBot(cashBox.keyEnum.key1, 0, 1);                           //СОСТОЯНИЕ
-        bot.pressKeyBot(cashBox.keyEnum.key1, 0, 1);                           //ВКЛ
-        bot.pressKeyBot(cashBox.keyEnum.keyEnter, 0, 1);                       //ENTER
-        bot.pressKeyBot(cashBox.keyEnum.key2, 0, 1);                           //НАСТРОЙКА
-        bot.pressKeyBot(cashBox.keyEnum.key2, 0, 1);                           //МТС
-        bot.pressKeyBot(cashBox.keyEnum.keyEnter, 0, 1);                       //ЕНТЕР
+        bot.pressKey(cashBox.keyEnum.keyMenu, 0, 1);                        //МЕНЮ
+        bot.pressKey(cashBox.keyEnum.key5, 0, 1);                           //НАСТРОЙКИ
+        bot.pressKey(cashBox.keyEnum.key2, 0, 1);                           //СЕТЬ
+        bot.pressKey(cashBox.keyEnum.key3, 0, 1);                           //2G
+        bot.pressKey(cashBox.keyEnum.key1, 0, 1);                           //СОСТОЯНИЕ
+        bot.pressKey(cashBox.keyEnum.key1, 0, 1);                           //ВКЛ
+        bot.pressKey(cashBox.keyEnum.keyEnter, 0, 1);                       //ENTER
+        bot.pressKey(cashBox.keyEnum.key2, 0, 1);                           //НАСТРОЙКА
+        bot.pressKey(cashBox.keyEnum.key2, 0, 1);                           //МТС
+        bot.pressKey(cashBox.keyEnum.keyEnter, 0, 1);                       //ЕНТЕР
         bot.sendData();
         try {
             sleep(10000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        bot.pressKeyBot(cashBox.keyEnum.keyCancel, 0, 4);                      //назад
+        bot.pressKey(cashBox.keyEnum.keyCancel, 0, 4);                      //назад
         bot.sendData();
     }
 
     @Step("Выключить Ethernet")
     public void disableEthernet() {
-        bot.pressKeyBot(cashBox.keyEnum.keyMenu, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.key5, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.key2, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.key1, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.key1, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.key2, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.keyEnter, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.keyCancel, 0, 4);
+        bot.pressKey(cashBox.keyEnum.keyMenu, 0, 1);
+        bot.pressKey(cashBox.keyEnum.key5, 0, 1);
+        bot.pressKey(cashBox.keyEnum.key2, 0, 1);
+        bot.pressKey(cashBox.keyEnum.key1, 0, 1);
+        bot.pressKey(cashBox.keyEnum.key1, 0, 1);
+        bot.pressKey(cashBox.keyEnum.key2, 0, 1);
+        bot.pressKey(cashBox.keyEnum.keyEnter, 0, 1);
+        bot.pressKey(cashBox.keyEnum.keyCancel, 0, 4);
         bot.sendData();
     }
 
     @Step("Выключить WiFi")
     public void disableWiFi() {
-        bot.pressKeyBot(cashBox.keyEnum.keyMenu, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.key5, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.key2, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.key2, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.key1, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.key2, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.keyEnter, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.keyCancel, 0, 4);
+        bot.pressKey(cashBox.keyEnum.keyMenu, 0, 1);
+        bot.pressKey(cashBox.keyEnum.key5, 0, 1);
+        bot.pressKey(cashBox.keyEnum.key2, 0, 1);
+        bot.pressKey(cashBox.keyEnum.key2, 0, 1);
+        bot.pressKey(cashBox.keyEnum.key1, 0, 1);
+        bot.pressKey(cashBox.keyEnum.key2, 0, 1);
+        bot.pressKey(cashBox.keyEnum.keyEnter, 0, 1);
+        bot.pressKey(cashBox.keyEnum.keyCancel, 0, 4);
         bot.sendData();
     }
 
     @Step("Подключить кассу к кабинету")
     public void connectCashboxToKabinet() {
-        bot.pressKeyBot(cashBox.keyEnum.keyMenu, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.key5, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.key8, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.key1, 0, 1);
+        bot.pressKey(cashBox.keyEnum.keyMenu, 0, 1);
+        bot.pressKey(cashBox.keyEnum.key5, 0, 1);
+        bot.pressKey(cashBox.keyEnum.key8, 0, 1);
+        bot.pressKey(cashBox.keyEnum.key1, 0, 1);
         bot.sendData();
         bot.enterData(getCodeFromKabinet());
         bot.sendData();
@@ -94,53 +94,14 @@ public class Steps2G {
     @Step("Отключить кассу от кабинета если она подключена")
     public void disableConnectToCabinet() {
         if (isCabinetEnable()){
-            bot.pressKeyBot(cashBox.keyEnum.keyMenu, 0, 1);
-            bot.pressKeyBot(cashBox.keyEnum.key5, 0, 1);
-            bot.pressKeyBot(cashBox.keyEnum.key8, 0, 1);
-            bot.pressKeyBot(cashBox.keyEnum.key2, 0, 1);
-            bot.pressKeyBot(cashBox.keyEnum.keyEnter, 0, 1);
+            bot.pressKey(cashBox.keyEnum.keyMenu, 0, 1);
+            bot.pressKey(cashBox.keyEnum.key5, 0, 1);
+            bot.pressKey(cashBox.keyEnum.key8, 0, 1);
+            bot.pressKey(cashBox.keyEnum.key2, 0, 1);
+            bot.pressKey(cashBox.keyEnum.keyEnter, 0, 1);
             bot.sendData();
             checkCabinetIsDisable();
         }
-    }
-
-    @Step("Включить терминал")
-    public void enableBankTerminal(){
-        bot.pressKeyBot(cashBox.keyEnum.keyMenu, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.key5, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.key5, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.key1, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.key2, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.keyEnter, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.key2, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.key2, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.keyEnter, 0, 1);
-        bot.sendData();
-        //FIXME!!ИСПРАВИТЬ КОГДА СДЕЛАЮТ СОСТОЯНИЕ ЛОУДЕРА
-        try {
-            sleep(60000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        bot.pressKeyBot(cashBox.keyEnum.keyCancel, 0, 4);
-        bot.sendData();
-    }
-
-    @Step("Совершить покупку банковской картой")
-    public void paymentByCreditCard(){
-        bot.pressKeyBot(cashBox.keyEnum.key1, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.keyEnter, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.keyPayByCard, 0, 1);
-        bot.pressKeyBot(cashBox.keyEnum.keyEnter, 0, 1);
-        bot.sendData();
-        //FIXME!!ИСПРАВИТЬ КОГДА СДЕЛАЮТ СОСТОЯНИЕ ЛОУДЕРА
-        try {
-            sleep(20000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        bot.pressKeyBot(cashBox.keyEnum.keyEnter, 0, 1);
-        bot.sendData();
     }
 
     @Step("Очистить БД товаров на кассе")
@@ -162,7 +123,6 @@ public class Steps2G {
         System.out.println('w');
         return route[route.length - 1].equals("ppp0");
     }
-
 
     /**
      * Авторизация по токену для работы с кабинетом
@@ -201,12 +161,12 @@ public class Steps2G {
     public boolean checkCabinetIsEnable() {
         while (!isCabinetEnable()) {
             if (isIncorrectCabinetCode() || isCabinetError()) {
-                bot.pressKeyBot(cashBox.keyEnum.keyCancel, 0, 1);
+                bot.pressKey(cashBox.keyEnum.keyCancel, 0, 1);
                 bot.sendData();
                 return false;
             }
         }
-        bot.pressKeyBot(cashBox.keyEnum.keyCancel, 0, 1);
+        bot.pressKey(cashBox.keyEnum.keyCancel, 0, 1);
         bot.sendData();
         return true;
     }
@@ -253,11 +213,11 @@ public class Steps2G {
         }
         if (isCabinetDisableScreen()){
             System.out.println("экран кабинет отключен ");
-            bot.pressKeyBot(cashBox.keyEnum.keyEnter, 0, 1);
+            bot.pressKey(cashBox.keyEnum.keyEnter, 0, 1);
             bot.sendData();
             return true;
         }
-        bot.pressKeyBot(cashBox.keyEnum.keyEnter, 0, 1);
+        bot.pressKey(cashBox.keyEnum.keyEnter, 0, 1);
         bot.sendData();
         return false;
     }
@@ -318,14 +278,7 @@ public class Steps2G {
         return true;
     }
 
-    @Step("Терминал подключился?")
-    public boolean isEnableBankTerminal(){
-        List<ConfigFieldsEnum> configFields = new ArrayList<>();
-        configFields.add(ConfigFieldsEnum.TERMINAL_MODE);
-        Map<ConfigFieldsEnum, String> response = bot.getConfig(ConfigFieldsEnum.TERMINAL_MODE);
-        String result = response.get(ConfigFieldsEnum.TERMINAL_MODE);
-        return Integer.parseInt(result) == 2;
-    }
+
 
 
 }

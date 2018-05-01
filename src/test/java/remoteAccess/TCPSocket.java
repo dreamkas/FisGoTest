@@ -87,26 +87,4 @@ public class TCPSocket {
         return data;
     }
 
-//    //----------------------------------------------------------------------------
-//    //Парсинг ответа от сервера
-//    private void parseJson(String json) {
-//        Response tasksResponse = new Gson().fromJson(json, Response.class);
-//        for (int i = 0; i < taskId; i++) {
-//            if (!tasksResponse.getTaskResult(i).equals("OK"))
-//                System.out.println("Task complite with result not OK. task id = " + (i+1));
-//            else {
-//                if (json.contains("lcd_screen")) {
-//                    tasksResponse.savePicture(i);
-//                }
-//                if (json.contains("keypad_mode")) {
-//                    setKeypadMode(tasksResponse.getKeypadMode(i));
-//                }
-//                if (json.contains("cfg_data")) {
-//                    valueConfigFields = tasksResponse.getConfigValue(i, configFieldsEnum);
-//                }
-//
-//            }
-//        }
-//    }
-//    //----------------------------------------------------------------------------
 }
