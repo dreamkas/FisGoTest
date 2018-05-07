@@ -70,7 +70,6 @@ public class Tests2G {
         softly.assertAll();
     }
 
-
     @DisplayName("Проверка загрузки товаров на кассу из Кабинета")
     @Test
     public void testLoadGoodsFromCabinetWith2G() throws InterruptedException {
