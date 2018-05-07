@@ -3,6 +3,7 @@ package json.response;
 import com.google.gson.annotations.SerializedName;
 import json.request.data.enums.ConfigFieldsEnum;
 import json.response.data.CountersResponse;
+import json.response.data.GoodsData;
 import lombok.Getter;
 
 import java.util.Map;
@@ -33,6 +34,9 @@ public class TaskResponse {
 
     @SerializedName("loader_status")
     private String loaderStatus;
+
+    @SerializedName("GoodsData")
+    private GoodsData goodsData;
 
     private String message;
 

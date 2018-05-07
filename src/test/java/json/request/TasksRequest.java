@@ -28,6 +28,9 @@ public class TasksRequest {
     @SerializedName("counters")
     private List<CountersFieldsEnum> countersData;
 
+    @SerializedName("code")
+    private String goodsCode;
+
     /**
      * Конструктор на создание таски для нажатия кнопки
      * @param taskId - номер такси
@@ -73,4 +76,17 @@ public class TasksRequest {
         this.countersData = countersData;
         this.command = command;
     }
+
+    /**
+     * Конструктор для создание таски на получение информации о товаре.
+     * @param taskId - номер
+     * @param command - команда
+     * @param goodsCode - комер товара
+     */
+    public TasksRequest(int taskId, CommandEnum command, String goodsCode) {
+        this.taskId = taskId;
+        this.command = command;
+        this.goodsCode = goodsCode;
+    }
+
 }
