@@ -31,6 +31,9 @@ public class TasksRequest {
     @SerializedName("code")
     private String goodsCode;
 
+    @SerializedName("pos_num")
+    private int positionNumber;
+
     /**
      * Конструктор на создание таски для нажатия кнопки
      * @param taskId - номер такси
@@ -87,6 +90,18 @@ public class TasksRequest {
         this.taskId = taskId;
         this.command = command;
         this.goodsCode = goodsCode;
+    }
+
+    /**
+     * Конструктор на создание таски для получаения информации о позиции в чеке
+     * @param taskId - номер
+     * @param command - команда
+     * @param positionNumber - номер позиции
+     */
+    public TasksRequest(int taskId, CommandEnum command, int positionNumber) {
+        this.taskId = taskId;
+        this.command = command;
+        this.positionNumber = positionNumber;
     }
 
 }

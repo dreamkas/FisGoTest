@@ -4,6 +4,7 @@ import com.google.gson.annotations.SerializedName;
 import json.request.data.enums.ConfigFieldsEnum;
 import json.response.data.CountersResponse;
 import json.response.data.GoodsData;
+import json.response.data.PositionData;
 import lombok.Getter;
 
 import java.util.Map;
@@ -37,6 +38,9 @@ public class TaskResponse {
 
     @SerializedName("GoodsData")
     private GoodsData goodsData;
+
+    @SerializedName("PositionData")
+    private PositionData positionData;
 
     private String message;
 

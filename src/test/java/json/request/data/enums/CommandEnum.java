@@ -10,5 +10,7 @@ public enum CommandEnum {
     CLOSE_SESSION,
     CFG_GET,
     COUNTERS_GET,
-    LOADER_STATUS
+    LOADER_STATUS,
+    SEARCH_GOODS,
+    SEARCH_POSITION
 }
