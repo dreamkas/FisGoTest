@@ -32,7 +32,7 @@ public class TasksRequest {
     private String goodsCode;
 
     @SerializedName("pos_num")
-    private int positionNumber;
+    private Integer positionNumber;
 
     /**
      * Конструктор на создание таски для нажатия кнопки
@@ -98,7 +98,7 @@ public class TasksRequest {
      * @param command - команда
      * @param positionNumber - номер позиции
      */
-    public TasksRequest(int taskId, CommandEnum command, int positionNumber) {
+    public TasksRequest(int taskId, CommandEnum command, Integer positionNumber) {
         this.taskId = taskId;
         this.command = command;
         this.positionNumber = positionNumber;

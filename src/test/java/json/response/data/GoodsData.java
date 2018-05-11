@@ -12,7 +12,7 @@ public class GoodsData {
     @SerializedName("goods_name")
     private String goodsName;
 
-    @SerializedName("goods_name")
+    @SerializedName("unit_name")
     private String unit_name;
 
     @SerializedName("directory_code")

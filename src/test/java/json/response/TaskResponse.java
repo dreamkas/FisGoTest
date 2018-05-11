@@ -24,7 +24,7 @@ public class TaskResponse {
     @SerializedName("lcd_screen")
     private int[] lcdScreen;
 
-    @SerializedName("keypadMode")
+    @SerializedName("keypad_mode")
     private int keypadMode;
 
     @SerializedName("cfg_data")

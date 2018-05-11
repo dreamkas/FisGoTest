@@ -28,7 +28,6 @@ public class TestsBankTerminal {
         cashBox = new CashBox("12345678-1234-1234-1234-123456789012", CashBoxType.DREAMKASRF, "192.168.243.4");
         bot = new Bot(cashBox);
         step = new StepsBankTerminal(bot, cashBox);
-
     }
 
     @Step("Начальные установки")

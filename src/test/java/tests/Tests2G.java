@@ -28,7 +28,6 @@ public class Tests2G {
         cashBox = new CashBox("12345678-1234-1234-1234-123456789012", CashBoxType.DREAMKASRF, "192.168.243.4");
         bot = new Bot(cashBox);
         step = new Steps2G(bot, cashBox);
-
 //        bot.start();
 //        step.enable2G();
 //        bot.stop();
