@@ -12,6 +12,7 @@ import steps.Steps2G;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Ignore
 @Feature("2G тесты")
 @DisplayName("Тестирование 2G")
 public class Tests2G {

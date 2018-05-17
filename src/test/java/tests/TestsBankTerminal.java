@@ -6,14 +6,12 @@ import cashbox.CashBoxType;
 import io.qameta.allure.Step;
 import io.qameta.allure.junit4.DisplayName;
 import org.assertj.core.api.SoftAssertions;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import steps.StepsBankTerminal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Ignore
 public class TestsBankTerminal {
 
     private static CashBox cashBox;

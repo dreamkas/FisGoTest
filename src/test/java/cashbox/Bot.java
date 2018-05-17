@@ -1261,7 +1261,7 @@ public class Bot implements IBot {
         //------------------------------------------------Адрес сервера ОФД-------------------------------------------------------
         String addressOFD = searchForKeyword("ofd_server_address: ", keyWordList);
         if (addressOFD.equals("CANNOT FIND KEYWORD")) {
-            writeLogFile("The input file does not contain server address of the fiscal data operator for the selected item.\n");
+            writeLogFile("The input file does not contain tests address of the fiscal data operator for the selected item.\n");
             return;
         }
         enterStringData(addressOFD);
