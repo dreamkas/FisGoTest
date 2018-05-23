@@ -1588,8 +1588,6 @@ public class Bot implements IBot {
     }
 
     public void rebootCashBox(){
-        sendCommandSsh("reboot");
-        trySleep(20000);
-        start();
+
     }
 }

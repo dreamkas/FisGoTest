@@ -39,7 +39,8 @@ public class Screens {
             incorrectCabinetCode,
             cabinetError,
             cabinetSuccesDisable,
-            mainMenuRegistredModeScreen;
+            mainMenuRegistredModeScreen,
+            menuSystem;
 
     private String readScreenFile(String fileName) {
         try {
@@ -77,6 +78,7 @@ public class Screens {
         incorrectCabinetCode = readScreenFile("./screens/mainMenuRegistredMode.bmp");
         cabinetError = readScreenFile("./screens/cabinetError.bmp");
         cabinetSuccesDisable = readScreenFile("./screens/cabinetSuccesDisable.bmp");
+        menuSystem = readScreenFile("./screens/menuSystem.bmp");
     }
 
     //Сравниваем экран на кассе с экраном из "базы"
@@ -158,6 +160,9 @@ public class Screens {
 
                 case CABINET_SUCCES_DISABLE:
                     return strFromFile.equals(cabinetSuccesDisable);
+
+                case MENU_SYSTEM:
+                    return strFromFile.equals(menuSystem);
 
                 default:
                     return false;

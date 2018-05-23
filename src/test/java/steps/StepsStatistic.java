@@ -33,7 +33,7 @@ public class StepsStatistic {
         return isJSONValid(PATH_CASH_INFO_REPORT);
     }
 
-    @Step("Изменить поле TERMINAL_MODE на необходимое значение")
+    @Step("Изменить поле конфига на необходимое значение")
     public void changeConfigField(ConfigFieldsEnum field, String value) {
         bot.sendCommandSsh("echo \"attach '/FisGo/configDb.db' as config; update config.CONFIG set " + field + "='" + value + "';\" | sqlite3 /FisGo/configDb.db");
     }
@@ -46,6 +46,11 @@ public class StepsStatistic {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    @Step("Сделать backup конфига")
+    public void configBackup() {
+        bot.sendCommandSsh("cp /FisGo/configDb.db /FisGo/configDb_backup_for_test.db");
     }
 
     private boolean isJSONValid(String path) {
@@ -62,7 +67,6 @@ public class StepsStatistic {
         clearTxtFile(PATH_STATS);
         clearTxtFile(PATH_CASH_INFO_REPORT);
     }
-
     private void clearTxtFile(String path) {
         try {
             FileWriter fstream = new FileWriter(path);// конструктор с одним параметром - для перезаписи
@@ -73,6 +77,7 @@ public class StepsStatistic {
             System.err.println("Error in file cleaning: " + e.getMessage());
         }
     }
+
     private List<String> readTxtFile(String path) {
         List<String> list = new ArrayList<>();
         try {
