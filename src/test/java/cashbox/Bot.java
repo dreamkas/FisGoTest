@@ -1293,8 +1293,16 @@ public class Bot implements IBot {
 
     //Нажатие на кнопку (ввод данных) в зависимости от символа
     public void enterStringData(String str) {
-        int keypadMode = getKeypadMode();
 
+        System.out.println("keypadMode.SPEC_SYMBOLS " + keypadMode.SPEC_SYMBOLS);
+        System.out.println("keypadMode.ACTION_MODE "+ keypadMode.ACTION_MODE);
+        System.out.println("keypadMode.NUMBERS " + keypadMode.NUMBERS);
+        System.out.println("keypadMode.FREE_MODE "+ keypadMode.FREE_MODE);
+        System.out.println("keypadMode.CYRILLIC "+ keypadMode.CYRILLIC);
+        System.out.println("keypadMode.ENGLISH "+ keypadMode.ENGLISH);
+
+        int keypadMode = getKeypadMode();
+        System.out.println(keypadMode);
         Short keyNumPrew = 40, keyNum = 0;
         Integer pressCount = 0;
         boolean exit;
@@ -1510,13 +1518,40 @@ public class Bot implements IBot {
                 }
                 keyNumPrew = keyNum;
 
-                /* // Английские символы + цифры
-                if (keypadMode == ENGLISH + NUMBERS)
+                 // Английские символы + цифры
+                if (keypadMode == this.keypadMode.ENGLISH + this.keypadMode.NUMBERS)
                 {
-                } */
+                    for (int k = 0; k < keys[j].eng_code.size(); k++) {
+                        if (exit)
+                            break;
+                        pressCount++;
+                        if (charsetNumber == keys[j].eng_code.get(k)) {
+                            keyNum = keys[j].key_code;
+
+                            //если 2 буквы в строке находятся на одной кнопке отправляем нажатие на кассу, тем самым делаем паузу
+                            if (keyNumPrew.equals(keyNum)) {
+                                sendData();
+                            }
+                            pressKey(keyNum, 0, pressCount);
+                            exit = true;
+                        }
+                    }
+
+                    if (charsetNumber == keys[j].key_number) {
+                        keyNum = keys[j].key_code;
+                        pressCount++;
+                        pressKey(keyNum, 0, pressCount);
+                        //если 2 буквы в строке находятся на одной кнопке отправляем нажатие на кассу, тем самым делаем паузу
+                        if (keyNumPrew.equals(keyNum)) {
+                            sendData();
+                        }
+                        exit = true;
+                    }
+                }
             }
+            sendData();
         }
-        sendData();
+        //sendData();
     }
 
 
@@ -1588,6 +1623,13 @@ public class Bot implements IBot {
     }
 
     public void rebootCashBox(){
-
+        sendCommandSsh("/sbin/reboot");
+        try {
+            Thread.sleep(85_000);
+            System.out.println("SLEEP IS OVER");
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        start();
     }
 }

@@ -3,6 +3,7 @@ package tests;
 import cashbox.Bot;
 import cashbox.CashBox;
 import cashbox.CashBoxType;
+import io.qameta.allure.Feature;
 import io.qameta.allure.Step;
 import io.qameta.allure.junit4.DisplayName;
 import org.assertj.core.api.SoftAssertions;
@@ -12,6 +13,8 @@ import steps.StepsBankTerminal;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Ignore
+@Feature("Тесты банковского терминала")
+@DisplayName("Тестирование банковского терминала")
 public class TestsBankTerminal {
 
     private static CashBox cashBox;

@@ -3,6 +3,7 @@ package tests;
 import cashbox.Bot;
 import cashbox.CashBox;
 import cashbox.CashBoxType;
+import io.qameta.allure.Feature;
 import io.qameta.allure.Step;
 import io.qameta.allure.junit4.DisplayName;
 import org.assertj.core.api.SoftAssertions;
@@ -12,6 +13,8 @@ import steps.StepsPassword;
 import static org.junit.Assert.assertEquals;
 
 @Ignore
+@Feature("Тесты на ввод пароля")
+@DisplayName("Тестирование ввода пароля")
 public class PasswordTests {
 
     private static CashBox cashBox;

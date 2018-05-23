@@ -40,7 +40,9 @@ public class Screens {
             cabinetError,
             cabinetSuccesDisable,
             mainMenuRegistredModeScreen,
-            menuSystem;
+            menuSystem,
+            menuWiFi,
+            screenSuccessConnectEthernet;
 
     private String readScreenFile(String fileName) {
         try {
@@ -54,15 +56,15 @@ public class Screens {
     }
 
     private void screensInit() {
-        passwodScreen = readScreenFile ("./screens/password.bmp");
-        incorrectPasswodScreen = readScreenFile ("./screens/incorrectPassword.bmp");
-        menuRegistrationScreen = readScreenFile ("./screens/menuRegistration.bmp");
-        emptyScreen = readScreenFile ("./screens/emptyScreen.bmp");
-        registrationFiscalModeScreen = readScreenFile ("./screens/fiscalModeRegistration.bmp");
-        getRegistrationDataFromCabinetScreen = readScreenFile ("./screens/getRegistrationDataFromCabinet.bmp");
-        reRegistrationMenuScreen = readScreenFile ("./screens/reRegistrationMenu.bmp");
-        reRegistrationMenuNotAutonomicScreen = readScreenFile ("./screens/reRegistrationMenuNotAutonomic.bmp");
-        documentNotSendedScreen = readScreenFile ("./screens/documentNotSended.bmp");
+        passwodScreen = readScreenFile("./screens/password.bmp");
+        incorrectPasswodScreen = readScreenFile("./screens/incorrectPassword.bmp");
+        menuRegistrationScreen = readScreenFile("./screens/menuRegistration.bmp");
+        emptyScreen = readScreenFile("./screens/emptyScreen.bmp");
+        registrationFiscalModeScreen = readScreenFile("./screens/fiscalModeRegistration.bmp");
+        getRegistrationDataFromCabinetScreen = readScreenFile("./screens/getRegistrationDataFromCabinet.bmp");
+        reRegistrationMenuScreen = readScreenFile("./screens/reRegistrationMenu.bmp");
+        reRegistrationMenuNotAutonomicScreen = readScreenFile("./screens/reRegistrationMenuNotAutonomic.bmp");
+        documentNotSendedScreen = readScreenFile("./screens/documentNotSended.bmp");
         turnOffScreen = readScreenFile("./screens/turnOff.bmp");
         openShiftMenuScreen = readScreenFile("./screens/openShiftMenu.bmp");
         shiftMenuOpenShiftScreen = readScreenFile("./screens/shiftMenuOpenShift.bmp");
@@ -79,6 +81,8 @@ public class Screens {
         cabinetError = readScreenFile("./screens/cabinetError.bmp");
         cabinetSuccesDisable = readScreenFile("./screens/cabinetSuccesDisable.bmp");
         menuSystem = readScreenFile("./screens/menuSystem.bmp");
+        menuWiFi = readScreenFile("./screens/menuWiFi.bmp");
+        screenSuccessConnectEthernet = readScreenFile("./screens/screenSuccessConnectEthernet.bmp");
     }
 
     //Сравниваем экран на кассе с экраном из "базы"
@@ -163,6 +167,12 @@ public class Screens {
 
                 case MENU_SYSTEM:
                     return strFromFile.equals(menuSystem);
+
+                case MENU_INTERNET:
+                    return strFromFile.equals(menuWiFi);
+
+                case SCREEN_SUCCES_CONNECT_ETHERNET:
+                    return strFromFile.equals(screenSuccessConnectEthernet);
 
                 default:
                     return false;
