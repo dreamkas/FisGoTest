@@ -44,8 +44,7 @@ public class StepsInternet {
 
     @Step("Проверка - успешно ли подключился Ethernet в меню СОСТОЯНИЕ")
     public boolean checkEnableInternetInterfaceInMenu() {
-        bot.getScreenJson();
-        return screen.compareScreen(ScreenPicture.MENU_INTERNET);
+        return screen.compareScreen(ScreenPicture.MENU_INTERNET, bot.getScreenJson());
     }
 
     @Step("Открыть меню НАСТРОЙКИ в ethernet")
@@ -134,10 +133,10 @@ public class StepsInternet {
 
     @Step("Проверка, что на кассе экран об успешном подключении к Ethernet")
     public boolean checkScreenSuccesfulConnect() {
-        bot.getScreenJson();
+        boolean result = screen.compareScreen(ScreenPicture.SCREEN_SUCCES_CONNECT_ETHERNET, bot.getScreenJson());
         bot.pressKey(cashBox.keyEnum.keyEnter, 0, 1);
         bot.sendData();
-        return screen.compareScreen(ScreenPicture.SCREEN_SUCCES_CONNECT_ETHERNET);
+        return result;
     }
 
     @Step("Пинг 8.8.8.8 для проверки работы интернета")

@@ -67,13 +67,13 @@ public class Bot implements IBot {
         tcpSocket.socketClose(resultJson());
     }
 
-    public void getScreenJson() {
+    public String getScreenJson() {
         taskId++;
         TasksRequest task = new TasksRequest(taskId, CommandEnum.LCD_SCREEN);
         tasksRequestList.add(task);
         String response = tcpSocket.sendDataToSocket(getTaskId(), resultJson());
         Response tasksResponse = new Gson().fromJson(response, Response.class);
-        savePicture(tasksResponse.getTaskResponseList().get(0).getLcdScreen());
+        return savePicture(tasksResponse.getTaskResponseList().get(0).getLcdScreen());
     }
 
     public int getKeypadMode() {
@@ -224,8 +224,8 @@ public class Bot implements IBot {
     // если экран совпадает, то выполняется выборка из БД пользователей и вводдится пароль
     public void enterPasswordIfScreenOpen() {
         //проверяем, что открыт экран ввода пароля
-        getScreenJson();
-        boolean compare = screens.compareScreen(ScreenPicture.PASSWORD);
+
+        boolean compare = screens.compareScreen(ScreenPicture.PASSWORD, getScreenJson());
         //если полученный экран с кассы совпадает с экраном ввода пароля, то выполняем if
         if (compare) {
             //делаем выборку их БД users на кассе, получаем пароль одного из них
@@ -310,8 +310,7 @@ public class Bot implements IBot {
         pressKey(keyEnum.keyCancel, 0, 1);
         sendData();
         trySleep(2000);
-        getScreenJson();
-        boolean compare = screens.compareScreen(ScreenPicture.FREE_SALE_MODE);
+        boolean compare = screens.compareScreen(ScreenPicture.FREE_SALE_MODE, getScreenJson());
         if (compare) {
             String countCheckStr = searchForKeyword("check_count: ", keyWordArray);
             if (countCheckStr.equals("CANNOT FIND KEYWORD")) {
@@ -473,8 +472,8 @@ public class Bot implements IBot {
             sendData();
         }
         trySleep(3500);
-        getScreenJson();
-        boolean compare = screens.compareScreen(screen);
+
+        boolean compare = screens.compareScreen(screen, getScreenJson());
         if (!compare) {
             //получить дату из кассы
             DataFromCashbox dataFromCashbox = new DataFromCashbox();
@@ -494,8 +493,8 @@ public class Bot implements IBot {
         pressKey(keyEnum.keyMenu, 0, 1);
         pressKey(keyEnum.key1, 0, 1);
         sendData();
-        getScreenJson();
-        boolean compare = screens.compareScreen(ScreenPicture.SHIFT_MENU_OPEN_SHIFT);
+
+        boolean compare = screens.compareScreen(ScreenPicture.SHIFT_MENU_OPEN_SHIFT, getScreenJson());
         if (compare) {
             pressKey(keyEnum.key5, 0, 1);
             String sumInsertion = searchForKeyword("sum_insertion: ", keyWordArray);
@@ -1607,7 +1606,7 @@ public class Bot implements IBot {
     }
 
     //Преобразование полученного массива от сервера в картинку
-    private void savePicture(int[] lcdScreen){
+    private String savePicture(int[] lcdScreen){
         if (lcdScreen != null) {
             byte byteToFile[] = new byte[lcdScreen.length];
             for (int i = 0; i < lcdScreen.length; i++)
@@ -1616,10 +1615,16 @@ public class Bot implements IBot {
                 FileOutputStream fos = new FileOutputStream(new File("reciveData\\tmpScreen.bmp"));
                 fos.write(byteToFile);
                 fos.close();
+                FileInputStream fstream = new FileInputStream("reciveData\\tmpScreen.bmp");
+                BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
+                return br.readLine();
+
             } catch (IOException e) {
                 e.printStackTrace();
+                return null;
             }
         }
+        else return null;
     }
 
     public void rebootCashBox(){

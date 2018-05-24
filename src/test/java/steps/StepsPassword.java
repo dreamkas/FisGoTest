@@ -51,8 +51,8 @@ public class StepsPassword {
 
     @Step("Проверка - успешный ввод пароля")
     public boolean isSuccessfulEntryPassword() {
-        bot.getScreenJson();
-        return screens.compareScreen(ScreenPicture.FREE_SALE_MODE) || screens.compareScreen(ScreenPicture.MENU_SYSTEM);
+        String screen = bot.getScreenJson();
+        return screens.compareScreen(ScreenPicture.FREE_SALE_MODE, screen) || screens.compareScreen(ScreenPicture.MENU_SYSTEM, screen);
     }
 
     @Step("Сменить пользователя")

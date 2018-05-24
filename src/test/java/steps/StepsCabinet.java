@@ -42,7 +42,7 @@ public class StepsCabinet {
 
     @Step("Отключить кассу от кабинета если она подключена")
     public void disableConnectToCabinet() {
-        if (isCabinetEnable()){
+        if (isCabinetEnable()) {
             bot.pressKey(cashBox.keyEnum.keyMenu, 0, 1);
             bot.pressKey(cashBox.keyEnum.key5, 0, 1);
             bot.pressKey(cashBox.keyEnum.key8, 0, 1);
@@ -62,6 +62,7 @@ public class StepsCabinet {
 
     /**
      * Получение колличества товаров в кабинете
+     *
      * @return - колличество товаров.
      */
     public int getCountGoodsInKabinet() {
@@ -73,6 +74,7 @@ public class StepsCabinet {
 
     /**
      * Проверка после подключения кассы к кабинету
+     *
      * @return true, если касса подключенна к кабинету
      */
     @Step("Проверка - подключен ли кабинет")
@@ -91,6 +93,7 @@ public class StepsCabinet {
 
     /**
      * Проверка подключена ли касса к Кабинету. Проверка из конфига кассы
+     *
      * @return boolean
      */
     public boolean isCabinetEnable() {
@@ -103,33 +106,35 @@ public class StepsCabinet {
 
     /**
      * Проверка - экран - "Неверный код"
+     *
      * @return true, если на кассе экран "Неверный код"
      */
     private boolean isIncorrectCabinetCode() {
-        bot.getScreenJson();
-        return screens.compareScreen(ScreenPicture.INCORRECT_CABINET_CODE);
+        return screens.compareScreen(ScreenPicture.INCORRECT_CABINET_CODE, bot.getScreenJson());
     }
 
     /**
      * Проверка - экран - "Ошибка кабинета"
+     *
      * @return true, если на кассе экран "Ошибка кабинета"
      */
     private boolean isCabinetError() {
-        bot.getScreenJson();
-        return screens.compareScreen(ScreenPicture.CABINET_ERROR);
+        return screens.compareScreen(ScreenPicture.CABINET_ERROR, bot.getScreenJson());
     }
 
     /**
      * Проверка, что кабинет отключился.
+     *
      * @return true - если кабинет отключен.
      */
     private boolean checkCabinetIsDisable() {
         while (isCabinetEnable()) {
-            if (isCabinetError()){
+            if (isCabinetError()) {
                 System.out.println("экран error");
-                return false;}
+                return false;
+            }
         }
-        if (isCabinetDisableScreen()){
+        if (isCabinetDisableScreen()) {
             System.out.println("экран кабинет отключен ");
             bot.pressKey(cashBox.keyEnum.keyEnter, 0, 1);
             bot.sendData();
@@ -142,15 +147,16 @@ public class StepsCabinet {
 
     /**
      * Проверка - экран - "Кабинет успешно отключен"
+     *
      * @return true, если на кассе экран "Ошибка кабинета"
      */
-    private boolean isCabinetDisableScreen(){
-        bot.getScreenJson();
-        return screens.compareScreen(ScreenPicture.CABINET_SUCCES_DISABLE);
+    private boolean isCabinetDisableScreen() {
+        return screens.compareScreen(ScreenPicture.CABINET_SUCCES_DISABLE, bot.getScreenJson());
     }
 
     /**
      * Авторизация по токену для работы с кабинетом
+     *
      * @param token - токен полученный в кабинете.
      */
     private RequestSpecification authByUserToken(String token) {

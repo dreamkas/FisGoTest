@@ -188,8 +188,7 @@ public class Steps2G {
      * @return true, если на кассе экран "Неверный код"
      */
     private boolean isIncorrectCabinetCode() {
-        bot.getScreenJson();
-        return screens.compareScreen(ScreenPicture.INCORRECT_CABINET_CODE);
+        return screens.compareScreen(ScreenPicture.INCORRECT_CABINET_CODE, bot.getScreenJson());
     }
 
     /**
@@ -197,8 +196,7 @@ public class Steps2G {
      * @return true, если на кассе экран "Ошибка кабинета"
      */
     private boolean isCabinetError() {
-        bot.getScreenJson();
-        return screens.compareScreen(ScreenPicture.CABINET_ERROR);
+        return screens.compareScreen(ScreenPicture.CABINET_ERROR, bot.getScreenJson());
     }
 
     /**
@@ -227,8 +225,7 @@ public class Steps2G {
      * @return true, если на кассе экран "Ошибка кабинета"
      */
     private boolean isCabinetDisableScreen(){
-        bot.getScreenJson();
-        return screens.compareScreen(ScreenPicture.CABINET_SUCCES_DISABLE);
+        return screens.compareScreen(ScreenPicture.CABINET_SUCCES_DISABLE, bot.getScreenJson());
     }
 
     /**
