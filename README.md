@@ -55,6 +55,7 @@ https://fisgotestapi.docs.apiary.io/
 `String getScreenJson();`
 
  Команда на получение текущего режима клавиатуры. (кириллица, английский и т.д.)
+ ***
  @return int - номер обозначающий режиим клавиатуры
   
 `int getKeypadMode();`
