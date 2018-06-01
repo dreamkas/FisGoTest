@@ -7,7 +7,7 @@ import json.response.data.CountersResponse;
 import java.util.List;
 import java.util.Map;
 
-public interface IBot {
+public interface BotFunctional {
 
     /**
      * Метод для старта бота (установка tcp-соединения с сервером кассы)
