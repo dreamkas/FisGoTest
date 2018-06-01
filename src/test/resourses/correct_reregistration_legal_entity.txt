@@ -1,3 +1,0 @@
-organization_name: 3
-calculation_address: 4
-calculation_place: 5

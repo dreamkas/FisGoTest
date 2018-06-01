@@ -24,7 +24,7 @@ import java.util.List;
 
 public class TCPSocket {
     //объект для полчения Json-ов тасок
-   // private cashbox.Bot bot = new cashbox.Bot();
+   // private Bot bot = new Bot();
     //сохранение режима ввода, полученного с кассы
     @Getter
     @Setter (AccessLevel.PRIVATE)

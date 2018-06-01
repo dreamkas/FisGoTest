@@ -1,8 +1,0 @@
-check_count: 1
-Good 1
-good_from_1: good_free_price
-good_price_1: 50
-good_type_1: countable
-good_count_1: 2
-type_pay: cash_pay
-sum_pay: 500

@@ -5,6 +5,7 @@ import cashbox.CashBox;
 import cashbox.CashBoxType;
 import io.qameta.allure.Feature;
 import io.qameta.allure.junit4.DisplayName;
+import json.request.data.enums.ConfigFieldsEnum;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
